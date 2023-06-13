@@ -1,0 +1,128 @@
+Platforms:
+  marenostrum4:
+    TYPE: slurm
+    HOST: mn4-cluster
+        # This needs that a ~/.ssh/config exists with the following:
+        # the login node in mn0 allows internet acces
+        # Host mn4-cluster
+        #     Hostname mn0.bsc.es
+        #     IdentifyFile ~/.ssh/<your_sshkey>
+        #     User <bsc user>
+    PROJECT: dese28
+    QUEUE: debug
+    USER: <to-be-overloaded-in-user-conf>
+    SCRATCH_DIR: /gpfs/scratch
+    ADD_PROJECT_TO_HOST: False
+    MAX_WALLCLOCK: '00:55'
+    TEMP_DIR: ''
+  marenostrum4-login:
+    TYPE: slurm
+    HOST: mn4-cluster
+        # This needs that a ~/.ssh/config exists with the following:
+        # the login node in mn0 allows internet acces
+        # Host mn4-cluster
+        #     Hostname mn0.bsc.es
+        #     IdentifyFile ~/.ssh/<your_sshkey>
+        #     User <bsc user>
+    PROJECT: dese28
+    QUEUE: debug
+    USER: <to-be-overloaded-in-user-conf>
+    SCRATCH_DIR: /gpfs/scratch
+    ADD_PROJECT_TO_HOST: False
+    MAX_WALLCLOCK: '00:55'
+  juwels-login:
+    TYPE: ps
+    HOST: juwels-cluster
+        # This needs that a ~/.ssh/config exists with the following:
+        # Host juwels-cluster
+        #     Hostname %.fz-juelich.de
+        #     IdentifyFile ~/.ssh/<your_sshkey>
+        #     User <juwels user>
+    PROJECT: hhb19
+    USER: <to-be-overloaded-in-user-conf>
+    SCRATCH_DIR: /p/scratch
+    SCRATCH_PROJECT_DIR: chhb19
+    ADD_PROJECT_TO_HOST: False
+    TEMP_DIR: ''
+  juwels:
+    TYPE: slurm
+    HOST: juwels-cluster
+        # This needs that a ~/.ssh/config exists with the following:
+        # Host juwels-cluster
+        #     Hostname %.fz-juelich.de
+        #     IdentifyFile ~/.ssh/<your_sshkey>
+        #     User <juwels user>
+    PROJECT: hhb19
+    USER: <to-be-overloaded-in-user-conf>
+    QUEUE: ""
+    CUSTOM_DIRECTIVES: '#SBATCH -p standard -N 1 --ntasks-per-node=24 --cpus-per-task=2'
+    SCRATCH_DIR: /p/scratch
+    SCRATCH_PROJECT_DIR: chhb19
+    PARTITION: devel
+    ADD_PROJECT_TO_HOST: False
+    MAX_WALLCLOCK: '48:00'
+    TEMP_DIR: ''
+    PROCESSORS_PER_NODE: 24
+  lumi-login:
+    TYPE: ps
+    HOST: lumi-cluster
+        # This needs that a ~/.ssh/config exists with the following:
+        # Host lumi-cluster
+        #     Hostname lumi.csc.fi
+        #     IdentifyFile ~/.ssh/<your_sshkey>
+        #     User <lumi user>
+    PROJECT: project_465000454
+    USER: <to-be-overloaded-in-user-conf>
+    SCRATCH_DIR: /scratch
+    ADD_PROJECT_TO_HOST: False
+    TEMP_DIR: ''
+  lumi:
+    TYPE: slurm
+    HOST: lumi-cluster
+        # This needs that a ~/.ssh/config exists with the following:
+        # Host lumi-cluster
+        #     Hostname lumi.csc.fi
+        #     IdentifyFile ~/.ssh/<your_sshkey>
+        #     User <lumi user>
+    PROJECT: project_465000454
+    USER: <to-be-overloaded-in-user-conf>
+    QUEUE: ""
+    SCRATCH_DIR: /scratch
+    ADD_PROJECT_TO_HOST: False
+    MAX_WALLCLOCK: '48:00'
+    TEMP_DIR: ''
+    PROCESSORS_PER_NODE: 128
+    BUDGET: "project_465000454"
+  levante-login:
+    TYPE: ps
+    HOST: levante
+        # This needs that a ~/.ssh/config exists with the following:
+        # Host levante-cluster
+        #     Hostname levante.dkrz.de
+        #     IdentifyFile ~/.ssh/<your_sshkey>
+        #     User <levante user>
+    PROJECT: <to-be-overloaded-by-user>
+    USER: <to-be-overloaded-in-user-conf>
+    SCRATCH_DIR: /work
+    ADD_PROJECT_TO_HOST: False
+    TEMP_DIR: ''
+    EXECUTABLE: "/usr/bin/bash -l" # this is needed on levante to make it find the module command
+  levante:
+    TYPE: slurm
+    HOST: levante
+        # This needs that a ~/.ssh/config exists with the following:
+        # Host levante-cluster
+        #     Hostname levante.dkrz.de
+        #     IdentifyFile ~/.ssh/<your_sshkey>
+        #     User <levante user>
+    PROJECT: <to-be-overloaded-by-user>
+    PARTITION: 'compute'
+    USER: <to-be-overloaded-in-user-conf>
+    QUEUE: ""
+    SCRATCH_DIR: /work
+    ADD_PROJECT_TO_HOST: False
+    MAX_WALLCLOCK: '48:00'
+    TEMP_DIR: ''
+    PROCESSORS_PER_NODE: 128
+    BUDGET: <to-be-overloaded-by-user>
+    EXECUTABLE: "/usr/bin/bash -l" # this is needed on levante to make it find the module command

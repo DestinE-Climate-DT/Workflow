@@ -1,0 +1,22 @@
+RUN:
+  # Sets the EXPERIMENT variables (datelist, number of chunks...). Current options: test-icon, test-ifs-fesom, test-ifs-nemo. 
+  SIMULATION: test-icon
+  # Physical parameters will be defined here. Current options: default.  
+  PARAMETER: default
+  # Current options: icon, ifs-fesom, ifs-nemo.
+  MODEL: icon
+  # Current options: none
+  APPLICATION: none
+  # Current options:
+    # ICON: r2b4
+    # IFS (Nemo and Fesom): tco79l137
+  GRID: r2b4
+  # Leave empty if the model version is not pre-compiled. Current options:
+    # ICON: 
+    # IFS-Nemo: ifs-source
+    # IFS-Fesom: 
+  MODEL_VERSION:
+  # openmpo, gcc, intel...
+  ENVIRONMENT: openmpi
+
+

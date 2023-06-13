@@ -1,0 +1,15 @@
+SIMULATION:
+  NAME: test-icon 
+  INPROOT: "/gpfs/projects/dese28/models/icon/inidata"
+  TIMEFORMAT: '+%FT%TZ'
+
+  CHECKPOINT_INTERVAL: "P1Y"
+  RESTART_INTERVAL: "P1D"
+
+EXPERIMENT:
+    DATELIST: 19790101
+    MEMBERS: "default"
+    CHUNKSIZEUNIT: day
+    CHUNKSIZE: 1
+    NUMCHUNKS: 5
+    CALENDAR: standard

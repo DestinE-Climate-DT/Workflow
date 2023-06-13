@@ -1,0 +1,9 @@
+MODEL:
+  SOURCE: git@gitlab.dkrz.de:icon/icon-mpim.git
+  BRANCH: feature-collection-destine
+  VERSION: icon-mpim
+  NAME: icon
+
+JOBS:
+  SIM:
+    FILE: templates/sim_icon.sh

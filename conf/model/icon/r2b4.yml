@@ -1,0 +1,19 @@
+CONFIGURATION:
+  ICON:
+    ATM_GID: "0043"
+    ATM_REF: "R02B04"
+    OCE_GID: "0036"
+    OCE_REF: "R02B04"
+
+    ATM_NPROMA: 32
+    OCE_NPROMA: 8
+
+    RUNSCRIPT: "exp.icon_r2b4_climateDT.run"
+
+PLATFORMS:
+  MARENOSTRUM4:
+    WALLCLOCK: '00:55'
+    NODES: 4
+    TASKS: 48
+    PROCESSORS: 192
+    CUSTOM_DIRECTIVES: "['#SBATCH --export=ALL']"

@@ -1,0 +1,14 @@
+CONFIGURATION:
+  IFS:
+    GTYPE: tco
+    RESOL: 79
+    LEVELS: 137
+    EXPVER: hvi1
+    LABEL: LWDA
+
+PLATFORMS: 
+  MARENOSTRUM4:
+    PARTITION: "debug"
+    NODES: 1
+    TASKS: 48
+    CUSTOM_DIRECTIVES: "['#SBATCH --export=ALL', '#SBATCH --exclusive']"

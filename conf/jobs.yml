@@ -1,0 +1,44 @@
+JOBS:
+  LOCAL_SETUP:
+    FILE: templates/local_setup.sh
+    PLATFORM: LOCAL
+    RUNNING: once
+  SYNCHRONIZE:
+    FILE: templates/synchronize.sh
+    PLATFORM: LOCAL
+    DEPENDENCIES: LOCAL_SETUP
+    RUNNING: once
+  REMOTE_SETUP:
+    FILE: templates/remote_setup.sh
+    # Compilation needs to be done in the login node for being able to clone packages
+    PLATFORM: "%DEFAULT.HPCARCH%-login"
+    DEPENDENCIES: SYNCHRONIZE
+    RUNNING: once
+  INI:
+    FILE: templates/ini.sh
+    PLATFORM: "%DEFAULT.HPCARCH%-login"
+    DEPENDENCIES: REMOTE_SETUP
+    RUNNING: member
+  SIM:
+    # Changea to sim_model.sh (temporary) in the /conf/model files
+    FILE: templates/sim.sh
+    PLATFORM: "%DEFAULT.HPCARCH%"
+    DEPENDENCIES: INI SIM-1
+    RUNNING: chunk
+    # Should also be overwriten
+    WALLCLOCK: '00:55'
+    # Must change to model-custom directives
+    #CUSTOM_DIRECTIVES: ["#SBATCH --nodes 4", "#SBATCH --ntasks-per-node=48", "#SBATCH --export=ALL"]
+    #CUSTOM_DIRECTIVES: ["#SBATCH -p debug", "#SBATCH -N 1", "#SBATCH --ntasks-per-node=64", "#SBATCH --export=ALL"]
+  GSV:
+    FILE: templates/gsv.sh
+    PLATFORM: "%DEFAULT.HPCARCH%"
+    DEPENDENCIES: SIM
+    RUNNING: chunk
+    WALLCLOCK: '00:05'
+  APPLICATION:
+    FILE: templates/application.sh
+    PLATFORM: "%DEFAULT.HPCARCH%"
+    DEPENDENCIES: GSV
+    RUNNING: chunk
+    WALLCLOCK: '00:05'

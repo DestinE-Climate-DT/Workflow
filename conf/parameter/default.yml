@@ -1,0 +1,8 @@
+# this is in a very early conceptual state
+# physical parameters should be defined here
+# there will also be a method later that converts
+# them into the correct namelist options for each model
+#
+
+PARAMETER:
+  radiation_factor: 5 # completly made up parameter
