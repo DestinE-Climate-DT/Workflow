@@ -1,0 +1,15 @@
+# This file is the entry point for this workflow configuration.
+# You must point the as_conf directory to the directory of this
+# file, and define the other files to be loaded here via
+# CUSTOM_CONFIG.{PRE|POST}.
+
+DEFAULT:
+  CUSTOM_CONFIG:
+    PRE:
+      - "%PROJDIR%/conf"
+      - "%PROJDIR%/conf/simulation/%RUN.SIMULATION%.yml"
+      - "%PROJDIR%/conf/model/%RUN.MODEL%/%RUN.MODEL%.yml"
+      - "%PROJDIR%/conf/application/%RUN.APPLICATION%.yml"
+      - "%PROJDIR%/conf/model/%RUN.MODEL%/%RUN.GRID_ATM%-%RUN.PROCESSOR_UNIT%.yml"
+    POST:
+      - "~/platforms.yml"

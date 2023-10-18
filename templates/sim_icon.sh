@@ -8,12 +8,17 @@ set -xuve
 HPCROOTDIR=${HPCROOTDIR:-%HPCROOTDIR%}
 PROJDEST=${PROJDEST:-%PROJECT.PROJECT_DESTINATION%}
 CURRENT_ARCH=${CURRENT_ARCH:-%CURRENT_ARCH%}
-MODEL_NAME=${MODEL_NAME:-%MODEL.NAME%}
+MODEL_NAME=${MODEL_NAME:-%RUN.MODEL%}
 MODEL_VERSION=${MODEL_VERSION:-%RUN.MODEL_VERSION%}
-CHUNKSIZE=${CHUNKSIZE:-%SIMULATION.CHUNKSIZE%}
-CHUNKSIZEUNIT=${CHUNKSIZEUNIT:-%SIMULATION.CHUNKSIZEUNIT%}
-RUNSCRIPT=${RUNSCRIPT:-%CONFIGURATION.ICON.RUNSCRIPT%}
+CHUNKSIZE=${CHUNKSIZE:-%EXPERIMENT.CHUNKSIZE%}
+CHUNKSIZEUNIT=${CHUNKSIZEUNIT:-%EXPERIMENT.CHUNKSIZEUNIT%}
+CHUNK_FIRST=${CHUNK_FIRST:-%CHUNK_FIRST%}
+R_RUNSCRIPT_P=${RUNSCRIPT:-%SIMULATION.RUNSCRIPT%}
 HPCARCH=${HPCARCH:-%HPCARCH%}
+HETJOB=${HETJOB:-%SIMULATION.HETJOB%}
+
+ENVIRONMENT=%RUN.ENVIRONMENT%
+PU=%RUN.PROCESSOR_UNIT%
 
 LIBDIR="${HPCROOTDIR}"/"${PROJDEST}"/lib
 HPC=$( echo "${CURRENT_ARCH}" | cut -d- -f1 )
@@ -32,7 +37,7 @@ load_inproot_precomp_path
 # Main code
 
 # Directory definition
-if [  ! -d "${PRECOMP_MODEL_PATH}" ]; then
+if [ -z "${MODEL_VERSION}" ]; then
     export MODEL_DIR="${HPCROOTDIR}"/"${PROJDEST}"/icon-mpim
 else
     export MODEL_DIR=${PRECOMP_MODEL_PATH}
@@ -43,7 +48,24 @@ export thisdir="${MODEL_DIR}"/run
 export basedir="${MODEL_DIR}"
 export icon_data_rootFolder="${INPROOT}"
 
-export MODEL="${basedir}"/bin/icon
+# Switch binaries for ocean and atmosphere when using hetjobs
+if [ "${PU}" = "gpu_gpu" ]; then
+    export MODEL_C="${basedir}"/build/16.0.1.1_rocm-5.4.1_cpu/bin/icon
+    export MODEL_G="${basedir}"/build/16.0.1.1_rocm-5.4.1_gpu/bin/icon
+elif [ "${PU}" = "cpu" ]; then
+    export MODEL="${basedir}"/build/16.0.1.1_rocm-5.4.1_cpu/bin/icon
+else
+    echo "Unsupported processing unit"
+    exit 1
+fi
+
+# Set output task to write to the FDB through the modified coupler
+export OUTPUT_TASK="${basedir}"/build/yaco_16.0.1.1_rocm-5.4.1/yaco
+
+# Set common test FDB path for diferent test runs
+export FDB_PATH=/projappl/project_465000454/models/icon/outdata/fdb.test
+export FDB_SCHEMA=/projappl/project_465000454/models/icon/outdata/schema
+
 set | grep SLURM
 
 export job_name=$SLURM_JOB_NAME
@@ -60,13 +82,22 @@ export job_name=$SLURM_JOB_NAME
 #  
 ######################################################
 function load_experiment_icon(){
-    # Experiment name-definition
-    export EXPNAME="%SIMULATION.NAME%"
+
+    # Experiment name/id-definition
+    SIM_NAME="%SIMULATION.NAME%"
+    EXPID="%DEFAULT.EXPID%"
+    export EXPNAME="${EXPID}_${SIM_NAME}"
+    
     export experiments_dir="${MODEL_DIR}"/experiments/rundir
     
-    if [ ! -d "$(experiments_dir)"/"$(EXPNAME)" ]; then
-	export lrestart=".FALSE."
+    # If first run, set lrestart to ".FALSE."
+    if [ ${CHUNK_FIRST} == "TRUE" ]; then
+       export lrestart=".false."
+       export restart_jsbach=".false."
+       export initialize_fromrestart=".true."
+       export read_initial_reservoirs=".true."
     fi 
+
     # Grid Configuration
     export atmos_gridID="%CONFIGURATION.ICON.ATM_GID%"
     export atmos_refinement="%CONFIGURATION.ICON.ATM_REF%"
@@ -77,26 +108,43 @@ function load_experiment_icon(){
     export nproma_atm="%CONFIGURATION.ICON.ATM_NPROMA%"
     export nproma_oce="%CONFIGURATION.ICON.OCE_NPROMA%"
 
+    # Time stepping configuration
+    export radTimeStep="%SIMULATION.RAD_TSTEP%"
+    export atmTimeStep="%SIMULATION.ATM_TSTEP%"
+    export oceTimeStep="%SIMULATION.OCE_TSTEP%"
+    export couplingTimeStep="%SIMULATION.COUPLING_TSTEP%"
+
+    # YACO output process timestep
+    export outTimeStep="%SIMULATION.OUT_TSTEP%"
+
+    # Internal YAC timestepping
+    export atm_lag="%SIMULATION.ATM_LAG%"
+    export oce_lag="%SIMULATION.OCE_LAG%"
+    export out_lag="%SIMULATION.OUT_LAG%"
+    
+    # Ocean and Atmosphere level configuration
+    export atm_levels="%CONFIGURATION.ICON.ATM_LEVELS%"               
+    export atm_halflevels="%CONFIGURATION.ICON.ATM_HALFLEVELS%"
+    export oce_levels="%CONFIGURATION.ICON.OCE_LEVELS%"                   
+    export oce_halflevels="%CONFIGURATION.ICON.OCE_HALFLEVELS%"
+
     # End/Start dates
     start_date=$(date -u --date=%Chunk_START_DATE% %SIMULATION.TIMEFORMAT%)
+    end_date=$(date -u --date=%Chunk_END_DATE% %SIMULATION.TIMEFORMAT%)
+    next_date=$(date -u --date="$end_date -60 seconds" %SIMULATION.TIMEFORMAT%)
+    
     export start_date
-    end_date=$(date -u --date=%Chunk_END_YEAR%%Chunk_END_MONTH%%Chunk_END_DAY% %SIMULATION.TIMEFORMAT%)
     export end_date
+    export next_date
 
     # Restart interval (uses mtime)
     # Stops run - Generates restart files
     export restart_interval="%SIMULATION.RESTART_INTERVAL%"    
     export checkpoint_interval="%SIMULATION.CHECKPOINT_INTERVAL%"
     
-    local PROJ_RUNSCRIPT_PATH="${HPCROOTDIR}"/"${PROJDEST}"/lib/runscript/exp.icon_r2b4_climateDT.run
-    
+    # LN script in rundir
     cd "${thisdir}"
-    # Temporal LN of runscripts
-    if [ ! -f exp.icon_r2b4_climateDT.run ]; then
-    	ln -s "${PROJ_RUNSCRIPT_PATH}" .
-    else
-    	echo "Run-script already present"
-    fi    
+    ln -sf "${HPCROOTDIR}"/"${PROJDEST}"/lib/runscripts/"${R_RUNSCRIPT_P}" .   
 }
 
 
@@ -114,15 +162,19 @@ function run_experiment_icon(){
     local EXP_OUTDIR=${experiments_dir}/${EXPNAME}
     # Enter runscript dir
     cd "${thisdir}"
-    # Submit experiment
-    ./"${RUNSCRIPT}"
 
-    cd "${EXP_OUTDIR}"
+    local R_RUNSCRIPT=$(basename "${R_RUNSCRIPT_P}")
+
+    ./${R_RUNSCRIPT} 
+
     if [ -f finish.status ] && grep -q -e "OK" -e "RESTART" finish.status; then
-        echo "Succesful run of the chunk"
-        export lrestart=".TRUE."
+        echo "Successful run of the chunk"
+        export lrestart=".true."
+        export restart_jsbach=".true."
+        export initialize_fromrestart=".false."
+        export read_initial_reservoirs=".false."
     else
-        echo "Unsuccesful run"
+        echo "Unsuccessful run"
         exit 1
     fi
 }
@@ -130,7 +182,7 @@ function run_experiment_icon(){
 # Loads HPC/Slurm (nodes,mpi,OpenMP) settings 
 # Loads necessary packages (module load ...) 
 # Exports necessary paths (input, output, restarts ...)
-load_sim_env_"${MODEL_NAME%%-*}"
+load_sim_env_"${MODEL_NAME%%-*}"_"${PU}"
 
 # Defines simulation specifics
 # Type of simulation

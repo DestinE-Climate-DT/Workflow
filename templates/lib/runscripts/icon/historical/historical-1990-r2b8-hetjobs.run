@@ -1,0 +1,1877 @@
+#! /bin/bash
+
+set -e
+# Utilities
+PATH="${MODEL_DIR}":$PATH
+
+SCRIPT_DIR=${thisdir:="${MODEL_DIR}"/run}
+
+# Load traditional error handling
+. $SCRIPT_DIR/add_run_routines
+# Reset files and file names for check_error and check_final_status
+final_status_file=${SCRIPT_DIR}/${job_name}.final_status
+current_status_file=${SCRIPT_DIR}/${job_name}.status
+rm -f ${final_status_file} ${current_status_file}
+
+# load local setting, if existing
+# -------------------------------
+if [ -a ../setting ]
+then
+  echo "Load Setting"
+  . ../setting
+fi
+
+# how to submit the next job
+# --------------------------
+job_name="${EXPNAME}"
+
+# cdo for post-processing
+# -----------------------
+cdo="cdo"
+cdo_diff="cdo diffn"
+
+#=============================================================================
+
+ulimit -s 4194304
+ulimit -c 0
+
+# ----------------------------------------------------------------------------
+# ICON historical 1990 10 km setup for DestinE development
+# ----------------------------------------------------------------------------
+
+# (0) Basic model configuration
+# -----------------------------
+
+# Mark current run as started in log
+echo $(date -u +'%Y-%m-%dT%H:%M:%SZ') ${start_date%:*} ${end_date%:*} ${SLURM_JOBID} start
+
+# Show current start date in job configuration
+sh -c 'scontrol update JobId=$SLURM_JOB_ID Comment="$*"' scomment $start_date
+
+#------------------------------------------------------------------------------
+
+# (5) Define the model configuration
+#-----------------------------------
+
+# Write namelist files directly to working directory, create this if missing
+
+EXPDIR="${experiments_dir}"/"${EXPNAME}"/run_${start_date//[-:]/}-${end_date//[-:]/}
+
+if [[ -d $EXPDIR ]]
+then
+    echo "$(date +'%Y-%m-%dT%H:%M:%S'): removing run dir '$EXPDIR'"
+    rm -fvr $EXPDIR
+fi
+
+mkdir -vp $EXPDIR
+cd $EXPDIR
+
+# I.1 Split the number of total procs and assign to each component
+# ----------------------------------------------------------------
+
+atm_tasks=$(( SLURM_NTASKS_HET_GROUP_0 ))
+oce_tasks=$(( SLURM_NTASKS_HET_GROUP_1 ))
+yaco_tasks=$(( SLURM_NTASKS_HET_GROUP_2 ))
+
+tot_tasks=$(( atm_tasks + oce_tasks ))
+
+atm_min_rank=0
+atm_max_rank=$(( atm_tasks - 1 ))
+atm_inc_rank=1
+
+oce_min_rank=$(( atm_max_rank + 1 ))
+oce_max_rank=$(( atm_max_rank + oce_tasks ))
+oce_inc_rank=1
+
+#
+# I.2 Fill model list
+# -------------------
+#
+
+namelist_list[0]="$atm_namelist"
+modelname_list[0]="atmo"
+modeltype_list[0]=1
+minrank_list[0]=$atm_min_rank
+maxrank_list[0]=$atm_max_rank
+incrank_list[0]=$atm_inc_rank
+#
+namelist_list[1]="$oce_namelist"
+modelname_list[1]="ocean"
+modeltype_list[1]=2
+minrank_list[1]=$oce_min_rank
+maxrank_list[1]=$oce_max_rank
+incrank_list[1]=$oce_inc_rank
+
+#
+# create ICON master, coupling and model namelists
+# ------------------------------------------------
+# For a complete list see Namelist_overview and Namelist_overview.pdf
+#
+
+cat > icon_master.namelist << EOF
+&master_nml
+    lrestart = ${lrestart}
+    read_restart_namelists = .false.
+/
+&master_time_control_nml
+    calendar = 'proleptic gregorian'
+    checkpointtimeintval = "${checkpoint_interval}"
+    restarttimeintval = "${restart_interval}"
+    experimentstartdate = "${start_date}"
+    experimentstopdate = "${end_date}"
+/
+&master_model_nml ! 'atmo'
+    model_name = 'atmo'
+    model_namelist_filename = 'NAMELIST_atm'
+    model_type = 1
+    model_min_rank = $atm_min_rank
+    model_max_rank = $atm_max_rank
+    model_inc_rank = $atm_inc_rank
+    model_rank_group_size = $atm_group_size
+/
+&master_model_nml ! 'ocean'
+    model_name = 'ocean'
+    model_namelist_filename = 'NAMELIST_oce'
+    model_type = 2
+    model_min_rank = $oce_min_rank
+    model_max_rank = $oce_max_rank
+    model_inc_rank = $oce_inc_rank
+    model_rank_group_size = $oce_group_size
+/
+&jsb_control_nml
+    is_standalone = .false.
+    debug_level = 0
+    restart_jsbach = .true.
+    timer_level = 0
+/
+&jsb_model_nml
+    model_id = 1
+    model_name = 'JSBACH'
+    model_shortname = 'jsb'
+    model_description = 'JSBACH land surface model'
+    model_namelist_filename = 'NAMELIST_lnd'
+/
+&time_nml
+    is_relative_time = .true.
+/
+
+EOF
+
+# I.3 YAC coupling library configuration
+#-----------------------------------------------------------------------------
+# component names in coupling.xml must (!) match with modelname_list[*]
+cat > coupling.xml << EOF
+<?xml version='1.0' encoding='UTF-8'?>
+<coupling xmlns="http://www.w3schools.com" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.w3schools.com coupling.xsd">
+  <redirect redirect_of_root="false" redirect_stdout="false" />
+  <components>
+    <component id="1">
+      <name>ocean</name>
+      <model>ICON</model>
+      <simulated>atmosphere</simulated>
+      <transient_grid_refs>
+        <transient_grid_ref collection_size="1" grid_ref="1" id="1" transient_ref="1" />
+        <transient_grid_ref collection_size="1" grid_ref="1" id="2" transient_ref="2" />
+        <transient_grid_ref collection_size="1" grid_ref="1" id="3" transient_ref="3" />
+        <transient_grid_ref collection_size="1" grid_ref="1" id="4" transient_ref="4" />
+        <transient_grid_ref collection_size="1" grid_ref="1" id="5" transient_ref="5" />
+        <transient_grid_ref collection_size="${oce_levels}" grid_ref="1" id="6" transient_ref="6" />
+        <transient_grid_ref collection_size="${oce_levels}" grid_ref="1" id="7" transient_ref="7" />
+        <transient_grid_ref collection_size="${oce_levels}" grid_ref="1" id="8" transient_ref="8" />
+        <transient_grid_ref collection_size="${oce_levels}" grid_ref="1" id="9" transient_ref="9" />
+        <transient_grid_ref collection_size="${oce_halflevels}" grid_ref="1" id="10" transient_ref="10" />
+        <transient_grid_ref collection_size="1" grid_ref="1" id="11" transient_ref="11" />
+        <transient_grid_ref collection_size="1" grid_ref="1" id="12" transient_ref="12" />
+        <transient_grid_ref collection_size="1" grid_ref="1" id="13" transient_ref="13" />
+        <transient_grid_ref collection_size="3" grid_ref="1" id="14" transient_ref="14" />
+        <transient_grid_ref collection_size="2" grid_ref="1" id="15" transient_ref="43" />
+        <transient_grid_ref collection_size="2" grid_ref="1" id="16" transient_ref="44" />
+        <transient_grid_ref collection_size="3" grid_ref="1" id="17" transient_ref="45" />
+        <transient_grid_ref collection_size="4" grid_ref="1" id="18" transient_ref="46" />
+        <transient_grid_ref collection_size="2" grid_ref="1" id="19" transient_ref="47" />
+        <transient_grid_ref collection_size="1" grid_ref="1" id="20" transient_ref="48" />
+        <transient_grid_ref collection_size="1" grid_ref="1" id="21" transient_ref="49" />
+        <transient_grid_ref collection_size="1" grid_ref="1" id="22" transient_ref="50" />
+        <transient_grid_ref collection_size="1" grid_ref="1" id="23" transient_ref="51" />
+        <transient_grid_ref collection_size="1" grid_ref="1" id="24" transient_ref="52" />
+      </transient_grid_refs>
+    </component>
+    <component id="2">
+      <name>healpix_io</name>
+      <model>none</model>
+      <simulated>none</simulated>
+      <transient_grid_refs>
+        <transient_grid_ref collection_size="1" grid_ref="2" id="1" transient_ref="20" />
+        <transient_grid_ref collection_size="1" grid_ref="2" id="2" transient_ref="33" />
+        <transient_grid_ref collection_size="1" grid_ref="2" id="3" transient_ref="38" />
+        <transient_grid_ref collection_size="1" grid_ref="2" id="4" transient_ref="40" />
+        <transient_grid_ref collection_size="1" grid_ref="2" id="5" transient_ref="1" />
+        <transient_grid_ref collection_size="1" grid_ref="2" id="6" transient_ref="18" />
+        <transient_grid_ref collection_size="1" grid_ref="2" id="7" transient_ref="17" />
+        <transient_grid_ref collection_size="1" grid_ref="2" id="8" transient_ref="29" />
+        <transient_grid_ref collection_size="1" grid_ref="2" id="9" transient_ref="28" />
+        <transient_grid_ref collection_size="1" grid_ref="2" id="10" transient_ref="27" />
+        <transient_grid_ref collection_size="1" grid_ref="2" id="11" transient_ref="26" />
+        <transient_grid_ref collection_size="1" grid_ref="2" id="12" transient_ref="23" />
+        <transient_grid_ref collection_size="1" grid_ref="2" id="13" transient_ref="24" />
+        <transient_grid_ref collection_size="1" grid_ref="2" id="14" transient_ref="25" />
+        <transient_grid_ref collection_size="1" grid_ref="2" id="15" transient_ref="15" />
+        <transient_grid_ref collection_size="1" grid_ref="2" id="16" transient_ref="16" />
+        <transient_grid_ref collection_size="${atm_levels}" grid_ref="2" id="17" transient_ref="37" />
+        <transient_grid_ref collection_size="${atm_levels}" grid_ref="2" id="18" transient_ref="39" />
+        <transient_grid_ref collection_size="${atm_levels}" grid_ref="2" id="19" transient_ref="32" />
+        <transient_grid_ref collection_size="1" grid_ref="2" id="20" transient_ref="42" />
+        <transient_grid_ref collection_size="1" grid_ref="2" id="21" transient_ref="21" />
+        <transient_grid_ref collection_size="1" grid_ref="2" id="22" transient_ref="22" />
+        <transient_grid_ref collection_size="${atm_levels}" grid_ref="2" id="23" transient_ref="41" />
+        <transient_grid_ref collection_size="${atm_levels}" grid_ref="2" id="24" transient_ref="19" />
+        <transient_grid_ref collection_size="1" grid_ref="2" id="25" transient_ref="34" />
+        <transient_grid_ref collection_size="1" grid_ref="2" id="26" transient_ref="35" />
+        <transient_grid_ref collection_size="1" grid_ref="2" id="27" transient_ref="30" />
+        <transient_grid_ref collection_size="1" grid_ref="2" id="28" transient_ref="31" />
+        <transient_grid_ref collection_size="1" grid_ref="2" id="29" transient_ref="2" />
+        <transient_grid_ref collection_size="1" grid_ref="2" id="30" transient_ref="3" />
+        <transient_grid_ref collection_size="1" grid_ref="2" id="31" transient_ref="36" />
+        <transient_grid_ref collection_size="${oce_levels}" grid_ref="2" id="32" transient_ref="9" />
+        <transient_grid_ref collection_size="${oce_levels}" grid_ref="2" id="33" transient_ref="8" />
+        <transient_grid_ref collection_size="${oce_levels}" grid_ref="2" id="34" transient_ref="7" />
+        <transient_grid_ref collection_size="${oce_levels}" grid_ref="2" id="35" transient_ref="6" />
+        <transient_grid_ref collection_size="1" grid_ref="2" id="36" transient_ref="4" />
+        <transient_grid_ref collection_size="${oce_halflevels}" grid_ref="2" id="37" transient_ref="10" />
+      </transient_grid_refs>
+    </component>
+    <component id="3">
+      <name>dummy</name>
+      <model>none</model>
+      <simulated>none</simulated>
+      <transient_grid_refs />
+    </component>
+    <component id="4">
+      <name>atmo</name>
+      <model>ICON</model>
+      <simulated>atmosphere</simulated>
+      <transient_grid_refs>
+        <transient_grid_ref collection_size="1" grid_ref="3" id="1" transient_ref="15" />
+        <transient_grid_ref collection_size="1" grid_ref="3" id="2" transient_ref="16" />
+        <transient_grid_ref collection_size="1" grid_ref="3" id="3" transient_ref="17" />
+        <transient_grid_ref collection_size="1" grid_ref="3" id="4" transient_ref="18" />
+        <transient_grid_ref collection_size="${atm_levels}" grid_ref="3" id="5" transient_ref="19" />
+        <transient_grid_ref collection_size="1" grid_ref="3" id="6" transient_ref="20" />
+        <transient_grid_ref collection_size="1" grid_ref="3" id="7" transient_ref="21" />
+        <transient_grid_ref collection_size="1" grid_ref="3" id="8" transient_ref="22" />
+        <transient_grid_ref collection_size="1" grid_ref="3" id="9" transient_ref="23" />
+        <transient_grid_ref collection_size="1" grid_ref="3" id="10" transient_ref="24" />
+        <transient_grid_ref collection_size="1" grid_ref="3" id="11" transient_ref="25" />
+        <transient_grid_ref collection_size="1" grid_ref="3" id="12" transient_ref="26" />
+        <transient_grid_ref collection_size="1" grid_ref="3" id="13" transient_ref="27" />
+        <transient_grid_ref collection_size="1" grid_ref="3" id="14" transient_ref="28" />
+        <transient_grid_ref collection_size="1" grid_ref="3" id="15" transient_ref="29" />
+        <transient_grid_ref collection_size="1" grid_ref="3" id="16" transient_ref="30" />
+        <transient_grid_ref collection_size="1" grid_ref="3" id="17" transient_ref="31" />
+        <transient_grid_ref collection_size="${atm_levels}" grid_ref="3" id="18" transient_ref="32" />
+        <transient_grid_ref collection_size="1" grid_ref="3" id="19" transient_ref="33" />
+        <transient_grid_ref collection_size="1" grid_ref="3" id="20" transient_ref="34" />
+        <transient_grid_ref collection_size="1" grid_ref="3" id="21" transient_ref="35" />
+        <transient_grid_ref collection_size="1" grid_ref="3" id="22" transient_ref="36" />
+        <transient_grid_ref collection_size="${atm_levels}" grid_ref="3" id="23" transient_ref="37" />
+        <transient_grid_ref collection_size="1" grid_ref="3" id="24" transient_ref="38" />
+        <transient_grid_ref collection_size="${atm_levels}" grid_ref="3" id="25" transient_ref="39" />
+        <transient_grid_ref collection_size="1" grid_ref="3" id="26" transient_ref="40" />
+        <transient_grid_ref collection_size="${atm_levels}" grid_ref="3" id="27" transient_ref="41" />
+        <transient_grid_ref collection_size="1" grid_ref="3" id="28" transient_ref="42" />
+        <transient_grid_ref collection_size="2" grid_ref="3" id="29" transient_ref="43" />
+        <transient_grid_ref collection_size="2" grid_ref="3" id="30" transient_ref="44" />
+        <transient_grid_ref collection_size="3" grid_ref="3" id="31" transient_ref="45" />
+        <transient_grid_ref collection_size="4" grid_ref="3" id="32" transient_ref="46" />
+        <transient_grid_ref collection_size="2" grid_ref="3" id="33" transient_ref="47" />
+        <transient_grid_ref collection_size="1" grid_ref="3" id="34" transient_ref="48" />
+        <transient_grid_ref collection_size="1" grid_ref="3" id="35" transient_ref="49" />
+        <transient_grid_ref collection_size="1" grid_ref="3" id="36" transient_ref="5" />
+        <transient_grid_ref collection_size="1" grid_ref="3" id="37" transient_ref="11" />
+        <transient_grid_ref collection_size="1" grid_ref="3" id="38" transient_ref="12" />
+        <transient_grid_ref collection_size="1" grid_ref="3" id="39" transient_ref="13" />
+        <transient_grid_ref collection_size="3" grid_ref="3" id="40" transient_ref="14" />
+        <transient_grid_ref collection_size="1" grid_ref="3" id="41" transient_ref="50" />
+        <transient_grid_ref collection_size="1" grid_ref="3" id="42" transient_ref="51" />
+        <transient_grid_ref collection_size="1" grid_ref="3" id="43" transient_ref="52" />
+      </transient_grid_refs>
+    </component>
+  </components>
+  <transients>
+    <transient id="1" transient_standard_name="hs" />
+    <transient id="2" transient_standard_name="ice_u" />
+    <transient id="3" transient_standard_name="ice_v" />
+    <transient id="4" transient_standard_name="mlotst" />
+    <transient id="5" transient_standard_name="sea_level_pressure" />
+    <transient id="6" transient_standard_name="so" />
+    <transient id="7" transient_standard_name="to" />
+    <transient id="8" transient_standard_name="u" />
+    <transient id="9" transient_standard_name="v" />
+    <transient id="10" transient_standard_name="w" />
+    <transient id="11" transient_standard_name="sea_surface_temperature" />
+    <transient id="12" transient_standard_name="eastward_sea_water_velocity" />
+    <transient id="13" transient_standard_name="northward_sea_water_velocity" />
+    <transient id="14" transient_standard_name="ocean_sea_ice_bundle" />
+    <transient id="15" transient_standard_name="clivi" />
+    <transient id="16" transient_standard_name="cllvi" />
+    <transient id="17" transient_standard_name="hfls" />
+    <transient id="18" transient_standard_name="hfss" />
+    <transient id="19" transient_standard_name="hus" />
+    <transient id="20" transient_standard_name="pr" />
+    <transient id="21" transient_standard_name="ps" />
+    <transient id="22" transient_standard_name="pres_msl" />
+    <transient id="23" transient_standard_name="rlds" />
+    <transient id="24" transient_standard_name="rlus" />
+    <transient id="25" transient_standard_name="rlut" />
+    <transient id="26" transient_standard_name="rsds" />
+    <transient id="27" transient_standard_name="rsdt" />
+    <transient id="28" transient_standard_name="rsus" />
+    <transient id="29" transient_standard_name="rsut" />
+    <transient id="30" transient_standard_name="sic" />
+    <transient id="31" transient_standard_name="sit" />
+    <transient id="32" transient_standard_name="ta" />
+    <transient id="33" transient_standard_name="tas" />
+    <transient id="34" transient_standard_name="tauu" />
+    <transient id="35" transient_standard_name="tauv" />
+    <transient id="36" transient_standard_name="ts" />
+    <transient id="37" transient_standard_name="ua" />
+    <transient id="38" transient_standard_name="uas" />
+    <transient id="39" transient_standard_name="va" />
+    <transient id="40" transient_standard_name="vas" />
+    <transient id="41" transient_standard_name="omega" />
+    <transient id="42" transient_standard_name="hydro_runoff_box" />
+    <transient id="43" transient_standard_name="surface_downward_eastward_stress" />
+    <transient id="44" transient_standard_name="surface_downward_northward_stress" />
+    <transient id="45" transient_standard_name="surface_fresh_water_flux" />
+    <transient id="46" transient_standard_name="total_heat_flux" />
+    <transient id="47" transient_standard_name="atmosphere_sea_ice_bundle" />
+    <transient id="48" transient_standard_name="10m_wind_speed" />
+    <transient id="49" transient_standard_name="river_runoff" />
+    <transient id="50" transient_standard_name="co2_mixing_ratio"/>
+    <transient id="51" transient_standard_name="co2_flux"/>
+    <transient id="52" transient_standard_name="sea_level_pressure"/>
+  </transients>
+  <grids>
+    <grid id="1" alias_name="icon_ocean_grid" />
+    <grid id="2" alias_name="healpix_2" />
+    <grid id="3" alias_name="icon_atmos_grid" />
+  </grids>
+  <dates>
+    <start_date>${start_date}</start_date>
+    <end_date>${end_date}</end_date>
+    <calendar>proleptic-gregorian</calendar>
+  </dates>
+  <timestep_unit>ISO_format</timestep_unit>
+  <couples>
+    <couple>
+      <component1 component_id="1" />
+      <component2 component_id="4" />
+      <transient_couple transient_id="11">
+        <source component_ref="1" transient_grid_ref="11" />
+        <target transient_grid_ref="37" />
+        <timestep>
+          <source>${oceTimeStep}</source>
+          <target>${atmTimeStep}</target>
+          <coupling_period operation="average">${couplingTimeStep}</coupling_period>
+          <source_timelag>${oce_lag}</source_timelag>
+          <target_timelag>${atm_lag}</target_timelag>
+        </timestep>
+        <mapping_on_source>true</mapping_on_source>
+        <interpolation_requirements>
+          <interpolation method="n-nearest_neighbor" n="1" weighted="ARITHMETIC_AVERAGE" />
+          <interpolation method="fixed_value" user_value="-999.9" />
+        </interpolation_requirements>
+        <enforce_write_weight_file>false</enforce_write_weight_file>
+      </transient_couple>
+      <transient_couple transient_id="13">
+        <source component_ref="1" transient_grid_ref="13" />
+        <target transient_grid_ref="39" />
+        <timestep>
+          <source>${oceTimeStep}</source>
+          <target>${atmTimeStep}</target>
+          <coupling_period operation="average">${couplingTimeStep}</coupling_period>
+          <source_timelag>${oce_lag}</source_timelag>
+          <target_timelag>${atm_lag}</target_timelag>
+        </timestep>
+        <mapping_on_source>true</mapping_on_source>
+        <interpolation_requirements>
+          <interpolation method="n-nearest_neighbor" n="1" weighted="ARITHMETIC_AVERAGE" />
+          <interpolation method="fixed_value" user_value="-999.9" />
+        </interpolation_requirements>
+        <enforce_write_weight_file>false</enforce_write_weight_file>
+      </transient_couple>
+      <transient_couple transient_id="14">
+        <source component_ref="1" transient_grid_ref="14" />
+        <target transient_grid_ref="40" />
+        <timestep>
+          <source>${oceTimeStep}</source>
+          <target>${atmTimeStep}</target>
+          <coupling_period operation="average">${couplingTimeStep}</coupling_period>
+          <source_timelag>${oce_lag}</source_timelag>
+          <target_timelag>${atm_lag}</target_timelag>
+        </timestep>
+        <mapping_on_source>true</mapping_on_source>
+        <interpolation_requirements>
+          <interpolation method="n-nearest_neighbor" n="1" weighted="ARITHMETIC_AVERAGE" />
+          <interpolation method="fixed_value" user_value="-999.9" />
+        </interpolation_requirements>
+        <enforce_write_weight_file>false</enforce_write_weight_file>
+      </transient_couple>
+      <transient_couple transient_id="12">
+        <source component_ref="1" transient_grid_ref="12" />
+        <target transient_grid_ref="38" />
+        <timestep>
+          <source>${oceTimeStep}</source>
+          <target>${atmTimeStep}</target>
+          <coupling_period operation="average">${couplingTimeStep}</coupling_period>
+          <source_timelag>${oce_lag}</source_timelag>
+          <target_timelag>${atm_lag}</target_timelag>
+        </timestep>
+        <mapping_on_source>true</mapping_on_source>
+        <interpolation_requirements>
+          <interpolation method="n-nearest_neighbor" n="1" weighted="ARITHMETIC_AVERAGE" />
+          <interpolation method="fixed_value" user_value="-999.9" />
+        </interpolation_requirements>
+        <enforce_write_weight_file>false</enforce_write_weight_file>
+      </transient_couple>
+      <transient_couple transient_id="45">
+        <source component_ref="2" transient_grid_ref="31" />
+        <target transient_grid_ref="17" />
+        <timestep>
+          <source>${atmTimeStep}</source>
+          <target>${oceTimeStep}</target>
+          <coupling_period operation="average">${couplingTimeStep}</coupling_period>
+          <source_timelag>${atm_lag}</source_timelag>
+          <target_timelag>${oce_lag}</target_timelag>
+        </timestep>
+        <mapping_on_source>true</mapping_on_source>
+        <interpolation_requirements>
+          <interpolation method="n-nearest_neighbor" n="1" weighted="ARITHMETIC_AVERAGE" />
+          <interpolation method="fixed_value" user_value="-999.9" />
+        </interpolation_requirements>
+        <enforce_write_weight_file>false</enforce_write_weight_file>
+      </transient_couple>
+      <transient_couple transient_id="46">
+        <source component_ref="2" transient_grid_ref="32" />
+        <target transient_grid_ref="18" />
+        <timestep>
+          <source>${atmTimeStep}</source>
+          <target>${oceTimeStep}</target>
+          <coupling_period operation="average">${couplingTimeStep}</coupling_period>
+          <source_timelag>${atm_lag}</source_timelag>
+          <target_timelag>${oce_lag}</target_timelag>
+        </timestep>
+        <mapping_on_source>true</mapping_on_source>
+        <interpolation_requirements>
+          <interpolation method="n-nearest_neighbor" n="1" weighted="ARITHMETIC_AVERAGE" />
+          <interpolation method="fixed_value" user_value="-999.9" />
+        </interpolation_requirements>
+        <enforce_write_weight_file>false</enforce_write_weight_file>
+      </transient_couple>
+      <transient_couple transient_id="5">
+        <source component_ref="2" transient_grid_ref="36" />
+        <target transient_grid_ref="5" />
+        <timestep>
+          <source>${atmTimeStep}</source>
+          <target>${oceTimeStep}</target>
+          <coupling_period operation="average">${couplingTimeStep}</coupling_period>
+          <source_timelag>${atm_lag}</source_timelag>
+          <target_timelag>${oce_lag}</target_timelag>
+        </timestep>
+        <mapping_on_source>true</mapping_on_source>
+        <interpolation_requirements>
+          <interpolation method="n-nearest_neighbor" n="1" weighted="ARITHMETIC_AVERAGE" />
+          <interpolation method="fixed_value" user_value="-999.9" />
+        </interpolation_requirements>
+        <enforce_write_weight_file>false</enforce_write_weight_file>
+      </transient_couple>
+      <transient_couple transient_id="44">
+        <source component_ref="2" transient_grid_ref="30" />
+        <target transient_grid_ref="16" />
+        <timestep>
+          <source>${atmTimeStep}</source>
+          <target>${oceTimeStep}</target>
+          <coupling_period operation="average">${couplingTimeStep}</coupling_period>
+          <source_timelag>${atm_lag}</source_timelag>
+          <target_timelag>${oce_lag}</target_timelag>
+        </timestep>
+        <mapping_on_source>true</mapping_on_source>
+        <interpolation_requirements>
+          <interpolation method="n-nearest_neighbor" n="1" weighted="ARITHMETIC_AVERAGE" />
+          <interpolation method="fixed_value" user_value="-999.9" />
+        </interpolation_requirements>
+        <enforce_write_weight_file>false</enforce_write_weight_file>
+      </transient_couple>
+      <transient_couple transient_id="47">
+        <source component_ref="2" transient_grid_ref="33" />
+        <target transient_grid_ref="19" />
+        <timestep>
+          <source>${atmTimeStep}</source>
+          <target>${oceTimeStep}</target>
+          <coupling_period operation="average">${couplingTimeStep}</coupling_period>
+          <source_timelag>${atm_lag}</source_timelag>
+          <target_timelag>${oce_lag}</target_timelag>
+        </timestep>
+        <mapping_on_source>true</mapping_on_source>
+        <interpolation_requirements>
+          <interpolation method="n-nearest_neighbor" n="1" weighted="ARITHMETIC_AVERAGE" />
+          <interpolation method="fixed_value" user_value="-999.9" />
+        </interpolation_requirements>
+        <enforce_write_weight_file>false</enforce_write_weight_file>
+      </transient_couple>
+      <transient_couple transient_id="48">
+        <source component_ref="2" transient_grid_ref="34" />
+        <target transient_grid_ref="20" />
+        <timestep>
+          <source>${atmTimeStep}</source>
+          <target>${oceTimeStep}</target>
+          <coupling_period operation="average">${couplingTimeStep}</coupling_period>
+          <source_timelag>${atm_lag}</source_timelag>
+          <target_timelag>${oce_lag}</target_timelag>
+        </timestep>
+        <mapping_on_source>true</mapping_on_source>
+        <interpolation_requirements>
+          <interpolation method="n-nearest_neighbor" n="1" weighted="ARITHMETIC_AVERAGE" />
+          <interpolation method="fixed_value" user_value="-999.9" />
+        </interpolation_requirements>
+        <enforce_write_weight_file>false</enforce_write_weight_file>
+      </transient_couple>
+      <transient_couple transient_id="43">
+        <source component_ref="2" transient_grid_ref="29" />
+        <target transient_grid_ref="15" />
+        <timestep>
+          <source>${atmTimeStep}</source>
+          <target>${oceTimeStep}</target>
+          <coupling_period operation="average">${couplingTimeStep}</coupling_period>
+          <source_timelag>${atm_lag}</source_timelag>
+          <target_timelag>${oce_lag}</target_timelag>
+        </timestep>
+        <mapping_on_source>true</mapping_on_source>
+        <interpolation_requirements>
+          <interpolation method="n-nearest_neighbor" n="1" weighted="ARITHMETIC_AVERAGE" />
+          <interpolation method="fixed_value" user_value="-999.9" />
+        </interpolation_requirements>
+        <enforce_write_weight_file>false</enforce_write_weight_file>
+      </transient_couple>
+      <transient_couple transient_id="49">
+        <source component_ref="2" transient_grid_ref="35" />
+        <target transient_grid_ref="21" />
+        <timestep>
+          <source>${atmTimeStep}</source>
+          <target>${oceTimeStep}</target>
+          <coupling_period operation="average">${couplingTimeStep}</coupling_period>
+          <source_timelag>${atm_lag}</source_timelag>
+          <target_timelag>${oce_lag}</target_timelag>
+        </timestep>
+        <mapping_on_source>true</mapping_on_source>
+        <interpolation_requirements>
+          <interpolation method="source_to_target_map" spread_distance="0.3" weighted="ARITHMETIC_AVERAGE" />
+        </interpolation_requirements>
+        <enforce_write_weight_file>false</enforce_write_weight_file>
+      </transient_couple>
+    </couple>
+
+
+
+
+
+
+    <couple>
+      <component1 component_id="2" />
+      <component2 component_id="4" />
+
+      <!--
+      <transient_couple transient_id="36">
+        <source component_ref="2" transient_grid_ref="22" />
+        <target transient_grid_ref="31" />
+        <timestep>
+          <source>${atmTimeStep}</source>
+          <target>${outTimeStep}</target>
+          <coupling_period operation="average">${outTimeStep}</coupling_period>
+          <source_timelag>${atm_lag}</source_timelag>
+          <target_timelag>${out_lag}</target_timelag>
+        </timestep>
+        <mapping_on_source>true</mapping_on_source>
+        <interpolation_requirements>
+          <interpolation method="n-nearest_neighbor" n="1" weighted="ARITHMETIC_AVERAGE" />
+          <interpolation method="fixed_value" user_value="-999.9" />
+        </interpolation_requirements>
+        <enforce_write_weight_file>false</enforce_write_weight_file>
+      </transient_couple>
+      <transient_couple transient_id="38">
+        <source component_ref="2" transient_grid_ref="24" />
+        <target transient_grid_ref="3" />
+        <timestep>
+          <source>${atmTimeStep}</source>
+          <target>${outTimeStep}</target>
+          <coupling_period operation="average">${outTimeStep}</coupling_period>
+          <source_timelag>${atm_lag}</source_timelag>
+          <target_timelag>${out_lag}</target_timelag>
+        </timestep>
+        <mapping_on_source>true</mapping_on_source>
+        <interpolation_requirements>
+          <interpolation method="n-nearest_neighbor" n="1" weighted="ARITHMETIC_AVERAGE" />
+          <interpolation method="fixed_value" user_value="-999.9" />
+        </interpolation_requirements>
+        <enforce_write_weight_file>false</enforce_write_weight_file>
+      </transient_couple>
+      <transient_couple transient_id="35">
+        <source component_ref="2" transient_grid_ref="21" />
+        <target transient_grid_ref="26" />
+        <timestep>
+          <source>${atmTimeStep}</source>
+          <target>${outTimeStep}</target>
+          <coupling_period operation="average">${outTimeStep}</coupling_period>
+          <source_timelag>${atm_lag}</source_timelag>
+          <target_timelag>${out_lag}</target_timelag>
+        </timestep>
+        <mapping_on_source>true</mapping_on_source>
+        <interpolation_requirements>
+          <interpolation method="n-nearest_neighbor" n="1" weighted="ARITHMETIC_AVERAGE" />
+          <interpolation method="fixed_value" user_value="-999.9" />
+        </interpolation_requirements>
+        <enforce_write_weight_file>false</enforce_write_weight_file>
+      </transient_couple>
+      -->
+
+
+      <transient_couple transient_id="37">
+        <source component_ref="2" transient_grid_ref="23" />
+        <target transient_grid_ref="17" />
+        <timestep>
+          <source>${atmTimeStep}</source>
+          <target>${outTimeStep}</target>
+          <coupling_period operation="average">${outTimeStep}</coupling_period>
+          <source_timelag>${atm_lag}</source_timelag>
+          <target_timelag>${out_lag}</target_timelag>
+        </timestep>
+        <mapping_on_source>true</mapping_on_source>
+        <interpolation_requirements>
+          <interpolation method="n-nearest_neighbor" n="1" weighted="ARITHMETIC_AVERAGE" />
+          <interpolation method="fixed_value" user_value="-999.9" />
+        </interpolation_requirements>
+        <enforce_write_weight_file>false</enforce_write_weight_file>
+      </transient_couple>
+
+      <!--
+      <transient_couple transient_id="16">
+        <source component_ref="2" transient_grid_ref="2" />
+        <target transient_grid_ref="16" />
+        <timestep>
+          <source>${atmTimeStep}</source>
+          <target>${outTimeStep}</target>
+          <coupling_period operation="average">${outTimeStep}</coupling_period>
+          <source_timelag>${atm_lag}</source_timelag>
+          <target_timelag>${out_lag}</target_timelag>
+        </timestep>
+        <mapping_on_source>true</mapping_on_source>
+        <interpolation_requirements>
+          <interpolation method="n-nearest_neighbor" n="1" weighted="ARITHMETIC_AVERAGE" />
+          <interpolation method="fixed_value" user_value="-999.9" />
+        </interpolation_requirements>
+        <enforce_write_weight_file>false</enforce_write_weight_file>
+      </transient_couple>
+      <transient_couple transient_id="30">
+        <source component_ref="2" transient_grid_ref="16" />
+        <target transient_grid_ref="27" />
+        <timestep>
+          <source>${atmTimeStep}</source>
+          <target>${outTimeStep}</target>
+          <coupling_period operation="average">${outTimeStep}</coupling_period>
+          <source_timelag>${atm_lag}</source_timelag>
+          <target_timelag>${out_lag}</target_timelag>
+        </timestep>
+        <mapping_on_source>true</mapping_on_source>
+        <interpolation_requirements>
+          <interpolation method="n-nearest_neighbor" n="1" weighted="ARITHMETIC_AVERAGE" />
+          <interpolation method="fixed_value" user_value="-999.9" />
+        </interpolation_requirements>
+        <enforce_write_weight_file>false</enforce_write_weight_file>
+      </transient_couple>
+      <transient_couple transient_id="29">
+        <source component_ref="2" transient_grid_ref="15" />
+        <target transient_grid_ref="8" />
+        <timestep>
+          <source>${atmTimeStep}</source>
+          <target>${outTimeStep}</target>
+          <coupling_period operation="average">${outTimeStep}</coupling_period>
+          <source_timelag>${atm_lag}</source_timelag>
+          <target_timelag>${out_lag}</target_timelag>
+        </timestep>
+        <mapping_on_source>true</mapping_on_source>
+        <interpolation_requirements>
+          <interpolation method="n-nearest_neighbor" n="1" weighted="ARITHMETIC_AVERAGE" />
+          <interpolation method="fixed_value" user_value="-999.9" />
+        </interpolation_requirements>
+        <enforce_write_weight_file>false</enforce_write_weight_file>
+      </transient_couple>
+      <transient_couple transient_id="40">
+        <source component_ref="2" transient_grid_ref="26" />
+        <target transient_grid_ref="4" />
+        <timestep>
+          <source>${atmTimeStep}</source>
+          <target>${outTimeStep}</target>
+          <coupling_period operation="average">${outTimeStep}</coupling_period>
+          <source_timelag>${atm_lag}</source_timelag>
+          <target_timelag>${out_lag}</target_timelag>
+        </timestep>
+        <mapping_on_source>true</mapping_on_source>
+        <interpolation_requirements>
+          <interpolation method="n-nearest_neighbor" n="1" weighted="ARITHMETIC_AVERAGE" />
+          <interpolation method="fixed_value" user_value="-999.9" />
+        </interpolation_requirements>
+        <enforce_write_weight_file>false</enforce_write_weight_file>
+      </transient_couple>
+      <transient_couple transient_id="19">
+        <source component_ref="2" transient_grid_ref="5" />
+        <target transient_grid_ref="24" />
+        <timestep>
+          <source>${atmTimeStep}</source>
+          <target>${outTimeStep}</target>
+          <coupling_period operation="average">${outTimeStep}</coupling_period>
+          <source_timelag>${atm_lag}</source_timelag>
+          <target_timelag>${out_lag}</target_timelag>
+        </timestep>
+        <mapping_on_source>true</mapping_on_source>
+        <interpolation_requirements>
+          <interpolation method="n-nearest_neighbor" n="1" weighted="ARITHMETIC_AVERAGE" />
+          <interpolation method="fixed_value" user_value="-999.9" />
+        </interpolation_requirements>
+        <enforce_write_weight_file>false</enforce_write_weight_file>
+      </transient_couple>
+      <transient_couple transient_id="22">
+        <source component_ref="2" transient_grid_ref="8" />
+        <target transient_grid_ref="22" />
+        <timestep>
+          <source>${atmTimeStep}</source>
+          <target>${outTimeStep}</target>
+          <coupling_period operation="average">${outTimeStep}</coupling_period>
+          <source_timelag>${atm_lag}</source_timelag>
+          <target_timelag>${out_lag}</target_timelag>
+        </timestep>
+        <mapping_on_source>true</mapping_on_source>
+        <interpolation_requirements>
+          <interpolation method="n-nearest_neighbor" n="1" weighted="ARITHMETIC_AVERAGE" />
+          <interpolation method="fixed_value" user_value="-999.9" />
+        </interpolation_requirements>
+        <enforce_write_weight_file>false</enforce_write_weight_file>
+      </transient_couple>
+      <transient_couple transient_id="17">
+        <source component_ref="2" transient_grid_ref="3" />
+        <target transient_grid_ref="7" />
+        <timestep>
+          <source>${atmTimeStep}</source>
+          <target>${outTimeStep}</target>
+          <coupling_period operation="average">${outTimeStep}</coupling_period>
+          <source_timelag>${atm_lag}</source_timelag>
+          <target_timelag>${out_lag}</target_timelag>
+        </timestep>
+        <mapping_on_source>true</mapping_on_source>
+        <interpolation_requirements>
+          <interpolation method="n-nearest_neighbor" n="1" weighted="ARITHMETIC_AVERAGE" />
+          <interpolation method="fixed_value" user_value="-999.9" />
+        </interpolation_requirements>
+        <enforce_write_weight_file>false</enforce_write_weight_file>
+      </transient_couple>
+      <transient_couple transient_id="18">
+        <source component_ref="2" transient_grid_ref="4" />
+        <target transient_grid_ref="6" />
+        <timestep>
+          <source>${atmTimeStep}</source>
+          <target>${outTimeStep}</target>
+          <coupling_period operation="average">${outTimeStep}</coupling_period>
+          <source_timelag>${atm_lag}</source_timelag>
+          <target_timelag>${out_lag}</target_timelag>
+        </timestep>
+        <mapping_on_source>true</mapping_on_source>
+        <interpolation_requirements>
+          <interpolation method="n-nearest_neighbor" n="1" weighted="ARITHMETIC_AVERAGE" />
+          <interpolation method="fixed_value" user_value="-999.9" />
+        </interpolation_requirements>
+        <enforce_write_weight_file>false</enforce_write_weight_file>
+      </transient_couple>
+      <transient_couple transient_id="25">
+        <source component_ref="2" transient_grid_ref="11" />
+        <target transient_grid_ref="14" />
+        <timestep>
+          <source>${atmTimeStep}</source>
+          <target>${outTimeStep}</target>
+          <coupling_period operation="average">${outTimeStep}</coupling_period>
+          <source_timelag>${atm_lag}</source_timelag>
+          <target_timelag>${out_lag}</target_timelag>
+        </timestep>
+        <mapping_on_source>true</mapping_on_source>
+        <interpolation_requirements>
+          <interpolation method="n-nearest_neighbor" n="1" weighted="ARITHMETIC_AVERAGE" />
+          <interpolation method="fixed_value" user_value="-999.9" />
+        </interpolation_requirements>
+        <enforce_write_weight_file>false</enforce_write_weight_file>
+      </transient_couple>
+      <transient_couple transient_id="28">
+        <source component_ref="2" transient_grid_ref="14" />
+        <target transient_grid_ref="9" />
+        <timestep>
+          <source>${atmTimeStep}</source>
+          <target>${outTimeStep}</target>
+          <coupling_period operation="average">${outTimeStep}</coupling_period>
+          <source_timelag>${atm_lag}</source_timelag>
+          <target_timelag>${out_lag}</target_timelag>
+        </timestep>
+        <mapping_on_source>true</mapping_on_source>
+        <interpolation_requirements>
+          <interpolation method="n-nearest_neighbor" n="1" weighted="ARITHMETIC_AVERAGE" />
+          <interpolation method="fixed_value" user_value="-999.9" />
+        </interpolation_requirements>
+        <enforce_write_weight_file>false</enforce_write_weight_file>
+      </transient_couple>
+      <transient_couple transient_id="27">
+        <source component_ref="2" transient_grid_ref="13" />
+        <target transient_grid_ref="10" />
+        <timestep>
+          <source>${atmTimeStep}</source>
+          <target>${outTimeStep}</target>
+          <coupling_period operation="average">${outTimeStep}</coupling_period>
+          <source_timelag>${atm_lag}</source_timelag>
+          <target_timelag>${out_lag}</target_timelag>
+        </timestep>
+        <mapping_on_source>true</mapping_on_source>
+        <interpolation_requirements>
+          <interpolation method="n-nearest_neighbor" n="1" weighted="ARITHMETIC_AVERAGE" />
+          <interpolation method="fixed_value" user_value="-999.9" />
+        </interpolation_requirements>
+        <enforce_write_weight_file>false</enforce_write_weight_file>
+      </transient_couple>
+      <transient_couple transient_id="33">
+        <source component_ref="2" transient_grid_ref="19" />
+        <target transient_grid_ref="2" />
+        <timestep>
+          <source>${atmTimeStep}</source>
+          <target>${outTimeStep}</target>
+          <coupling_period operation="average">${outTimeStep}</coupling_period>
+          <source_timelag>${atm_lag}</source_timelag>
+          <target_timelag>${out_lag}</target_timelag>
+        </timestep>
+        <mapping_on_source>true</mapping_on_source>
+        <interpolation_requirements>
+          <interpolation method="n-nearest_neighbor" n="1" weighted="ARITHMETIC_AVERAGE" />
+          <interpolation method="fixed_value" user_value="-999.9" />
+        </interpolation_requirements>
+        <enforce_write_weight_file>false</enforce_write_weight_file>
+      </transient_couple>
+      <transient_couple transient_id="15">
+        <source component_ref="2" transient_grid_ref="1" />
+        <target transient_grid_ref="15" />
+        <timestep>
+          <source>${atmTimeStep}</source>
+          <target>${outTimeStep}</target>
+          <coupling_period operation="average">${outTimeStep}</coupling_period>
+          <source_timelag>${atm_lag}</source_timelag>
+          <target_timelag>${out_lag}</target_timelag>
+        </timestep>
+        <mapping_on_source>true</mapping_on_source>
+        <interpolation_requirements>
+          <interpolation method="n-nearest_neighbor" n="1" weighted="ARITHMETIC_AVERAGE" />
+          <interpolation method="fixed_value" user_value="-999.9" />
+        </interpolation_requirements>
+        <enforce_write_weight_file>false</enforce_write_weight_file>
+      </transient_couple>
+      <transient_couple transient_id="34">
+        <source component_ref="2" transient_grid_ref="20" />
+        <target transient_grid_ref="25" />
+        <timestep>
+          <source>${atmTimeStep}</source>
+          <target>${outTimeStep}</target>
+          <coupling_period operation="average">${outTimeStep}</coupling_period>
+          <source_timelag>${atm_lag}</source_timelag>
+          <target_timelag>${out_lag}</target_timelag>
+        </timestep>
+        <mapping_on_source>true</mapping_on_source>
+        <interpolation_requirements>
+          <interpolation method="n-nearest_neighbor" n="1" weighted="ARITHMETIC_AVERAGE" />
+          <interpolation method="fixed_value" user_value="-999.9" />
+        </interpolation_requirements>
+        <enforce_write_weight_file>false</enforce_write_weight_file>
+      </transient_couple>
+      <transient_couple transient_id="21">
+        <source component_ref="2" transient_grid_ref="7" />
+        <target transient_grid_ref="21" />
+        <timestep>
+          <source>${atmTimeStep}</source>
+          <target>${outTimeStep}</target>
+          <coupling_period operation="average">${outTimeStep}</coupling_period>
+          <source_timelag>${atm_lag}</source_timelag>
+          <target_timelag>${out_lag}</target_timelag>
+        </timestep>
+        <mapping_on_source>true</mapping_on_source>
+        <interpolation_requirements>
+          <interpolation method="n-nearest_neighbor" n="1" weighted="ARITHMETIC_AVERAGE" />
+          <interpolation method="fixed_value" user_value="-999.9" />
+        </interpolation_requirements>
+        <enforce_write_weight_file>false</enforce_write_weight_file>
+      </transient_couple>
+      <transient_couple transient_id="39">
+        <source component_ref="2" transient_grid_ref="25" />
+        <target transient_grid_ref="18" />
+        <timestep>
+          <source>${atmTimeStep}</source>
+          <target>${outTimeStep}</target>
+          <coupling_period operation="average">${outTimeStep}</coupling_period>
+          <source_timelag>${atm_lag}</source_timelag>
+          <target_timelag>${out_lag}</target_timelag>
+        </timestep>
+        <mapping_on_source>true</mapping_on_source>
+        <interpolation_requirements>
+          <interpolation method="n-nearest_neighbor" n="1" weighted="ARITHMETIC_AVERAGE" />
+          <interpolation method="fixed_value" user_value="-999.9" />
+        </interpolation_requirements>
+        <enforce_write_weight_file>false</enforce_write_weight_file>
+      </transient_couple>
+      <transient_couple transient_id="42">
+        <source component_ref="2" transient_grid_ref="28" />
+        <target transient_grid_ref="20" />
+        <timestep>
+          <source>${atmTimeStep}</source>
+          <target>${outTimeStep}</target>
+          <coupling_period operation="average">${outTimeStep}</coupling_period>
+          <source_timelag>${atm_lag}</source_timelag>
+          <target_timelag>${out_lag}</target_timelag>
+        </timestep>
+        <mapping_on_source>true</mapping_on_source>
+        <interpolation_requirements>
+          <interpolation method="n-nearest_neighbor" n="1" weighted="ARITHMETIC_AVERAGE" />
+          <interpolation method="fixed_value" user_value="-999.9" />
+        </interpolation_requirements>
+        <enforce_write_weight_file>false</enforce_write_weight_file>
+      </transient_couple>
+      <transient_couple transient_id="24">
+        <source component_ref="2" transient_grid_ref="10" />
+        <target transient_grid_ref="13" />
+        <timestep>
+          <source>${atmTimeStep}</source>
+          <target>${outTimeStep}</target>
+          <coupling_period operation="average">${outTimeStep}</coupling_period>
+          <source_timelag>${atm_lag}</source_timelag>
+          <target_timelag>${out_lag}</target_timelag>
+        </timestep>
+        <mapping_on_source>true</mapping_on_source>
+        <interpolation_requirements>
+          <interpolation method="n-nearest_neighbor" n="1" weighted="ARITHMETIC_AVERAGE" />
+          <interpolation method="fixed_value" user_value="-999.9" />
+        </interpolation_requirements>
+        <enforce_write_weight_file>false</enforce_write_weight_file>
+      </transient_couple>
+      <transient_couple transient_id="26">
+        <source component_ref="2" transient_grid_ref="12" />
+        <target transient_grid_ref="11" />
+        <timestep>
+          <source>${atmTimeStep}</source>
+          <target>${outTimeStep}</target>
+          <coupling_period operation="average">${outTimeStep}</coupling_period>
+          <source_timelag>${atm_lag}</source_timelag>
+          <target_timelag>${out_lag}</target_timelag>
+        </timestep>
+        <mapping_on_source>true</mapping_on_source>
+        <interpolation_requirements>
+          <interpolation method="n-nearest_neighbor" n="1" weighted="ARITHMETIC_AVERAGE" />
+          <interpolation method="fixed_value" user_value="-999.9" />
+        </interpolation_requirements>
+        <enforce_write_weight_file>false</enforce_write_weight_file>
+      </transient_couple>
+      <transient_couple transient_id="32">
+        <source component_ref="2" transient_grid_ref="18" />
+        <target transient_grid_ref="19" />
+        <timestep>
+          <source>${atmTimeStep}</source>
+          <target>${outTimeStep}</target>
+          <coupling_period operation="average">${outTimeStep}</coupling_period>
+          <source_timelag>${atm_lag}</source_timelag>
+          <target_timelag>${out_lag}</target_timelag>
+        </timestep>
+        <mapping_on_source>true</mapping_on_source>
+        <interpolation_requirements>
+          <interpolation method="n-nearest_neighbor" n="1" weighted="ARITHMETIC_AVERAGE" />
+          <interpolation method="fixed_value" user_value="-999.9" />
+        </interpolation_requirements>
+        <enforce_write_weight_file>false</enforce_write_weight_file>
+      </transient_couple>
+      <transient_couple transient_id="41">
+        <source component_ref="2" transient_grid_ref="27" />
+        <target transient_grid_ref="23" />
+        <timestep>
+          <source>${atmTimeStep}</source>
+          <target>${outTimeStep}</target>
+          <coupling_period operation="average">${outTimeStep}</coupling_period>
+          <source_timelag>${atm_lag}</source_timelag>
+          <target_timelag>${out_lag}</target_timelag>
+        </timestep>
+        <mapping_on_source>true</mapping_on_source>
+        <interpolation_requirements>
+          <interpolation method="n-nearest_neighbor" n="1" weighted="ARITHMETIC_AVERAGE" />
+          <interpolation method="fixed_value" user_value="-999.9" />
+        </interpolation_requirements>
+        <enforce_write_weight_file>false</enforce_write_weight_file>
+      </transient_couple>
+      <transient_couple transient_id="20">
+        <source component_ref="2" transient_grid_ref="6" />
+        <target transient_grid_ref="1" />
+        <timestep>
+          <source>${atmTimeStep}</source>
+          <target>${outTimeStep}</target>
+          <coupling_period operation="average">${outTimeStep}</coupling_period>
+          <source_timelag>${atm_lag}</source_timelag>
+          <target_timelag>${out_lag}</target_timelag>
+        </timestep>
+        <mapping_on_source>true</mapping_on_source>
+        <interpolation_requirements>
+          <interpolation method="n-nearest_neighbor" n="1" weighted="ARITHMETIC_AVERAGE" />
+          <interpolation method="fixed_value" user_value="-999.9" />
+        </interpolation_requirements>
+        <enforce_write_weight_file>false</enforce_write_weight_file>
+      </transient_couple>
+      <transient_couple transient_id="23">
+        <source component_ref="2" transient_grid_ref="9" />
+        <target transient_grid_ref="12" />
+        <timestep>
+          <source>${atmTimeStep}</source>
+          <target>${outTimeStep}</target>
+          <coupling_period operation="average">${outTimeStep}</coupling_period>
+          <source_timelag>${atm_lag}</source_timelag>
+          <target_timelag>${out_lag}</target_timelag>
+        </timestep>
+        <mapping_on_source>true</mapping_on_source>
+        <interpolation_requirements>
+          <interpolation method="n-nearest_neighbor" n="1" weighted="ARITHMETIC_AVERAGE" />
+          <interpolation method="fixed_value" user_value="-999.9" />
+        </interpolation_requirements>
+        <enforce_write_weight_file>false</enforce_write_weight_file>
+      </transient_couple>
+      <transient_couple transient_id="31">
+        <source component_ref="2" transient_grid_ref="17" />
+        <target transient_grid_ref="28" />
+        <timestep>
+          <source>${atmTimeStep}</source>
+          <target>${outTimeStep}</target>
+          <coupling_period operation="average">${outTimeStep}</coupling_period>
+          <source_timelag>${atm_lag}</source_timelag>
+          <target_timelag>${out_lag}</target_timelag>
+        </timestep>
+        <mapping_on_source>true</mapping_on_source>
+        <interpolation_requirements>
+          <interpolation method="n-nearest_neighbor" n="1" weighted="ARITHMETIC_AVERAGE" />
+          <interpolation method="fixed_value" user_value="-999.9" />
+        </interpolation_requirements>
+        <enforce_write_weight_file>false</enforce_write_weight_file>
+      </transient_couple>
+      -->
+
+    </couple>
+  </couples>
+  <created tool="build_coupling.py" />
+</coupling>
+EOF
+
+# yac-io configuration
+
+cat > yaco.yml << EOF
+output: fdb
+
+grid:
+  type: healpix
+  nside: 2
+  order: nested
+  name: healpix_2
+
+yac_input:
+  ranks:
+    ${tot_tasks}:
+      name: healpix_io
+      yac_xml: coupling.xml
+      yac_xsd: coupling.xsd
+      collections:
+        - name: ua
+          size: ${atm_levels}
+      start_date: ${start_date}
+      end_date: ${end_date}
+      time_step: ${outTimeStep}
+      calendar: gregorian
+
+fdb_writer:
+  fdb_config: fdb.yml
+  fdb_key:
+    class: de
+    expid: de1
+    version: 1
+    source: icon
+    levtype: 1
+    grid:
+      use: grid
+    level: 0
+    datetime:
+      use: datetime
+      datetime: "%Y%m%D %H%M%S"
+  grib:
+    centre: ecmf
+    gridType: unstructured_grid # TODO replace with below
+    # gridType: healpix
+    # orderingConvention: nested
+    # Nside: 2
+    significanceOfReferenceTime: 2
+    typeOfProcessedData: 1
+    typeOfGeneratingProcess: 2
+  collections:
+    ua:
+      fdb_key:
+        variable: u_component_of_wind
+        levtype: 150
+        level:
+          use: collection_index
+      grib:
+        discipline: 0
+        parameterCategory: 2
+        parameterNumber: 2
+        scaledValueOfSecondFixedSurface:
+          use: collection_index
+          add: 1
+EOF
+
+#-------
+
+cat > fdb.yml << EOF
+type: local
+engine: toc
+schema: ${FDB_SCHEMA}
+spaces:
+- handler: Default
+  roots:
+  - path: ${FDB_PATH}
+EOF
+
+#-------
+
+cat > schema << EOF
+[ class:Default, expid:Default, version:Integer
+  [ source:Default, variable:Default, levtype:Integer, grid:Default
+    [ level:Double, datetime:Default ]]]
+EOF
+
+#-----------------------------------------------------------------------------
+# II. ATMOSPHERE and LAND
+#-----------------------------------------------------------------------------
+#
+# atmosphere namelist
+# -------------------
+
+cat > NAMELIST_atm << EOF
+
+&coupling_mode_nml
+    coupled_mode = .true.
+/
+&parallel_nml
+    nproma = 500
+    nproma_sub = 500
+    num_io_procs = 0
+    nblocks_c = 1
+    io_proc_chunk_size = 36
+    io_process_stride = 8
+    num_restart_procs = 4
+/
+&grid_nml
+    dynamics_grid_filename = 'icon_grid_G.nc'
+/
+&run_nml
+    num_lev = 90 ! number of full levels
+    modeltimestep = 'PT75S'
+    ltestcase = .false. ! run testcase
+    ldynamics = .true. ! dynamics
+    ltransport = .true. ! transport
+    iforcing = 2 ! 0: none, 1: HS, 2: ECHAM, 3: NWP
+    output = 'nml'
+    msg_level = 10 ! level of details report during integration
+    restart_filename = '${EXPNAME}_restart_atm_${end_date}.mfr'
+    activate_sync_timers = .true.
+    timers_level = 10
+/
+&extpar_nml
+    itopo = 1 ! 1: read topography from the grid file
+/
+&initicon_nml
+    init_mode = 2 ! 2: initialize from IFS analysis
+    ifs2icon_filename = 'ifs2icon.nc'
+/
+&nonhydrostatic_nml
+    damp_height = 40000. ! [m]
+    rayleigh_coeff = 1.2 ! set to 0.1001 for rerun with little change
+    vwind_offctr = 0.2
+    divdamp_fac = 0.004
+    divdamp_order = 24
+    divdamp_trans_end = 17500
+    divdamp_trans_start = 12500
+    divdamp_type = 32
+    exner_expol = 0.333
+    hbot_qvsubstep = 16000.
+    htop_moist_proc = 22500.
+    iadv_rhotheta = 2
+    igradp_method = 3
+    itime_scheme = 4
+    ivctype = 2
+    l_open_ubc = .false.
+    l_zdiffu_t = .true.
+    lhdiff_rcf = .true.
+    thhgtd_zdiffu = 125.
+    thslp_zdiffu = 0.02
+/
+&interpol_nml
+/
+&sleve_nml
+    min_lay_thckn = 25. ! [m]
+    top_height = 75000. ! [m]
+    stretch_fac = 0.9
+    decay_scale_1 = 4000. ! [m]
+    decay_scale_2 = 2500. ! [m]
+    decay_exp = 1.2
+    flat_height = 16000. ! [m]
+    htop_thcknlimit = 14000.
+    max_lay_thckn = 400.
+/
+&diffusion_nml
+/
+&transport_nml
+    ihadv_tracer = 20, 20, 20, 20, 20, 20
+    itype_hlimit = 3, 4, 4, 4, 4, 4
+    ivadv_tracer = 3, 3, 3, 3, 3, 3
+    tracer_names = 'hus', 'clw', 'cli', 'qr', 'qs', 'qg'
+/
+&aes_phy_nml
+    ! domain 1
+    ! atmospheric physics ("" = never)
+    aes_phy_config(1)%dt_rad = 'PT30M'
+    aes_phy_config(1)%dt_vdf = 'PT75S'
+    ! surface (true or false)
+    aes_phy_config(1)%ljsb = .true.
+    aes_phy_config(1)%lamip = .false.
+    aes_phy_config(1)%lice = .true.
+    aes_phy_config(1)%lmlo = .false.
+    aes_phy_config(1)%llake = .true.
+    aes_phy_config(1)%dt_mig = 'PT75S'
+    aes_phy_config(1)%iqneg_d2p = 2
+    aes_phy_config(1)%iqneg_p2d = 2
+/
+&aes_rad_nml
+    ! domain 1
+    aes_rad_config(1)%isolrad = 6
+    aes_rad_config(1)%irad_h2o = 1
+    aes_rad_config(1)%irad_co2 = 2
+    aes_rad_config(1)%irad_ch4 = 12
+    aes_rad_config(1)%irad_n2o = 12
+    aes_rad_config(1)%irad_o3 = 6 ! constant annual cycle climatology
+    aes_rad_config(1)%irad_o2 = 2
+    aes_rad_config(1)%irad_cfc11 = 2
+    aes_rad_config(1)%irad_cfc12 = 2
+    aes_rad_config(1)%irad_aero = 12
+    aes_rad_config(1)%vmr_co2 = 312.82e-06 ! constant ratio (348.0e-6)
+    aes_rad_config(1)%vmr_ch4 = 1163.80e-09 ! constant ratio (1650.0e-9)
+    aes_rad_config(1)%vmr_n2o = 289.74e-09 ! constant ratio (306.0e-9)
+    aes_rad_config(1)%lyr_perp = .true.
+    aes_rad_config(1)%yr_perp = 1950
+    aes_rad_config(1)%vmr_cfc11 = 0.89388e-12
+    aes_rad_config(1)%vmr_cfc12 = 6.3823e-12
+/
+&aes_gwd_nml
+/
+&aes_sso_nml
+/
+&aes_vdf_nml
+    aes_vdf_config(1)%pr0 = 0.7
+    aes_vdf_config(1)%turb = 2
+/
+&aes_cnv_nml
+/
+&aes_cld_nml
+/
+&aes_cov_nml
+    aes_cov_config(1)%cqx = 1.e-6
+    aes_cov_config(1)%icov = 3
+/
+&ccycle_nml
+/
+! Parameters for all output files
+! -------------------------------
+&io_nml
+    output_nml_dict = 'dict.txt'
+    netcdf_dict = 'dict.txt'
+    itype_pres_msl = 4
+    restart_file_type = 5
+    ! restart_write_mode = 'joint procs multifile' ! not useful in r2b4 setup
+    ! lnetcdf_flt64_output = .true. ! 64 bit output in all files
+    ! lkeep_in_sync = .true. ! sync after each timestep
+    write_initial_state = .false.
+    restart_write_mode = 'joint procs multifile'
+    write_last_restart = .true.
+/
+&sea_ice_nml
+    albedow_sim = 0.10
+    albi = 0.70
+    albim = 0.65
+    albs = 0.80
+    albsm = 0.65
+    i_ice_dyn = 1
+    i_ice_therm = 1
+    leadclose_1 = 0.25
+    leadclose_2n = 0.666
+/
+&aes_cop_nml
+    aes_cop_config(1)%cinhomi = 1.0
+    aes_cop_config(1)%cinhoml1 = 0.4
+    aes_cop_config(1)%cinhoml2 = 0.4
+    aes_cop_config(1)%cinhoml3 = 0.4
+    aes_cop_config(1)%cn1lnd = 50.0
+    aes_cop_config(1)%cn1sea = 50.0
+    aes_cop_config(1)%cn2lnd = 220.0
+    aes_cop_config(1)%cn2sea = 100.0
+/
+&aes_mig_nml
+    aes_mig_config(1)%mu_rain = 0.5
+    aes_mig_config(1)%rain_n0_factor = 0.1
+    aes_mig_config(1)%v0snow = 25.
+/
+
+EOF
+
+# jsbach namelist
+# ---------------
+
+cat > NAMELIST_lnd << EOF
+
+&jsb_model_nml
+    usecase = 'jsbach_lite'
+    use_lakes = .true.
+    fract_filename = 'bc_land_frac.nc'
+    init_from_ifs = .true.
+/
+&jsb_seb_nml
+    bc_filename = 'bc_land_phys.nc'
+    ic_filename = 'ic_land_soil.nc'
+/
+&jsb_rad_nml
+    use_alb_veg_simple = .true. ! if jsbach_lite
+    bc_filename = 'bc_land_phys.nc'
+    ic_filename = 'ic_land_soil.nc'
+/
+&jsb_turb_nml
+    bc_filename = 'bc_land_phys.nc'
+    ic_filename = 'ic_land_soil.nc'
+/
+&jsb_sse_nml
+    l_heat_cap_map = .false.
+    l_heat_cond_map = .false.
+    l_heat_cap_dyn = .false.
+    l_heat_cond_dyn = .false.
+    l_snow = .true.
+    l_dynsnow = .true.
+    l_freeze = .true.
+    l_supercool = .false.
+    bc_filename = 'bc_land_soil.nc'
+    ic_filename = 'ic_land_soil.nc'
+/
+&jsb_hydro_nml
+    bc_filename = 'bc_land_soil.nc'
+    ic_filename = 'ic_land_soil.nc'
+    bc_sso_filename = 'bc_land_sso.nc'
+/
+&jsb_assimi_nml
+    active = .false. ! if jsbach_pfts
+/
+&jsb_pheno_nml
+    scheme = 'climatology' ! 'climatology' if jsbach_lite
+    bc_filename = 'bc_land_phys.nc'
+    ic_filename = 'ic_land_soil.nc'
+/
+&jsb_carbon_nml
+    active = .false.
+    bc_filename = 'bc_land_carbon.nc'
+    ic_filename = 'ic_land_carbon.nc'
+    read_cpools = .false.
+/
+&jsb_fuel_nml
+    active = .false.
+    fuel_algorithm = 1
+/
+&jsb_disturb_nml
+    active = .false.
+    ic_filename = 'ic_land_soil.nc'
+    bc_filename = 'bc_land_phys.nc'
+    fire_algorithm = 1
+    windbreak_algorithm = 1
+    lburn_pasture = .false.
+/
+&jsb_hd_nml
+    active = .true.
+    routing_scheme = 'full' ! 'zero': simple scheme with zero runoff everywhere
+    diag_water_budget = .true.
+    debug_hd = .false.
+    enforce_water_budget = .false. ! stop in case of water conservation problem
+    bc_filename = 'bc_land_hd.nc'
+    ic_filename = 'ic_land_hd.nc'
+    read_initial_reservoirs = ${read_initial_reservoirs}
+/
+
+EOF
+
+#-----------------------------------------------------------------------------
+# III. OCEAN and SEA-ICE (and HAMOCC) 
+#-----------------------------------------------------------------------------
+#
+# ocean namelist
+# --------------
+
+cat > NAMELIST_oce << EOF
+
+&coupling_mode_nml
+    coupled_mode = .true.
+/
+&parallel_nml
+    nproma = 32
+    num_io_procs = 0
+    num_prefetch_proc = 0
+    l_fast_sum = .false.
+    num_restart_procs = 4
+    p_test_run = .false.
+/
+&grid_nml
+    dynamics_grid_filename = 'icon_grid_O.nc'
+    use_dummy_cell_closure = .true.
+    use_duplicated_connectivity = .false.
+/
+&dynamics_nml
+    iequations = -1 ! -1: hydrost. ocean model
+/
+&run_nml
+    modeltimestep = 'PT300S'
+    output = 'nml' ! namelist controlled output scheme
+    activate_sync_timers = .true.
+    profiling_output = 1 ! aggregated: 1; detailed: 2; in files: 3
+    msg_timestamp = .false.
+    timers_level = 10
+    debug_check_level = 1
+    restart_filename = '${EXPNAME}_restart_oce_${end_date}.mfr'
+/
+&dbg_index_nml
+    dbg_lat_in = 30.0
+    dbg_lon_in = -30.0
+    idbg_elev = 5
+    idbg_mxmn = 0
+    idbg_slev = 1
+    idbg_val = 0
+    str_mod_tst = 'all'
+/
+&ocean_dynamics_nml
+    n_zlev = 40
+    dzlev_m = 12.0, 10.0, 10.0, 10.0, 10.0, 10.0, 13.0, 15.0, 20.0, 25.0, 30.0,
+              35.0, 40.0, 45.0, 50.0, 55.0, 60.0, 70.0, 80.0, 90.0, 100.0,
+              110.0, 120.0, 130.0, 140.0, 150.0, 170.0, 180.0, 190.0, 200.0,
+              220.0, 250.0, 270.0, 300.0, 350.0, 400.0, 450.0, 500.0, 500.0,
+              600.0
+    l_edge_based = .false. ! edge- or cell-based mimetic discretization
+    select_solver = 4 ! 1=gmres_oce_old; 2=ocean_restart_gmres, 3=mixed precisison restart, 4=CG (default) 5=CGJ 6=BiCG 7=GMRES restart (legacy) 8=MINRES
+    use_absolute_solver_tolerance = .true.
+    fast_performance_level = 200 ! performance level 12: for cell-based; 5: default
+    use_continuity_correction = .true. ! height adjustment according to vertical velocity in dynamics
+    cfl_check = .false.
+    cfl_write = .false.
+    i_bc_veloc_top = 1
+    i_bc_veloc_bot = 1 ! 0: (def) bottom friction off, 1: on
+    l_lhs_direct = .false.
+    l_partial_cells = .false.
+    select_lhs = 1
+    solver_max_restart_iterations = 100
+    solver_tolerance = 1.0E-10
+    minverticallevels = 10
+    solver_max_iter_per_restart = 14
+    vert_cor_type = 1
+/
+&ocean_tracer_transport_nml
+    flux_calculation_horz = 5 ! 1=upwind, 2=central, 3=Lax-Friedrichs, 4=Miura, 5=FCT with Zalesak limiter (default)
+    flux_calculation_vert = 7 ! 6=adpo; 7=upwind biased ppm (default); 8=FCT with Zalesak limiter
+    ! define low and high order methods to be used in
+    ! horizontal flux corrected transport methods
+    ! (flux_calculation_horz=4,5)
+    fct_low_order_flux = 1 ! horizontal low  order method: 1=upwind (def), no other implemented
+    fct_high_order_flux = 5 ! horizontal high order method: 1=upwind, 2=central, 3=lax_friedrichs, 4=miura_order1
+    fct_limiter_horz = 100 ! Zalesak
+    threshold_min_t = -2.0
+/
+&ocean_horizontal_diffusion_nml
+    laplacian_form = 1 ! 1=curlcurl-graddiv
+    velocitydiffusion_order = 2 ! 1=laplacian (def); 2=biharmonic; 21=biharmonic+laplacian (for the laplacian leith)
+    harmonicviscosity_scaling = 1
+    harmonicviscosity_reference = 0.0 ! [m2/s] constant horizontal viscosity coefficient for velocity
+    tracerhorizontaldiffusion_scaling = 1
+    temperature_horizontaldiffusion_background = 0.0
+    temperature_horizontaldiffusion_reference = 0
+    salinity_horizontaldiffusion_background = 0.0
+    salinity_horizontaldiffusion_reference = 0
+    biharmonicviscosity_background = 0.0
+    biharmonicviscosity_reference = 2.0E10
+    biharmonicviscosity_scaling = 1
+/
+&ocean_vertical_diffusion_nml
+    alpha_tke = 30.0
+    c_eps = 0.7
+    cd = 3.75
+    kappam_max = 100.0
+    kappam_min = 0.0
+    mxl_min = 1.d-8
+    only_tke = .true.
+    ppscheme_type = 0
+    tke_min = 1.d-6
+    tke_mxl_choice = 2
+    tke_surf_min = 1.d-4
+    use_lbound_dirichlet = .false.
+    use_ubound_dirichlet = .false.
+    vert_mix_type = 2
+    clc = 0.15 ! Factor in vertical Langmuir circulation (Axell, 2002: clc=0.1)
+    l_lc = .true. ! Use Langmuir parameterisation (Axell, 2002)
+/
+&ocean_gentmcwilliamsredi_nml
+    gmredi_configuration = 0 ! 0=cartesian diffusion; 1=GM-Redi: bolus advection + isopycnal diffusion
+    tapering_scheme = 1
+    gmredi_usesrelativemaxslopes = .false.
+    s_max = 1.0e-3 ! 1.0
+    s_d = 1.0e-4 ! 5e-3 to 5e-4
+    k_tracer_gm_kappa_parameter = 0.0
+    k_tracer_isoneutral_parameter = 0.0 ! value for cell-based cartesian diffusion - mpiom: 1000/400km = 400/160km
+    k_tracer_dianeutral_parameter = 0.0 ! 1.0E-5
+    switch_off_diagonal_vert_expl = .true.
+    gmredi_combined_diagnostic = .false.
+    revert_vertical_recon_and_transposed = .true.
+    slope_calc_via_temperture_salinity = .true.
+    include_slope_squared_implicit = .true. ! think of l_with_vert_tracer_diffusion
+    switch_on_tapering_horizontal_diffusion = .true.
+/
+&ocean_physics_nml
+    i_sea_ice = 1 ! 0 = no sea ice; 1 = sea ice model on; default=1
+/
+&ocean_forcing_nml
+    iforc_oce = 14 ! ocean forcing: 14 from coupling via YAC
+    forcing_windstress_u_type = 2 ! 0: zero wind stress, 1: read from file, 2: none
+    forcing_windstress_v_type = 2 ! 0: zero wind stress, 1: read from file, 2: none
+    limit_seaice = .true. ! default: TRUE
+    seaice_limit = 6.0 ! hard limit set to 80% of upper layer for sea ice
+    lfix_salt_content = .true. ! fix global ocean+ice salt content to constant (false)
+    jerlov_atten = 0.08
+    jerlov_bluefrac = 0.36
+    lcheck_salt_content = .false.
+    limit_elevation = .false.
+    limit_seaice_type = 1
+    lswr_jerlov = .true.
+    tides_mod = 1
+    use_tides = .false.
+    atm_pressure_included_in_icedyn = .true.
+    atm_pressure_included_in_ocedyn = .true.
+/
+&ocean_diagnostics_nml
+    diagnose_for_heat_content = .true.
+    diagnose_for_horizontalvelocity = .false.
+    diagnose_for_tendencies = .false.
+    diagnostics_level = 1
+/
+&io_nml
+    restart_file_type = 5
+    write_last_restart = .true.
+    ! restart_write_mode = 'joint procs multifile' ! not yet available in ocean model
+    ! lnetcdf_flt64_output = .true. ! 64 bit output in all files
+    ! lkeep_in_sync = .true. ! sync after each timestep
+    write_initial_state = .false.
+    restart_write_mode = 'joint procs multifile'
+/
+&sea_ice_nml
+    albedow_sim = 0.10
+    albi = 0.70
+    albim = 0.65
+    albs = 0.80
+    albsm = 0.65
+    i_ice_dyn = 1
+    i_ice_therm = 1
+    leadclose_1 = 0.25
+    leadclose_2n = 0.666
+/
+&ocean_initialConditions_nml
+    initial_salinity_type                      = 0                ! 0: none, 1: read S from initial_state.nc
+    initial_temperature_type                   = 0                ! 0: none, 1: read T from initial_state.nc
+    initialize_fromRestart                     = ${initialize_fromrestart}
+/
+EOF
+
+# Selectively add disturbance to overcome model failure
+# ------------------------------------------------
+
+if [[ "$disturbance_command" ]]
+then   
+    echo "disturbing model for start date ${start_date}, using '$disturbance_command'"
+    eval "$disturbance_command"
+fi
+
+#-----------------------------------------------------------------------------
+
+#=============================================================================
+#
+# This section of the run script prepares and starts the model integration. 
+#
+#-----------------------------------------------------------------------------
+
+#-----------------------------------------------------------------------------
+# Provide input files
+# $Id: format.tmpl 9264 2021-06-21 21:24:57Z m221078 $
+#
+# [files]
+
+# [files.atmosphere]
+atmosphere_dir="${icon_data_rootFolder}"/grids/public/mpim
+
+# [files.atmosphere.mapped]
+mapped_dir=$atmosphere_dir/0033
+ln -snvf $mapped_dir/icon_grid_0033_R02B08_G.nc icon_grid_G.nc
+
+# [files.atmosphere.mapped.initial]
+initial_dir=$mapped_dir/initial_condition
+ln -snvf $initial_dir/ifs2icon_1990010100_R02B08_G.nc ifs2icon.nc
+
+y0=${start_date::4}
+yN=${end_date::4}
+
+ozone_dir=$mapped_dir/ozone
+
+# [files.atmosphere.mapped.ozone]
+for((yr = y0 + -1; yr <= yN + 1; ++yr)) 
+do
+    label=1989
+        ((yr >= 1989)) && label=${yr}
+        ((yr >= 2015)) && label=2014
+    ln -snvf $ozone_dir/bc_ozone_historical_${label}.nc .
+done # offsets
+
+# [files.atmosphere.mapped.ocean_surface]
+ocean_surface_dir=$mapped_dir/sst_and_seaice
+ln -snvf $ocean_surface_dir/bc_sic_1988-1992.nc bc_sic.nc
+ln -snvf $ocean_surface_dir/bc_sst_1988-1992.nc bc_sst.nc
+
+# [files.atmosphere.mapped.aerosols]
+aerosols_dir=$mapped_dir/aerosol_kinne
+ln -snvf $aerosols_dir/bc_aeropt_kinne_lw_b16_coa.nc .
+ln -snvf $aerosols_dir/bc_aeropt_kinne_sw_b14_coa.nc .
+
+for((yr = y0 + -1; yr <= yN + 1; ++yr)) 
+do
+    label=1989
+        ((yr >= 1989)) && label=${yr}
+        ((yr >= 2023)) && label=2022
+
+   ln -snvf $aerosols_dir/bc_aeropt_kinne_sw_b14_fin_${label}.nc  .
+
+done # offsets
+
+# [files.atmosphere.restart]
+restart_dir="${experiments_dir}"/"${EXPNAME}"/restarts 
+
+if [ ! -d "${restart_dir}" ]; then
+   mkdir ${restart_dir}
+fi
+
+# If second chunk read/write from mfr (multirestartfile)
+if [ "${lrestart}" == ".true." ]; then
+      ln -snvf $restart_dir/"${EXPNAME}"_restart_atm_${end_date}.mfr \
+      multifile_restart_atm.mfr
+fi
+# [files.atmosphere.model]
+model_dir="${MODEL_DIR}"
+
+# [files.atmosphere.model.data]
+data_dir=$model_dir/data
+ln -snvf $data_dir/ECHAM6_CldOptProps_rrtmgp_lw.nc \
+    rrtmgp-cloud-optics-coeffs-lw.nc
+ln -snvf $data_dir/ECHAM6_CldOptProps_rrtmgp_sw.nc \
+    rrtmgp-cloud-optics-coeffs-sw.nc
+
+# [files.atmosphere.model.rrtmgp]
+rrtmgp_dir=$model_dir/externals/rte-rrtmgp/rrtmgp/data
+ln -snvf $rrtmgp_dir/rrtmgp-data-lw-g256-2018-12-04.nc coefficients_lw.nc
+ln -snvf $rrtmgp_dir/rrtmgp-data-sw-g224-2018-12-04.nc coefficients_sw.nc
+
+# [files.atmosphere.model.run]
+run_dir=$model_dir/run
+cp -fv $run_dir/dict.iconam.mpim dict.txt
+
+# [files.land]
+land_dir="${icon_data_rootFolder}"/grids/public/mpim
+
+# [files.land.mapped]
+mapped_dir=$land_dir/0033-0034/land
+ln -snvf $mapped_dir/ic_land_soil_1950.nc ic_land_soil.nc
+ln -snvf $mapped_dir/bc_land_frac_1950.nc bc_land_frac.nc
+ln -snvf $mapped_dir/bc_land_phys_1950.nc bc_land_phys.nc
+ln -snvf $mapped_dir/bc_land_soil_1950.nc bc_land_soil.nc
+ln -snvf $mapped_dir/bc_land_sso_1950.nc bc_land_sso.nc
+ln -snvf $mapped_dir/icon_hdpara_r2b8_0033_0034_ns_maxlnd_v1.nc bc_land_hd.nc
+ln -snvf $mapped_dir/hdstart_r2b8_0033_0034_v1.nc ic_land_hd.nc
+
+
+# [files.land.model]
+model_dir="${MODEL_DIR}"/externals/jsbach/data
+ln -snvf $model_dir/lctlib_nlct21.def .
+
+# [files.ocean]
+ocean_dir="${icon_data_rootFolder}"/grids/public/mpim
+
+# [files.ocean.grids]
+grids_dir=$ocean_dir/0034
+ln -snvf $grids_dir/icon_grid_0034_R02B08_O.nc icon_grid_O.nc
+
+# [files.ocean.restart]
+restart_dir="${experiments_dir}"/"${EXPNAME}"/restarts
+
+# If second chunk read/write from mfr (multirestartfile)
+# If running first chunk then itialize ocean from excisting restart data
+
+if [ "${initialize_fromrestart}" == ".false." ]; then
+   ln -snvf $restart_dir/"${EXPNAME}"_restart_oce_${end_date}.mfr \
+      multifile_restart_ocean.mfr
+else
+   restart_dir=$grids_dir"/ocean/restart"
+   ln -snvf $restart_dir/icon_r2b8_1990_spinup_restart_oce_19910101T000000Z.mfr \
+      multifile_restart_ocean.mfr
+fi
+
+# [files.coupler]
+coupler_dir="${MODEL_DIR}"/externals/yac/input
+cp -fv $coupler_dir/coupling.xsd .
+
+
+#-----------------------------------------------------------------------------
+#  get model
+#
+ls -l ${MODEL_C}
+check_error $? "${MODEL_C} does not exist?"
+#
+ldd ${MODEL_C}
+#
+ls -l ${MODEL_G}
+check_error $? "${MODEL_G} does not exist?"
+#
+ldd ${MODEL_G}
+#-----------------------------------------------------------------------------
+#
+# start experiment
+#
+
+rm -f finish.status
+
+# Environment for ICON gpu 
+cat > icon.gpu << 'EOF'
+source $BASH_ENV
+module load rocm
+
+device=$(($SLURM_LOCALID%8))
+
+export ROCR_VISIBLE_DEVICES=$device
+export MPICH_GPU_SUPPORT_ENABLED=1
+
+export PMI_SIGNAL_STARTUP_COMPLETION=1
+export PMI_VERSION_DISPLAY=1
+
+export FI_MP_CACHE_MONITOR="memhooks"
+export FI_CXI_OPTIMIZED_MRS=FALSE
+
+${MODEL_G}
+EOF
+
+# Environment for ICON CPU
+cat > icon.cpu << 'EOF'
+source $BASH_ENV
+
+export FI_MP_CACHE_MONITOR="memhooks"
+export FI_CXI_OPTIMIZED_MRS=FALSE
+
+export PMI_SIGNAL_STARTUP_COMPLETION=1
+export PMI_VERSION_DISPLAY=1
+
+export OMP_STACKSIZE=256M
+export OMP_NUM_THREADS=7
+export ICON_THREADS=7
+
+${MODEL_C}
+EOF
+
+cat > yaco.cpu << 'EOF'
+source $BASH_ENV
+module load rocm
+
+export LD_LIBRARY_PATH=/scratch/project_465000454/redler2/yaco_16.0.1.1_rocm-5.4.1/lib:/scratch/project_465000454/redler2/yaco_16.0.1.1_rocm-5.4.1/lib64:${LD_LIBRARY_PATH}
+
+export FI_MP_CACHE_MONITOR="memhooks"
+export FI_CXI_OPTIMIZED_MRS=FALSE
+
+export PMI_SIGNAL_STARTUP_COMPLETION=1
+export PMI_VERSION_DISPLAY=1
+
+${OUTPUT_TASK} yaco.yml
+EOF
+
+chmod 755 ./icon.gpu
+chmod 755 ./icon.cpu
+chmod 755 ./yaco.cpu
+
+
+# Run and set hetjob environments
+
+export MODELg="${MODEL_DIR}/scripts/lumi_scripts/run4lumi.sh ./icon.gpu"
+export MODELc="${MODEL_DIR}/scripts/lumi_scripts/run4lumi.sh ./icon.cpu"
+export OUTPUTc="${MODEL_DIR}/scripts/lumi_scripts/run4lumi.sh ./yaco.cpu"
+
+# Check that the FDB exists, if not create path
+
+test -d ${FDB_PATH} || mkdir ${FDB_PATH}
+
+set | grep SLURM
+
+date
+srun --export=ALL -l -n $atm_tasks ${MODELg} : -n $oce_tasks --cpus-per-task 7 ${MODELc} : -n $yaco_tasks --cpus-per-task 7 ${OUTPUTc} || exit 1
+date
+
+if [ -r finish.status ] ; then
+  check_final_status 0 "${START} ${MODEL}"
+else
+  check_final_status -1 "${START} ${MODEL}"
+fi
+
+# Handle restart hand-over
+
+cp -lrfv ${EXPNAME}_restart_atm_${end_date}.mfr "${experiments_dir}"/"${EXPNAME}"/restarts
+cp -lrfv ${EXPNAME}_restart_oce_${end_date}.mfr "${experiments_dir}"/"${EXPNAME}"/restarts
+
+# Clean up our restart
+
+rm -rfv ${EXPNAME}_restart_atm_${end_date}.mfr
+rm -rfv ${EXPNAME}_restart_oce_${end_date}.mfr
+#
+#-----------------------------------------------------------------------------
+#
+
+finish_status=`cat finish.status`
+echo $finish_status
+echo "============================"
+echo "Script run successfully: $finish_status"
+echo "============================"
+
+#-----------------------------------------------------------------------------
+
+# Mark current run as successful in log
+echo $(date -u +'%Y-%m-%dT%H:%M:%SZ') ${start_date%:*} ${end_date%:*} ${SLURM_JOBID} end
+
+cp finish.status ${run_dir}
+
+status=0
+exit $status
+
+#-----------------------------------------------------------------------------
+# vim:ft=sh
+#-----------------------------------------------------------------------------

@@ -1,0 +1,19 @@
+CONFIGURATION:
+  IFS:
+    GTYPE: tco
+    RESOL: 79
+    LEVELS: 137
+    EXPVER: hz9m
+    LABEL: LWDA
+
+    IO_NODES: 1
+
+PLATFORMS:    
+  LUMI:
+    TYPE: slurm
+    PARTITION: "dev-g"
+    MAX_WALLCLOCK: "00:30"
+    TASKS: 8
+    THREADS: 7
+    CUSTOM_DIRECTIVES: "['#SBATCH --gpus-per-node=8', '#SBATCH --hint=nomultithread', '#SBATCH --exclusive', '#SBATCH --mem=0']"
+
