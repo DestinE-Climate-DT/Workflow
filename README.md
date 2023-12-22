@@ -1,52 +1,30 @@
 # Climate DT (DE_340) workflow
 Welcome to the Climate DT Workflow documentation!
 
-<details><summary>Table of contents:</summary>
-  <ol>
-    <li>
-      <a href="#about-the-project">About The Project</a>
-      <ul>
-        <li><a href="#Current-list-of-steps">Current list of steps</a></li>
-        <li><a href="#Selectable-configuration">Selectable configuration</a></li>
-      </ul>
-    </li>
-    <li>
-      <a href="#getting-started">Getting Started</a>
-      <ul>
-        <li><a href="#prerequisites">Prerequisites</a></li>
-        <li><a href="#Create-your-own-experiment">Create your own experiment</a></li>
-        <li><a href="#Execute-the-workflow">Execute the workflow</a></li>
-      </ul>
-    </li>
-    <li><a href="#contributing">Contributing </a></li>
-    <li><a href="#contact-us">Contact us! </a></li>
-  </ol>
-
-</details>
+Version v3.0.0. Which includes v2.0.0 + applications
 
 ## About the project 
-This workflow contains a preliminary version of the DE_340 workflow. It is used for development and testing in conjunction with [Autosubmit4](https://earth.bsc.es/gitlab/es/autosubmit). The implemented workflow tasks keep a model-agnostic interface and contain the merged sub-workflows for ICON, IFS-FESOM, and IFS-NEMO. Currently, MareNostrum4 is supported for ICON and IFS-NEMO to perform basic simulations. LUMI, JUWELS and Levante can be used to run IFS-FESOM with similar configurations.
+This workflow contains a preliminary version of the DE_340 workflow. It is used for development and testing in conjunction with [Autosubmit4](https://earth.bsc.es/gitlab/es/autosubmit). The implemented workflow tasks keep a model-agnostic interface and contain the merged sub-workflows for ICON, IFS-FESOM, and IFS-NEMO. Currently, LUMI is supported for IFS-NEMO and ICON to perform basic simulations. MareNostrum4 is supported for IFS-NEMO.
 
 ### Current list of steps:
 Each step contains a very short description of its main purpose. The templates are located in `/workflow/templates`.
-* `local_setup` 
-* `synchronize` 
-* `remote_setup`
-* `ini`
-* `sim`
-* `gsv`
-* `application`
+* `local_setup:` performs basic checks as well as compressing the workflow project in order to be sent through the network. Runs in the Autosubmit VM. 
+* `synchronize:` syncs the workflow project with the remote platform. Runs in the Autosubmit VM.
+* `remote_setup: ` loads the necessary enviroment and then compiles the diferent models. Performs checks in the remote platform. Runs in the remote platform (login nodes for LUMI, interactive partition for MN4).
+* `ini: ` prepares any necessary initial data for the climate model runs. 
+* `sim: ` runs one chunk of climate simulation.
+* `dn: ` notifies when the wanted data is already produced by the model.
+* `opa:` creates the statistics required by the data consumers (Apps)
+* `applications:` creates usable output using the applications from the different use cases 
 
 ### Selectable configuration
 
-We are now running the workflow with the new version of the CUSTOM_CONFIG and the minimal configuration new features
-of Autosubmit. This new configuration scheme allows for a distributed, hierarchical parametrization of the workflow, thereby providing a more customizable, modular, and user-friendly workflow. The structure, domain and use of this new configuration scheme will likely evolve as it adapts to the needs of other work packages.
+We are now running the workflow with the new version of the CUSTOM_CONFIG and the minimal configuration new features of Autosubmit. This new configuration scheme allows for a distributed, hierarchical parametrization of the workflow, thereby providing a more customizable, modular, and user-friendly workflow. The structure, domain and use of this new configuration scheme will likely evolve as it adapts to the needs of other work packages.
 
 ## Getting Started
 All the experiments should be created in the [Autosubmit Virtual Machine](https://wiki.eduuni.fi/display/cscRDIcollaboration/Autosubmit+VM). To access the VM, you need a user and your SSH key to be authorized. Add your name, e-mail, preferred username, and SSH (local) public key to the [table](https://wiki.eduuni.fi/display/cscRDIcollaboration/Autosubmit+VM+Users). 
 
-Make sure you have a recent Autosubmit version running `autosubmit --version`. This workflow has been developed using the `4.0.0b0` version of Autosubmit. You can follow more detailed description in [Autosubmit Readthedocs](https://autosubmit.readthedocs.io/en/master/). 
-
+Make sure you have a recent Autosubmit version running `autosubmit --version`. This workflow has been developed using the `4.1.0` version of Autosubmit. Otherwise update it by typing  `module load autosubmit/v4.1.0-beta`. You can follow more detailed description about Autosubmit in [Autosubmit Readthedocs](https://autosubmit.readthedocs.io/en/master/). 
 
 ### Prerequisites
 Inside the Autosubmit VM, you need to put your user configurations for platforms somewhere (we recommend `~/platforms.yml`):
@@ -59,82 +37,149 @@ Platforms:
     USER: <USER> 
   lumi:
     USER: <USER>
-  juwels-login:
-    USER: <USER>
-  juwels:
-    USER: <USER>
   marenostrum4:
     USER: <USER>
   marenostrum4-login:
     USER: <USER>
-  levante:
-    PROJECT: <PROJECT>
-    USER: <USER>
-  levante-login:
-    PROJECT: <PROJECT>
-    USER: <USER>
 ```
 
-You also need to configure password-less access to the platforms where you want to run experiments. Further instructions can be found [here](https://wiki.eduuni.fi/display/cscRDIcollaboration/Autosubmit+VM) (Section 4. How to get password-less access from VM to Levante / LUMI / MN4).
+You also need to configure password-less access to the platforms where you want to run
+experiments. Further instructions can be found [here](https://wiki.eduuni.fi/display/cscRDIcollaboration/Autosubmit+VM) (Section 4. How to get password-less access from VM to Levante / LUMI / MN4).
 
 ### Create your own experiment
 
-1. Create an Autosubmit experiment using minimal configurations:
+1. Create an Autosubmit experiment using minimal configurations.
+
+> **NOTE**: you MUST change `<TYPE_YOUR_PLATFORM_HERE>` below with your platform!
+For example: lumi, marenostrum4, juwels, levnte... **For the current deliverable the platform is meant to run in lumi.**
+> Check the available platforms at `/appl/AS/DefaultConfigs/platforms.yml`
+> or `~/platforms.yml` if you created this file in your home directory.
 
 ```
-autosubmit expid -min -repo https://earth.bsc.es/gitlab/digital-twins/de_340/workflow -b main -d "A description"
+autosubmit expid \
+  --description "A useful description" \
+  --HPC <TYPE_YOUR_PLATFORM_HERE> \
+  --minimal_configuration \
+  --git_as_conf conf/bootstrap/ \
+  --git_repo https://earth.bsc.es/gitlab/digital-twins/de_340/workflow \
+  --git_branch v3.0.0
 ```
 
-You will receive the following message: `Experiment <expid> created`, where `<expid>` is the identifyer of your experiment. 
+You will receive the following message: `Experiment <expid> created`, where `<expid>`
+is the identifier of your experiment. A directory will be created for your experiment
+at: `/appl/AS/AUTOSUBMIT_DATA/<expid>`.
 
-A directory will be created : 
+2. The command `autosubmit expid` above will create a `minimal.yml` file for you.
+Modify this file (e.g. `/appl/AS/AUTOSUBMIT_DATA/<expid>/conf/minimal.yml`) as needed.
 
-- In the Autosubmit's VM used at BSC, the path is `/esarchive/autosubmit/<expid>`
-- In the ClimateDT VM used at CSC, the path is: `/appl/AS/AUTOSUBMIT_DATA/<expid>`.
+In the `GIT` section in the `minimal.yml`, you can use `PROJECT_SUBMODULES` to set
+the Git submodules for the models you want to run (e.g.: `icon-mpim`, `ifs-fesom`,
+`ifs-nemo`). Or leave it empty to select all the models. Autosubmit will clone
+them when you run `autosubmit create` (first run) or `autosubmit refresh`.
 
-2. Copy the `minimal_example.yml` and the `main_example.yml` into your experiment `conf` folder, making sure that the default `minimal.yml` created by the previous command is overwritten:
-```shell
-cp minimal_example.yml <autosubmit_experiments_path>/<expid>/conf/minimal.yml
-cp main_example.yml <autosubmit_experiments_path>/<expid>/conf/main.yml
+**For the current deliverable you should use the following submodules:**
+ `  PROJECT_SUBMODULES: 'one_pass gsv_interface aqua mhm wildfires_fwi urban'`
+
+> **NOTE**: you need to have access to the corresponding model sources
+> repository and your ssh keys must be uploaded there.
+
+**For the current deliverable you should set `TOTALJOBS: 2` and `MAXWAITINGJOBS: 2` As for testing purposes we are using the debug queue so that waitig time is avoided**
+```
+CONFIG:
+  # Current version of Autosubmit.
+  AUTOSUBMIT_VERSION: "4.1.0"
+  # Total number of jobs in the workflow.
+  TOTALJOBS: 2
+  # Maximum number of jobs permitted in the waiting status.
+  MAXWAITINGJOBS: 2
+
 ```
 
-And edit them accordingly, paying special attention to the variables `DEFAULT.EXPID` in the `minimal_example.yml` file, and the `RUN` dictionary in the `main_example.yml` file, that defines the configuration of the simulation that you will run.
+3. In `/appl/AS/AUTOSUBMIT_DATA/<expid>/conf/`, create a `main.yml` file (e. g.: `vim main.yml`), copy the following keys and fill the fields with the model, simulation etc. that you want to run:
 
-In the `git` section in the `minimal_example.yml`, fill the `PROJECT_SUBMODULES` with the models you want to run (`icon-mpim`, `ifs-fesom`, `ifs-nemo`). Autosubmit will clone them (Note: you need to have access to the correspondent model sources repostory and your ssh keys must be uploaded there). 
+```
+RUN:
+  SIMULATION: test-ifs-nemo
+  # Physical parameters will be defined here. Current options: default.  
+  # Current options: ifs-nemo.
+  MODEL: ifs-nemo
+  # Current options: none
+  READ_EXPID: #<----------*Update with the expid that you were given after creating the experiment*
+  GRID_ATM: tco79l137
+  # Current options:
+    # ICON: r2b4
+    # Nemo: eORCA1_Z75
+  GRID_OCEAN: eORCA1_Z75
+  MODEL_VERSION: "dev-aina" 
+  # openmpo, gcc, intel...
+  ENVIRONMENT: "cray"
+  CLEAN_RUN: "true"
+  PROCESSOR_UNIT: "gpu"
+
+APP:
+  OUTPATH: "/scratch/project_465000454/tmp/%RUN.READ_EXPID%/"
+
+JOBS:
+   SIM:
+     WALLCLOCK: "00:10"
+     NODES: 4
+
+
+EXPERIMENT:
+   DATELIST: 19900101 #Startdate
+   MEMBERS: fc0
+   CHUNKSIZEUNIT: day
+   CHUNKSIZE: 3
+   NUMCHUNKS: 1
+   CALENDAR: standard
+
+
+CONFIGURATION:
+        IFS:
+                MULTIO_PLANS: "historical"
+        NEMO:
+                MULTIO_PLANS: "historical"
+
+```
 
 ### Execute the workflow
 
-With this set up you can have autosubmit create the workflow for you:
-```
-autosubmit create <expid>
-```
-This process can take some time, because autosubmit is cloning all the files of the WF repostory and the models' repostory.
-
 Now you can run the workflow:
-```
+
+```bash
 autosubmit run <expid>
 ```
 
-Whenever you change something in the git repostory make sure you refresh your experiment. Be careful! This command will overwrite any changes in the local project folder.
+Whenever you change something in the git repository make sure you refresh your experiment:
 
-```
+> **BE CAREFUL!** This command will overwrite any changes in the local project folder.
+> Note that this is doing the same thing that the `autosubmit create` did in a previous
+> step, but `autosubmit create` only refreshes the git repository the first time it is
+> executed:
+
+```bash
 autosubmit refresh <expid>
 ```
 
-and then you need autosubmit to create the updated files again:
-```
-autosubmit create <expid>
+Then you need autosubmit to create the updated the workflow files again:
+
+```bash
+autosubmit create <expid> -v -np
 ```
 
-This resets the status of all the jobs, so if you don't want to run everything from the beginning again, you can set the status like this:
-```
+This resets the status of all the jobs, so if you do not want to run everything from
+the beginning again, you can set the status of tasks, for example:
+
+```bash
 autosubmit setstatus a002 -fl "a002_LOCAL_SETUP a002_SYNCHRONIZE a002_REMOTE_SETUP" -t COMPLETED -s
 ```
-(`-fl` is for filter, so you filter them by job name now, `-t` is for target status(?) so, we set them to `COMPLETED` here. `-s` is for save, 
-which is needed to save the results to disk.)
 
-You can add a `-np` for no plot to most of the commands to not have the error with missing xdg-open etc.
+`-fl` is for filter, so you filter them by job name now, `-t` is for target status(?)
+so, we set them to `COMPLETED` here. `-s` is for save, which is needed to save the
+results to disk.
 
+You can add a `-np` for “no plot” to most of the commands to not have the error with
+missing `xdg-open`, etc.
 
 ## Contributing
 This workflow is work in progress, and suggestions and contributions are greatly appreciated. If you have a suggestion, desire some new feature, or detect a bug, please: 
@@ -157,9 +202,7 @@ For any doubts or issues you can contact the workflow developers:
 
 - Miguel Castrillo (Work package leader): miguel.castrillo@bsc.es
 - Leo Arriola (ICON Workflow developer): leo.arriola@bsc.es
-- Miguel Andrés (IFS-Fesom Workflow developer): miguel.andres-martinez@awi.de
 - Sebastian Beyer (IFS-Fesom Workflow developer): sebastian.beyer@awi.de
-- Julian Berlin (IFS-Fesom Workflow developer): julian.berlin@bsc.es
 - Francesc Roura (Applications Workflow developer): francesc.roura@bsc.es
 - Aina Gaya (IFS-Nemo Workflow developer): aina.gayayavila@bsc.es
 
@@ -170,99 +213,6 @@ Main Autosubmit support:
 
 [Link to the Autosubmit tutorial & Hands-on](https://wiki.eduuni.fi/display/cscRDIcollaboration/Autosubmit+introductory+session)
 
-### Local project
-
-<details><summary>Instructions for a local project (in case that you don't have access to the model repostory): </summary>
-Clone this repo (anywhere you like, but I put it in home now)
-```
-git clone https://earth.bsc.es/gitlab/digital-twins/de_340/workflow -b <branch-with-latest-changes> ~/DT_workflow
-```
-
-Generate a new experiment:
-```
-autosubmit expid -H LUMI -d "Basic ClimateDT workflow"
-```
-
-Set basic config for experiment definition (make sure you put the correct path of your user platform config file here):
-```
-default:
-  CUSTOM_CONFIG: "%ROOTDIR%/proj/proj_model/conf,/albedo/home/user/.config/autosubmit/platforms.yml"
-```
-Note: this will soon be deprecated and substituted by the `PRE` and `POST` new `COSTUM_CONFIG` logic. In this case,
-the user file (e.g. `/albedo/home/user/.config/autosubmit/platforms.yml`) belongs to `POST`.
-
-Set your project type to local and set the project path (must be the one where you cloned this repo into)
-```
-project:
-  PROJECT_TYPE: local
-  PROJECT_DESTINATION: 'proj_model'
-local:
-  PROJECT_PATH: '~/DT_workflow'
-```
-
-#### Chunks
-
-To configure chunks of the experiment, you need to set the following in `expdef.yml`:
-This means to run a total of 5 days in increments of one day starting from January 20th 2020:
-```
-experiment:
-  MODEL: MODEL_NAME
-  DATELIST: 20200120
-  MEMBERS: "fc0"
-  CHUNKSIZEUNIT: day
-  CHUNKSIZE: 1
-  NUMCHUNKS: 5
-  CHUNKINI: ''
-  CALENDAR: standard
-```
-
-The `expdef.yml` should look similar to this now:
-```
-DeFault:
-  EXPID: a002
-  HPCARCH: LUMI
-  CUSTOM_CONFIG: 
-    PRE:
-     - "%PROJDIR%/conf"
-     - "%PROJDIR%/conf/simulation/%RUN.SIMULATION%.yml"
-     - "%PROJDIR%/conf/parameter/%RUN.PARAMETER%.yml"
-     - "%PROJDIR%/conf/model/%RUN.MODEL%/%RUN.MODEL%.yml"
-     - "%PROJDIR%/conf/model/%RUN.MODEL%/%RUN.GRID%.yml"
-     - "%PROJDIR%/conf/application/%RUN.APPLICATION%.yml"
-    POST:
-     - "~/platforms.yml"
-
-experiment:
-  MODEL: MODEL_NAME
-  DATELIST: 20200120
-  MEMBERS: "fc0"
-  CHUNKSIZEUNIT: day
-  CHUNKSIZE: 1
-  NUMCHUNKS: 5
-  CHUNKINI: ''
-  CALENDAR: standard
-project:
-  PROJECT_TYPE: local
-  PROJECT_DESTINATION: 'proj_model'
-local:
-  PROJECT_PATH: '~/DT_workflow'
-project_files:
-  FILE_PROJECT_CONF: ''
-  FILE_JOBS_CONF: ''
-  JOB_SCRIPTS_TYPE: ''
-rerun:
-  RERUN: FALSE
-  RERUN_JOBLIST: ''
-```
-
-#### Initiate the submodule
-
-If you are using a local project (not a git project), make sure you initiate first your model's submodule:
-```
-git init <submodule>
-git update <submodule>
-```
-If you are using a `git` project, that will be done automatically by Autosubmit, and you can skip this step.
-
 </details>
+
 

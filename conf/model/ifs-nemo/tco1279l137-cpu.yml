@@ -1,0 +1,22 @@
+CONFIGURATION:
+  IFS:
+    GTYPE: tco
+    RESOL: 1279
+    LEVELS: 137
+    EXPVER: hz9o
+    LABEL: LWDA
+
+    IO_NODES: 40
+
+PLATFORMS:
+  MARENOSTRUM4:
+    QUEUE: "class_a"
+    NODES: 200
+    TASKS: 8
+    THREADS: 6
+
+  LUMI:
+    NODES: 240
+    TASKS: 16
+    THREADS: 8
+   

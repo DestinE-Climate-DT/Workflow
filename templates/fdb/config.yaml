@@ -1,0 +1,9 @@
+---
+type: local
+engine: toc
+schema: %CURRENT_HPC_PROJECT_DIR%/experiments/%DEFAULT.EXPID%/schema
+spaces:
+- handler: Default
+  roots:
+  - path: %CURRENT_HPC_PROJECT_DIR%/experiments/%DEFAULT.EXPID%/fdb
+

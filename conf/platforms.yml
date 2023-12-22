@@ -1,35 +1,36 @@
 Platforms:
   marenostrum4:
     TYPE: slurm
-    HOST: mn4-cluster
+    HOST: mn4-cluster1
         # This needs that a ~/.ssh/config exists with the following:
         # the login node in mn0 allows internet acces
-        # Host mn4-cluster
+        # Host mn4-cluster1
         #     Hostname mn0.bsc.es
         #     IdentifyFile ~/.ssh/<your_sshkey>
         #     User <bsc user>
     PROJECT: dese28
-    QUEUE: debug
     USER: <to-be-overloaded-in-user-conf>
+    QUEUE: debug
     SCRATCH_DIR: /gpfs/scratch
     ADD_PROJECT_TO_HOST: False
-    MAX_WALLCLOCK: '00:55'
     TEMP_DIR: ''
+    CUSTOM_DIRECTIVES: "['#SBATCH --exclusive', '#SBATCH --export=ALL', '#SBATCH --hint=nomultithread']"
   marenostrum4-login:
-    TYPE: slurm
-    HOST: mn4-cluster
+    TYPE: ps
+    HOST: mn4-cluster1
         # This needs that a ~/.ssh/config exists with the following:
         # the login node in mn0 allows internet acces
-        # Host mn4-cluster
+        # Host mn4-cluster1
         #     Hostname mn0.bsc.es
         #     IdentifyFile ~/.ssh/<your_sshkey>
         #     User <bsc user>
     PROJECT: dese28
-    QUEUE: debug
     USER: <to-be-overloaded-in-user-conf>
     SCRATCH_DIR: /gpfs/scratch
     ADD_PROJECT_TO_HOST: False
-    MAX_WALLCLOCK: '00:55'
+    PARTITION: interactive
+    PROCESSORS: 4
+    MAX_WALLCLOCK: '02:00'
   juwels-login:
     TYPE: ps
     HOST: juwels-cluster
@@ -72,27 +73,31 @@ Platforms:
         #     IdentifyFile ~/.ssh/<your_sshkey>
         #     User <lumi user>
     PROJECT: project_465000454
+    HPC_PROJECT_DIR: /projappl/project_465000454
     USER: <to-be-overloaded-in-user-conf>
     SCRATCH_DIR: /scratch
     ADD_PROJECT_TO_HOST: False
     TEMP_DIR: ''
+    TOTALJOBS: 12
+    MAXWAITINGJOBS: 12
   lumi:
     TYPE: slurm
-    HOST: lumi-cluster
+    HOST: lumi-cluster #lumi.csc.fi
         # This needs that a ~/.ssh/config exists with the following:
         # Host lumi-cluster
         #     Hostname lumi.csc.fi
         #     IdentifyFile ~/.ssh/<your_sshkey>
         #     User <lumi user>
     PROJECT: project_465000454
+    HPC_PROJECT_DIR: /projappl/project_465000454
     USER: <to-be-overloaded-in-user-conf>
-    QUEUE: ""
     SCRATCH_DIR: /scratch
-    ADD_PROJECT_TO_HOST: False
-    MAX_WALLCLOCK: '48:00'
-    TEMP_DIR: ''
-    PROCESSORS_PER_NODE: 128
+    ADD_PROJECT_TO_HOST: False 
+    TEMP_DIR: '' 
     BUDGET: "project_465000454"
+    EXECUTABLE: "/bin/bash --login"
+    CUSTOM_DIRECTIVES: "['#SBATCH --exclusive', '#SBATCH --export=ALL', '#SBATCH --hint=nomultithread', '#SBATCH --mem=0']"
+    PARTITION: debug
   levante-login:
     TYPE: ps
     HOST: levante
@@ -121,7 +126,7 @@ Platforms:
     QUEUE: ""
     SCRATCH_DIR: /work
     ADD_PROJECT_TO_HOST: False
-    MAX_WALLCLOCK: '48:00'
+    MAX_WALLCLOCK: '00:29'
     TEMP_DIR: ''
     PROCESSORS_PER_NODE: 128
     BUDGET: <to-be-overloaded-by-user>

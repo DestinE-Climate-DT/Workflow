@@ -1,0 +1,124 @@
+DATA:
+  1:  
+    GSVREQUEST: #raw data
+      param: "10u"
+      domain: g
+      class: rd
+      type: fc
+      expver: "%RUN.READ_EXPID%"
+      stream: lwda
+      levtype: "sfc"
+      date: split_day
+      time: 0000/to/2300/by/0100
+      step: ["0"]  # Irrelevant. Step will be recalculated in workflow
+      grid: 1/1
+      method: nn
+      area: "75.0/-25.0/35.0/45.0"
+    OPAREQUEST:
+      stat: "raw"
+      stat_freq: "daily_noon"
+      output_freq: "daily"
+      time_step: 60 # in minutes, 60*timestep length in hours TODO: do that automatically
+      save: True
+      checkpoint: True
+      checkpoint_filepath: "%APP.OUTPATH%"
+      save_filepath: "%APP.OUTPATH%"
+  2:  
+    GSVREQUEST: #raw data
+      param: "10v"
+      domain: g
+      class: rd
+      type: fc
+      expver: "%RUN.READ_EXPID%"
+      stream: lwda
+      levtype: "sfc"
+      date: split_day
+      time: 0000/to/2300/by/0100
+      step: ["0"]  # Irrelevant. Step will be recalculated in workflow
+      grid: 1/1
+      method: nn
+      area: "75.0/-25.0/35.0/45.0"
+    OPAREQUEST:
+      stat: "raw"
+      stat_freq: "daily_noon"
+      output_freq: "daily"
+      time_step: 60 # in minutes, 60*timestep length in hours TODO: do that automatically
+      save: True
+      checkpoint: True
+      checkpoint_filepath: "%APP.OUTPATH%"
+      save_filepath: "%APP.OUTPATH%"
+  3:  
+    GSVREQUEST: #raw data
+      param: "2d"
+      domain: g
+      class: rd
+      type: fc
+      expver: "%RUN.READ_EXPID%"
+      stream: lwda
+      levtype: "sfc"
+      date: split_day
+      time: 0000/to/2300/by/0100
+      step: ["0"]  # Irrelevant. Step will be recalculated in workflow
+      grid: 1/1
+      method: nn
+      area: "75.0/-25.0/35.0/45.0"
+    OPAREQUEST:
+      stat: "raw"
+      stat_freq: "daily_noon"
+      output_freq: "daily"
+      time_step: 60 # in minutes, 60*timestep length in hours TODO: do that automatically
+      save: True
+      checkpoint: True
+      checkpoint_filepath: "%APP.OUTPATH%"
+      save_filepath: "%APP.OUTPATH%"
+  4:  
+    GSVREQUEST: #raw data
+      param: "tp"
+      domain: g
+      class: rd
+      type: fc
+      expver: "%RUN.READ_EXPID%"
+      stream: lwda
+      levtype: "sfc"
+      date: split_day
+      time: 0000/to/2300/by/0100
+      step: ["0"]  # Irrelevant. Step will be recalculated in workflow
+      grid: 1/1
+      method: nn
+      area: "75.0/-25.0/35.0/45.0"
+    OPAREQUEST:
+      stat: "sum"
+      stat_freq: "daily_noon"
+      output_freq: "daily"
+      time_step: 60 # in minutes, 60*timestep length in hours TODO: do that automatically
+      save: True
+      checkpoint: True
+      checkpoint_filepath: "%APP.OUTPATH%"
+      save_filepath: "%APP.OUTPATH%"
+  5:  
+    GSVREQUEST: #raw data
+      param: "2t"
+      domain: g
+      class: rd
+      type: fc
+      expver: "%RUN.READ_EXPID%"
+      stream: lwda
+      levtype: "sfc"
+      date: split_day
+      time: 0000/to/2300/by/0100
+      step: ["0"]  # Irrelevant. Step will be recalculated in workflow
+      grid: 1/1
+      method: nn
+      area: "75.0/-25.0/35.0/45.0"
+    OPAREQUEST:
+      stat: "raw"
+      stat_freq: "daily_noon"
+      output_freq: "daily"
+      time_step: 60 # in minutes, 60*timestep length in hours TODO: do that automatically
+      save: True
+      checkpoint: True
+      checkpoint_filepath: "%APP.OUTPATH%"
+      save_filepath: "%APP.OUTPATH%"
+
+APP:
+   other: "empty"

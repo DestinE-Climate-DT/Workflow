@@ -1,6 +1,6 @@
 MODEL:
   SOURCE: git@gitlab.dkrz.de:icon/icon-mpim.git
-  BRANCH: feature-collection-destine
+  BRANCH: feature-destine-ngc3-wo-hiopy
   VERSION: icon-mpim
   NAME: icon
 

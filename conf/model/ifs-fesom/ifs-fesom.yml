@@ -1,15 +1,4 @@
-
-MODEL:
-  NAME: ifs-fesom
-  SOURCE: https://git.ecmwf.int/scm/~naih/ifs-source.git
-  BRANCH: nextGEMS_CY47R3_RAPS20
-  # TODO: In the future, we will need to include the commit ids if we are to keep the cloning option (not needed for the submodule option)
-  #COMMIT_ID:
-  #FESOM_COMMIT_ID:
-  # If PRECOMP_MODEL_PATH is defined the workflow will skip the cloning and compilation
-  #PRECOMP_MODEL_PATH: "/scratch/project_462000048/sbeyer/a002/proj_ifs-fesom/ifs-source"
-  # TODO: this path depends on the experiment type and the HPC and it should probably be composed from information in platforms.yml and experiment/<sim_type>.yml
 JOBS:
   SIM:
     FILE: templates/sim_ifs-fesom.sh
-    
+
