@@ -1,5 +1,6 @@
 CONFIGURATION:
   RAPS_USER_FLAGS: "--keepxml"
+  DQC_PROFILE: lowres
   IFS:
     GTYPE: tco
     RESOL: 79
@@ -12,7 +13,7 @@ CONFIGURATION:
 PLATFORMS: 
   MARENOSTRUM4:
     QUEUE: "debug"
-    NODES: 2
+    NODES: 1
     TASKS: 24
     THREADS: 2
 
@@ -20,4 +21,5 @@ PLATFORMS:
     NODES: 2
     TASKS: 16
     THREADS: 8
+    PROCESSORS_PER_NODE: 128
 

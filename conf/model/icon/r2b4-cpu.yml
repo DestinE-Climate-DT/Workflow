@@ -1,4 +1,5 @@
 CONFIGURATION:
+  DQC_PROFILE: lowres
   ICON:
     ATM_GID: "0043"
     ATM_REF: "R02B04"
@@ -22,16 +23,15 @@ PLATFORMS:
     CUSTOM_DIRECTIVES: "['#SBATCH --export=ALL']"
   LUMI:
     WALLCLOCK: '00:30'
-    PARTITION: small-g
-  LUMI-login:
-    WALLCLOCK: '01:00'
-    NODES: 1
-    PROCESSORS: 16
-    PARTITION: dev-g
+    NODES: 4
+    TASKS: 32
+    THREADS: 4 
+    PARTITION: small
+    PROCESSORS_PER_NODE: 128
   LEVANTE:
     WALLCLOCK: '00:55'
-    NODES: 2
-    TASKS_PER_NODE: 128
-    PROCESSORS: 256
+    NODES: 4
+    TASKS: 32
+    THREADS: 2
     PARTITION: compute
     CUSTOM_DIRECTIVES: "['#SBATCH --export=ALL --distribution=block:cyclic']"

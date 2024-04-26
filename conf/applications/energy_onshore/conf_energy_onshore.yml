@@ -1,0 +1,11 @@
+JOBS:
+   OPA:
+      CUSTOM_DIRECTIVES: "['#SBATCH --exclusive', '#SBATCH --mem=0']"
+      WALLCLOCK: '00:30'
+      PARTITION: 'small'
+   APP:
+      CUSTOM_DIRECTIVES: "['#SBATCH --exclusive', '#SBATCH --mem=0']"
+      WALLCLOCK: '00:30'
+      PARTITION: 'small'
+
+

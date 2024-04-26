@@ -1,0 +1,18 @@
+#This include the option for the regridding
+target:
+  resolution: r100
+  frequency: monthly
+  fixer_name: ifs-destine-v1
+  outdir: %APP.OUTPATH%/LRA
+  tmpdir: %APP.OUTPATH%/tmp
+  opadir: %APP.OUTPATH%
+
+configdir: '%HPCROOTDIR%/%PROJECT.PROJECT_DESTINATION%/aqua/config'
+loglevel: INFO
+
+# all the variable listed here will be processed by the LRA creator
+catalog:
+  %AQUA.MODEL%:
+    %AQUA.EXP%: 
+      %AQUA.SOURCE%:
+        vars: [%AQUA.VARS%]

@@ -1,0 +1,49 @@
+JOBS:
+  INI:
+    DEPENDENCIES: REMOTE_SETUP
+    FILE: templates/ini.sh
+    PLATFORM: '%DEFAULT.HPCARCH%-login'
+    RUNNING: member
+    WALLCLOCK: 00:30
+  LOCAL_SETUP:
+    FILE: templates/local_setup.sh
+    PLATFORM: LOCAL
+    RUNNING: once
+  REMOTE_SETUP:
+    DEPENDENCIES: SYNCHRONIZE
+    FILE: templates/remote_setup.sh,templates/fdb/confignative.yaml,templates/fdb/configregularll.yaml,templates/fdb/confighealpix.yaml
+    PLATFORM: '%DEFAULT.HPCARCH%-login'
+    RUNNING: once
+    WALLCLOCK: 08:00
+  MSTRO_PM:
+    DEPENDENCIES: INI MSTRO_PM-1
+    FILE: templates/mstro_pm.sh
+    PLATFORM: '%DEFAULT.HPCARCH%'
+    RUNNING: chunk
+    WALLCLOCK: 02:00
+    NODES: 1
+    TASKS: 1
+  MSTRO_OPA:
+    DEPENDENCIES:
+       MSTRO_PM:
+         STATUS: "RUNNING"
+    FILE: templates/mstro_opa.sh
+    PLATFORM: '%DEFAULT.HPCARCH%'
+    RUNNING: chunk
+    NODES: 1
+    TASKS: 1
+    WALLCLOCK: 02:00
+  SIM:
+    DEPENDENCIES:
+       MSTRO_PM:
+         STATUS: "RUNNING"
+    FILE: <to-be-replaced-by-user-conf>
+    PLATFORM: '%DEFAULT.HPCARCH%'
+    WALLCLOCK: 09:00
+    running: chunk
+  SYNCHRONIZE:
+    DEPENDENCIES: LOCAL_SETUP
+    FILE: templates/synchronize.sh
+    PLATFORM: LOCAL
+    RUNNING: once
+

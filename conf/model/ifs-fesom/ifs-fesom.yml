@@ -1,4 +1,12 @@
 JOBS:
   SIM:
     FILE: templates/sim_ifs-fesom.sh
+  CLEAN:
+    FILE: templates/clean.sh
+    PLATFORM: "%DEFAULT.HPCARCH%-login"
+    DEPENDENCIES: SIM
+    RUNNING: chunk
+    WALLCLOCK: '00:30'
 
+RUN:
+  TYPE: test

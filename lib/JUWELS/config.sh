@@ -34,7 +34,7 @@ function load_SIM_env_ifs() {
 #
 #####################################################
 function rm_restarts_ifs() {
-    rm -rf $HPCROOTDIR/restarts
+    rm -rf "$HPCROOTDIR"/restarts
 }
 
 #####################################################
@@ -44,6 +44,6 @@ function rm_restarts_ifs() {
 # Arguments:
 #
 #####################################################
-function load_model_dir(){
-        export HPC_MODEL_DIR=/NOPATH/${MODEL_NAME}
+function load_model_dir() {
+    export HPC_MODEL_DIR=/NOPATH/${MODEL_NAME}
 }

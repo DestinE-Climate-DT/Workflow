@@ -1,0 +1,29 @@
+JOBS:
+  INI:
+    DEPENDENCIES: REMOTE_SETUP
+    FILE: templates/ini.sh
+    PLATFORM: '%DEFAULT.HPCARCH%-login'
+    RUNNING: member
+    WALLCLOCK: 00:30
+  LOCAL_SETUP:
+    FILE: templates/local_setup.sh
+    PLATFORM: LOCAL
+    RUNNING: once
+  REMOTE_SETUP:
+    DEPENDENCIES: SYNCHRONIZE
+    FILE: templates/remote_setup.sh,templates/fdb/confignative.yaml,templates/fdb/configregularll.yaml,templates/fdb/confighealpix.yaml
+    PLATFORM: '%DEFAULT.HPCARCH%-login'
+    RUNNING: once
+    WALLCLOCK: 02:00
+  SIM:
+    DEPENDENCIES: INI SIM-1
+    FILE: <to-be-replaced-by-user-conf>
+    PLATFORM: '%DEFAULT.HPCARCH%'
+    WALLCLOCK: 00:30
+    running: chunk
+  SYNCHRONIZE:
+    DEPENDENCIES: LOCAL_SETUP
+    FILE: templates/synchronize.sh
+    PLATFORM: LOCAL
+    RUNNING: once
+

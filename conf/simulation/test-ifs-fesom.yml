@@ -2,22 +2,19 @@
 ## in M340.5.1.1) (?)
 
 experiment:
-    DATELIST: 20200120
+    DATELIST: 19900101
     MEMBERS: fc0
     CHUNKSIZEUNIT: day
     CHUNKSIZE: 1
     NUMCHUNKS: 5
     CALENDAR: standard
 
-PLATFORMS:
-    LUMI:
-        PARTITION: "debug"
-        MAX_WALLCLOCK: "00:30"
-    MARENOSTRUM4:
-        PARTITION: "main"
-        MAX_WALLCLOCK: "24:00"
-
 JOBS:
    SIM:
        WALLCLOCK: "00:30"
+
+CONFIGURATION:
+    RAPS_EXPERIMENT: "hist"
+    IFS:
+        EXPVER: awi0
 

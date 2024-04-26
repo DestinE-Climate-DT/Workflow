@@ -1,0 +1,16 @@
+JOBS:
+  APP:
+    FILE: "templates/application.sh,templates/applications/aqua/only_lra.yaml"
+    DEPENDENCIES: OPA
+    RUNNING: chunk
+    WALLCLOCK: '00:05'
+    PLATFORM: "%DEFAULT.HPCARCH%"
+
+AQUA:
+    MODEL: "IFS-NEMO"
+    EXP: "ssp370"
+    SOURCE: "lra-r100-monthly"
+    VARS: "'tp', '2t', 'skt', 'tcc', 'lcc', 'mcc', 'hcc', 'sd', 'tciw', 'tclw', 'e', 'sf', 'slhf', 'sshf', 'ssr', 'str', 'strd', 'ssrd', 'tsr', 'ttr', 'tisr', 'q', 't', 'u', 'v', 'avg_tos', 'avg_siconc', 'avg_sos', 'avg_thetao', 'avg_so'"
+
+RUN:
+    MODEL: "ifs-nemo"

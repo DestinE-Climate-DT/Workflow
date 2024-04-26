@@ -1,0 +1,20 @@
+mars-keys:
+  class: d1
+  dataset: climate-dt
+  activity: CMIP6 # To be overwritten by workflow
+  experiment: hist # To be overwritten by workflow
+  generation: 1 
+  model: IFS-NEMO # To be overwritten by workflow
+  realization: 1
+  expver: a0fe  # To be overwritten by workflow
+  stream: clte
+  date: 19900101  # To be overwritten by workflow
+  type: fc
+  time: 0000/to/2300/by/0100
+  levtype: hl
+  levelist:
+   - 100
+  param:
+   - 228246  # 100u
+   - 228247  # 100v
+

@@ -1,6 +1,6 @@
 #!/bin/bash
 
-set -xuve 
+set -xuve
 
 # passing arguments needed
 HPCROOTDIR=$1
@@ -16,10 +16,10 @@ export MHM_DIR="$HPCROOTDIR/$PROJDEST/lib/runscript/run_mhm"
 DATE="${start_year}_${start_month}_${start_day}"
 
 # copying mHM fluxes for current time-step to final_results
-cp ${MHM_DIR}/output/mHM_Fluxes_States.nc ${WORK_DIR}/final_results/mHM_Fluxes_States_${DATE}.nc
+cp ${MHM_DIR}/output/mHM_Fluxes_States.nc ${MHM_DIR}/final_results/mHM_Fluxes_States_${DATE}.nc
 
 # moving re-start file for the next time step
-mv ${MHM_DIR}/output/mHM_restart_001.nc ${MHM_DIR}/input/restart/
+cp ${MHM_DIR}/output/mHM_restart_001.nc ${MHM_DIR}/input/restart/
 
 # adding extra day to current mHM_Fluxes_States.nc
 shift="1day"

@@ -1,0 +1,87 @@
+RUN:
+  OPA_NAMES:
+  APP_NAMES:
+JOBS:
+  LOCAL_SETUP:
+    FILE: templates/local_setup.sh
+    PLATFORM: LOCAL
+    RUNNING: once
+  SYNCHRONIZE:
+    FILE: templates/synchronize.sh
+    PLATFORM: LOCAL
+    DEPENDENCIES: LOCAL_SETUP
+    RUNNING: once
+  REMOTE_SETUP:
+    FILE: templates/remote_setup.sh,templates/fdb/confignative.yaml,templates/fdb/configregularll.yaml,templates/fdb/confighealpix.yaml
+    # Compilation needs to be done in the login node for being able to clone packages
+    PLATFORM: "%DEFAULT.HPCARCH%-login"
+    DEPENDENCIES: SYNCHRONIZE
+    RUNNING: once
+    WALLCLOCK: '02:00'
+  INI:
+    FILE: templates/ini.sh
+    PLATFORM: "%DEFAULT.HPCARCH%-login"
+    DEPENDENCIES: REMOTE_SETUP
+    RUNNING: member
+    WALLCLOCK: '00:30'
+  SIM:
+    FILE: <to-be-replaced-by-user-conf>
+    PLATFORM: "%DEFAULT.HPCARCH%"
+    DEPENDENCIES: INI SIM-1
+    running: chunk
+    WALLCLOCK: '00:30'
+  DN:
+    FILE: "templates/dn.sh,conf/mother_request.yml"
+    DEPENDENCIES:
+      SIM:
+        STATUS: "RUNNING"
+      DN:
+        SPLITS_FROM:
+          'all':
+            SPLITS_TO: 'previous'
+    RUNNING: chunk
+    WALLCLOCK: '08:00'
+    PLATFORM: "%DEFAULT.HPCARCH%-login"
+    SPLITS: 15
+    TOTALJOBS: 1
+    CHECK: on_submission
+#"%CURRENT_%"
+  OPA:
+    FOR:
+      NAME: "%RUN.OPA_NAMES%" 
+      SPLITS: 
+    DEPENDENCIES:
+    FILE: templates/opa.sh
+    PLATFORM: "%DEFAULT.HPCARCH%"
+    PARTITION: "%CURRENT_APP_PARTITION%"
+    RUNNING: chunk
+    NODES: 1
+    PROCESSORS: 1
+    TASKS: 1
+    THREADS: 1
+    CHECK: on_submission
+  APP:
+    FOR:
+      NAME: "%RUN.APP_NAMES%"
+      SPLITS: 
+      DEPENDENCIES:
+    FILE: "templates/application.sh,templates/applications/aqua/only_lra.yaml"
+    DEPENDENCIES: OPA
+    RUNNING: chunk
+    WALLCLOCK: '00:05'
+    PLATFORM: "%DEFAULT.HPCARCH%"
+    PARTITION: "%CURRENT_APP_PARTITION%"
+    NODES: 1
+    PROCESSORS: 1
+    TASKS: 1
+    THREADS: 1
+    CHECK: on_submission
+
+#WRAPPERS:
+#  POLICY: "mixed"
+#  MIN_WRAPPED: 3
+#  MAX_WRAPPED: 3
+#  wrapper:
+#      TYPE: "horizontal"
+#      JOBS_IN_WRAPPER: "%RUN.OPA_NAMES%"
+

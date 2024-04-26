@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# Input data 
+# Input data
 start_year=${1}
 start_month=${2}
 start_day=${3}
@@ -17,10 +17,8 @@ MRM_ARG_PATH=${13}
 MRM_NETWORK_DIR=${14}
 MRM_ID_GAUGES_FILE=${15}
 
-
-
-# Generate mrm nml content 
-cat - << MRMPARALLEL > ${WORK_DIR}/run_parallel_mrm.sh
+# Generate mrm nml content
+cat - <<MRMPARALLEL >${WORK_DIR}/run_parallel_mrm.sh
 #!/bin/bash
 #set -e
 #set -u

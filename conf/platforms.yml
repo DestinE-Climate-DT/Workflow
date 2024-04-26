@@ -9,11 +9,14 @@ Platforms:
         #     IdentifyFile ~/.ssh/<your_sshkey>
         #     User <bsc user>
     PROJECT: dese28
+    HPC_PROJECT_DIR: /gpfs/projects/dese28
     USER: <to-be-overloaded-in-user-conf>
     QUEUE: debug
     SCRATCH_DIR: /gpfs/scratch
+    FDB_DIR: /gpfs/projects/dese28/experiments
     ADD_PROJECT_TO_HOST: False
     TEMP_DIR: ''
+    PROCESSORS_PER_NODE: 48
     CUSTOM_DIRECTIVES: "['#SBATCH --exclusive', '#SBATCH --export=ALL', '#SBATCH --hint=nomultithread']"
   marenostrum4-login:
     TYPE: ps
@@ -25,6 +28,8 @@ Platforms:
         #     IdentifyFile ~/.ssh/<your_sshkey>
         #     User <bsc user>
     PROJECT: dese28
+    HPC_PROJECT_DIR: /gpfs/projects/dese28
+    FDB_DIR: /gpfs/projects/dese28/experiments
     USER: <to-be-overloaded-in-user-conf>
     SCRATCH_DIR: /gpfs/scratch
     ADD_PROJECT_TO_HOST: False
@@ -74,12 +79,15 @@ Platforms:
         #     User <lumi user>
     PROJECT: project_465000454
     HPC_PROJECT_DIR: /projappl/project_465000454
+    FDB_DIR: /scratch/project_465000454/experiments
+    FDB_PROD: "/users/lrb_465000454_fdb"
     USER: <to-be-overloaded-in-user-conf>
     SCRATCH_DIR: /scratch
     ADD_PROJECT_TO_HOST: False
     TEMP_DIR: ''
-    TOTALJOBS: 12
-    MAXWAITINGJOBS: 12
+    DATABRIDGE_FDB_HOME: "/users/lrb_465000454_fdb/databridge"
+    TOTAL_JOBS: 1
+    MAX_WAITING_JOBS: 1
   lumi:
     TYPE: slurm
     HOST: lumi-cluster #lumi.csc.fi
@@ -90,14 +98,19 @@ Platforms:
         #     User <lumi user>
     PROJECT: project_465000454
     HPC_PROJECT_DIR: /projappl/project_465000454
+    FDB_DIR: /scratch/project_465000454/experiments
     USER: <to-be-overloaded-in-user-conf>
     SCRATCH_DIR: /scratch
     ADD_PROJECT_TO_HOST: False 
     TEMP_DIR: '' 
     BUDGET: "project_465000454"
     EXECUTABLE: "/bin/bash --login"
+    DATABRIDGE_FDB_HOME: "/users/lrb_465000454_fdb/databridge"
     CUSTOM_DIRECTIVES: "['#SBATCH --exclusive', '#SBATCH --export=ALL', '#SBATCH --hint=nomultithread', '#SBATCH --mem=0']"
-    PARTITION: debug
+    APP_PARTITION: small
+    FDB_PROD: "/users/lrb_465000454_fdb"
+    MAX_PROCESSORS: 99999
+    MAX_WALLCLOCK: "00:30"
   levante-login:
     TYPE: ps
     HOST: levante
@@ -131,3 +144,4 @@ Platforms:
     PROCESSORS_PER_NODE: 128
     BUDGET: <to-be-overloaded-by-user>
     EXECUTABLE: "/usr/bin/bash -l" # this is needed on levante to make it find the module command
+

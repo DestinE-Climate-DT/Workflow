@@ -1,6 +1,6 @@
 #!/bin/bash
 
-set -xuve 
+set -xuve
 
 # passing arguments needed
 HPCROOTDIR=$1
@@ -39,21 +39,21 @@ export OMP_NUM_THREADS=${SLURM_CPUS_PER_TASK:-1}
 
 # --------------- creating nml for mrm
 ./generate_mrm_nml.sh \
-"${start_year}" \
-"${start_month}" \
-"${start_day}" \
-"${end_year}" \
-"${end_month}" \
-"${end_day}" \
-"${WORK_DIR}" \
-"${RESTART_DIR}" \
-"${HM_WORK}" \
-"${HM_OUTFILE}" \
-"${MRM_METEO_INPUT}" \
-"${MRM_EXE}" \
-"${MRM_ARG_PATH}" \
-"${MRM_NETWORK_DIR}" \
-"${MRM_ID_GAUGES_FILE}" 
+    "${start_year}" \
+    "${start_month}" \
+    "${start_day}" \
+    "${end_year}" \
+    "${end_month}" \
+    "${end_day}" \
+    "${WORK_DIR}" \
+    "${RESTART_DIR}" \
+    "${HM_WORK}" \
+    "${HM_OUTFILE}" \
+    "${MRM_METEO_INPUT}" \
+    "${MRM_EXE}" \
+    "${MRM_ARG_PATH}" \
+    "${MRM_NETWORK_DIR}" \
+    "${MRM_ID_GAUGES_FILE}"
 
 # to be able to execute the file
 chmod 777 run_parallel_mrm.sh

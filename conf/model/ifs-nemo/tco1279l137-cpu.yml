@@ -1,4 +1,5 @@
 CONFIGURATION:
+  DQC_PROFILE: production
   IFS:
     GTYPE: tco
     RESOL: 1279
@@ -19,4 +20,5 @@ PLATFORMS:
     NODES: 240
     TASKS: 16
     THREADS: 8
+    PROCESSORS_PER_NODE: 128
    

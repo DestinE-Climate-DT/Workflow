@@ -1,4 +1,5 @@
 CONFIGURATION:
+  DQC_PROFILE: development
   ICON:
     ATM_GID: "0033"
     ATM_REF: "R02B08"
@@ -21,17 +22,14 @@ PLATFORMS:
     PROCESSORS: 192
     CUSTOM_DIRECTIVES: "['#SBATCH --export=ALL']"
   LUMI:
-    WALLCLOCK: '7:00'
-    PARTITION: standard
+    WALLCLOCK: '08:00'
+    MAX_WALLCLOCK: '48:00'
+    PARTITION: ju-strategic
     NODES: 270
     TASKS: 32
     THREADS: 8
+    PROCESSORS_PER_NODE: 128
     CUSTOM_DIRECTIVES: "['#SBATCH --export=ALL --exclusive']"
-  LUMI-login:
-    WALLCLOCK: '01:00'
-    NODES: 1
-    PROCESSORS: 16
-    CUSTOM_DIRECTIVES: "['#SBATCH --exclusive']"
   LEVANTE:
     WALLCLOCK: '08:00'
     PARTITION: compute

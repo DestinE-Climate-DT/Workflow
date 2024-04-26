@@ -1,0 +1,1972 @@
+#! /bin/bash
+
+set -xve
+# Utilities
+PATH="${MODEL_DIR}":$PATH
+
+SCRIPT_DIR=${thisdir:="${MODEL_DIR}"/run}
+
+# Load traditional error handling
+. $SCRIPT_DIR/add_run_routines
+# Reset files and file names for check_error and check_final_status
+final_status_file=${SCRIPT_DIR}/${job_name}.final_status
+current_status_file=${SCRIPT_DIR}/${job_name}.status
+rm -f ${final_status_file} ${current_status_file}
+
+# load local setting, if existing
+# -------------------------------
+if [ -a ../setting ]
+then
+  echo "Load Setting"
+  . ../setting
+fi
+
+# how to submit the next job
+# --------------------------
+job_name="${EXPNAME}"
+
+# cdo for post-processing
+# -----------------------
+cdo="cdo"
+cdo_diff="cdo diffn"
+
+#=============================================================================
+#
+# Support log style output
+#
+pipe=icon_esm_run_$$.pipe
+mkfifo $pipe
+trap "cd $PWD && rm -f $pipe" EXIT
+awk '{print strftime("%FT%T:"), $0; fflush()}' $pipe &
+exec > $pipe 2>&1
+
+#=============================================================================
+
+ulimit -s 4194304
+ulimit -c 0
+
+# ----------------------------------------------------------------------------
+# ICON Historical 1990 10 km - 5 km setup for DestinE production
+# ----------------------------------------------------------------------------
+
+# (0) Basic model configuration
+# -----------------------------
+
+# Mark current run as started in log
+echo $(date -u +'%Y-%m-%dT%H:%M:%SZ') ${start_date%:*} ${end_date%:*} ${SLURM_JOBID} start
+
+# Show current start date in job configuration
+sh -c 'scontrol update JobId=$SLURM_JOB_ID Comment="$*"' scomment $start_date
+
+#------------------------------------------------------------------------------
+
+# (5) Define the model configuration
+#-----------------------------------
+
+# Write namelist files directly to working directory, create this if missing
+
+EXPDIR="${experiments_dir}"/"${EXPNAME}"/run_${start_date//[-:]/}-${end_date//[-:]/}
+
+if [[ -d $EXPDIR ]]
+then
+    echo "$(date +'%Y-%m-%dT%H:%M:%S'): removing run dir '$EXPDIR'"
+    rm -fvr $EXPDIR
+fi
+
+mkdir -vp $EXPDIR
+cd $EXPDIR
+
+# I.1 Split the number of total procs and assign to each component
+# ----------------------------------------------------------------
+
+atm_tasks=$(( SLURM_NTASKS_HET_GROUP_0 ))
+oce_tasks=$(( SLURM_NTASKS_HET_GROUP_1 ))
+yaco_tasks=$(( SLURM_NTASKS_HET_GROUP_2 ))
+
+tot_tasks=$(( atm_tasks + oce_tasks ))
+
+atm_min_rank=0
+atm_max_rank=$(( atm_tasks - 1 ))
+atm_inc_rank=1
+
+oce_min_rank=$(( atm_max_rank + 1 ))
+oce_max_rank=$(( atm_max_rank + oce_tasks ))
+oce_inc_rank=1
+
+#
+# I.2 Fill model list
+# -------------------
+#
+
+namelist_list[0]="$atm_namelist"
+modelname_list[0]="atmo"
+modeltype_list[0]=1
+minrank_list[0]=$atm_min_rank
+maxrank_list[0]=$atm_max_rank
+incrank_list[0]=$atm_inc_rank
+#
+namelist_list[1]="$oce_namelist"
+modelname_list[1]="ocean"
+modeltype_list[1]=2
+minrank_list[1]=$oce_min_rank
+maxrank_list[1]=$oce_max_rank
+incrank_list[1]=$oce_inc_rank
+
+
+#
+# create ICON master, coupling and model namelists
+# ------------------------------------------------
+# For a complete list see Namelist_overview and Namelist_overview.pdf
+#
+
+cat > icon_master.namelist << EOF
+&master_nml
+    lrestart = ${lrestart}
+    read_restart_namelists = .false.
+/
+&master_time_control_nml
+    calendar = 'proleptic gregorian'
+    checkpointtimeintval = "${checkpoint_interval}"
+    restarttimeintval = "${restart_interval}"
+    experimentstartdate = "${start_date}"
+    experimentstopdate = "${end_date}"
+/
+&master_model_nml ! 'atmo'
+    model_name = 'atmo'
+    model_namelist_filename = 'NAMELIST_atm'
+    model_type = 1
+    model_min_rank = $atm_min_rank
+    model_max_rank = $atm_max_rank
+    model_inc_rank = $atm_inc_rank
+    model_rank_group_size = $atm_group_size
+/
+&master_model_nml ! 'ocean'
+    model_name = 'ocean'
+    model_namelist_filename = 'NAMELIST_oce'
+    model_type = 2
+    model_min_rank = $oce_min_rank
+    model_max_rank = $oce_max_rank
+    model_inc_rank = $oce_inc_rank
+    model_rank_group_size = $oce_group_size
+/
+&jsb_control_nml
+    is_standalone = .false.
+    debug_level = 0
+    restart_jsbach = ${restart_jsbach}
+    timer_level = 0
+/
+&jsb_model_nml
+    model_id = 1
+    model_name = 'JSBACH'
+    model_shortname = 'jsb'
+    model_description = 'JSBACH land surface model'
+    model_namelist_filename = 'NAMELIST_lnd'
+/
+&time_nml
+    is_relative_time = .true.
+/
+EOF
+
+#
+# OCEAN Level list, needed for yaco
+# ---------------------------------
+#
+
+OCE_LEVELS_LIST=" 2.0,   2.2,   2.5,   2.8,   3.1,   3.5,   3.9,   4.4,   4.9,   5.4, \
+                  5.9,   6.4,   7.1,   7.7,   8.4,   9.2,  10.1,  11.0,  12.0,  13.2, \
+                 14.4,  15.7,  17.1,  18.7,  20.4,  22.3,  24.3,  26.5,  28.9,  31.5, \
+                 34.3,  37.3,  40.6,  43.1,  45.3,  46.8,  48.4,  50.0,  51.7,  53.4, \
+                 55.2,  57.0,  58.9,  60.8,  62.9,  66.6,  72.6,  80.6,  90.6, 100.2, \
+                110.0, 120.3, 128.7, 137.4, 146.4, 155.7, 165.2, 174.8, 184.4, 194.1, \
+                203.6, 212.9, 221.9, 230.5, 238.5, 245.9, 252.4, 258.1, 262.8, 266.4, \
+                268.9, 270.1"
+
+#
+# PRESSURE level list, needed for yaco
+# ---------------------------------
+#
+
+pressure_levels="100.0,500.0,1000.0,2000.0,3000.0,5000.0,7000.0,10000.0,15000.0,20000.0,25000.0,30000.0,40000.0,50000.0,60000.0,70000.0,85000.0,92500.0,100000.0"
+pressure_levels_fdb="1,5,10,20,30,50,70,100,150,200,250,300,400,500,600,700,850,925,1000"
+npressure_levels=19
+
+#
+# ATM-Grid UUIDS & TYPE
+#
+atm_vgrid_uuid=bd44d42adfa5e0a829e93b98afcb2d20
+atm_vgrid_type=4
+#
+cat > coupling.yaml << EOF
+definitions:
+  atm2oce: &atm2oce
+    src_component: atmo
+    src_grid: icon_atmos_grid
+    tgt_component: ocean
+    tgt_grid: icon_ocean_grid
+    src_lag: ${atm_lag}
+    tgt_lag: ${oce_lag}
+  oce2atm: &oce2atm
+    src_component: ocean
+    src_grid: icon_ocean_grid
+    tgt_component: atmo
+    tgt_grid: icon_atmos_grid
+    src_lag: ${oce_lag}
+    tgt_lag: ${atm_lag}
+  atm2yaco0: &atm2yaco0
+    src_component: atmo_output
+    src_grid: icon_atmos_grid
+    tgt_component: yaco0
+    tgt_grid: healpix
+    src_lag: ${atm_lag}
+    tgt_lag: ${yaco_lag}
+  atm2yaco1: &atm2yaco1
+    src_component: atmo_output
+    src_grid: icon_atmos_grid
+    tgt_component: yaco1
+    tgt_grid: healpix
+    src_lag: ${atm_lag}
+    tgt_lag: ${yaco_lag}
+  atm2yaco2: &atm2yaco2
+    src_component: atmo_output
+    src_grid: icon_atmos_grid
+    tgt_component: yaco2
+    tgt_grid: healpix
+    src_lag: ${atm_lag}
+    tgt_lag: ${yaco_lag}
+  atm2yaco3: &atm2yaco3
+    src_component: atmo_output
+    src_grid: icon_atmos_grid
+    tgt_component: yaco3
+    tgt_grid: healpix
+    src_lag: ${atm_lag}
+    tgt_lag: ${yaco_lag}
+  atm2yaco4: &atm2yaco4
+    src_component: atmo_output
+    src_grid: icon_atmos_grid
+    tgt_component: yaco4
+    tgt_grid: healpix
+    src_lag: ${atm_lag}
+    tgt_lag: ${yaco_lag}
+  oce2yaco5: &oce2yaco5
+    src_component: ocean_output
+    src_grid: icon_ocean_grid
+    tgt_component: yaco5
+    tgt_grid: healpix
+    src_lag: ${oce_lag}
+    tgt_lag: ${yaco_lag}
+  oce2yaco6: &oce2yaco6
+    src_component: ocean_output
+    src_grid: icon_ocean_grid
+    tgt_component: yaco6
+    tgt_grid: healpix
+    src_lag: ${oce_lag}
+    tgt_lag: ${yaco_lag}
+  oce2yaco7: &oce2yaco7
+    src_component: ocean_output
+    src_grid: icon_ocean_grid
+    tgt_component: yaco7
+    tgt_grid: healpix
+    src_lag: ${oce_lag}
+    tgt_lag: ${yaco_lag}
+
+  time_config: &time_config
+    coupling_period: ${couplingTimeStep}
+    time_reduction: average
+
+  time_config_1h_inst: &time_config_1h_inst
+    coupling_period: PT1H
+    time_reduction: none
+
+  time_config_1h_acc: &time_config_1h_acc
+    coupling_period: PT1H
+    time_reduction: accumulate
+
+  time_config_1h_avg: &time_config_1h_avg
+    coupling_period: PT1H
+    time_reduction: average
+
+  time_config_24h_avg: &time_config_24h_avg
+    coupling_period: P1D
+    time_reduction: average
+
+  interp_stacks:
+    nnn_interp_stack: &nnn_interp_stack
+      interpolation:
+        - nnn:
+            n: 1
+            weighted: arithmetic_average
+        - fixed:
+            user_value: -999.9
+    hcsbb_interp_stack: &hcsbb_interp_stack
+      interpolation:
+        - bernstein_bezier
+        - nnn:
+            n: 4
+            weighted: arithmetic_average
+        - fixed:
+            user_value: -999.9
+    conserv_interp_stack: &conserv_interp_stack
+      interpolation:
+        - conservative:
+            order: 1
+            enforced_conservation: false
+            partial_coverage: true
+            normalisation: fracarea
+        - fixed:
+            user_value: -999.9
+    spmap_interp_stack: &spmap_interp_stack
+      interpolation:
+        - source_to_target_map:
+            weighted: arithmetic_average
+            spread_distance: 0.3
+
+timestep_unit: ISO_format
+calendar: proleptic-gregorian
+
+coupling:
+  - <<: [ *atm2oce, *hcsbb_interp_stack, *time_config ]
+    field: [surface_downward_eastward_stress,
+            surface_downward_northward_stress,
+            10m_wind_speed]
+  - <<: [ *atm2oce, *conserv_interp_stack, *time_config ]
+    field: [surface_fresh_water_flux,
+            total_heat_flux,
+            atmosphere_sea_ice_bundle]
+  - <<: [ *atm2oce, *conserv_interp_stack, *time_config ]
+    field: [sea_level_pressure] 
+  - <<: [ *oce2atm, *conserv_interp_stack, *time_config ]
+    field: [sea_surface_temperature,
+            eastward_sea_water_velocity,
+            northward_sea_water_velocity,
+            ocean_sea_ice_bundle]
+  - <<: [ *atm2oce, *spmap_interp_stack, *time_config ]
+    field: river_runoff
+  - <<: [ *atm2yaco0, *nnn_interp_stack, *time_config_1h_inst ]
+    field: [ pressure_levels_temp, pressure_levels_u, pressure_levels_v ]
+  - <<: [ *atm2yaco1, *nnn_interp_stack, *time_config_1h_inst ]
+    field: [ pressure_levels_hus, pressure_levels_hur, pressure_levels_clw ]
+  - <<: [ *atm2yaco2, *nnn_interp_stack, *time_config_1h_inst ]
+    field: [ pressure_levels_omega, pressure_levels_gpsm, pressure_levels_pv ]
+  - <<: [ *atm2yaco3, *nnn_interp_stack, *time_config_1h_inst ]
+    field: [ pr, tas, clt, uas, vas, dew2, clivi, cllvi, pres_sfc, pres_msl ]
+  - <<: [ *atm2yaco3, *nnn_interp_stack, *time_config_1h_avg ]
+    field: [ hfss, hfls ]
+    scale_factor: 3600.0 # output timestep in seconds, hard coded
+  - <<: [ *atm2yaco4, *nnn_interp_stack, *time_config_1h_inst ]
+    field: [ ts_rad, prw, ts ]
+  - <<: [ *atm2yaco4, *nnn_interp_stack, *time_config_1h_acc ]
+    field: [ tauu, tauv ]
+  - <<: [ *atm2yaco4, *nnn_interp_stack, *time_config_1h_avg ]
+    field: [ rsds, rlds, rsns, rsnt, rlns, rlnt ]
+    scale_factor: 3600.0 # output timestep in seconds, hard coded
+  - <<: [ *oce2yaco5, *nnn_interp_stack, *time_config_24h_avg ]
+    field: [ conc, hi, hs, ice_u, ice_v, mlotst, zos ]
+  - <<: [ *oce2yaco6, *nnn_interp_stack, *time_config_24h_avg ]
+    field: to
+    scale_summand: 273.15
+  - <<: [ *oce2yaco6, *nnn_interp_stack, *time_config_24h_avg ]
+    field: so
+  - <<: [ *oce2yaco7, *nnn_interp_stack, *time_config_24h_avg ]
+    field: [ u, v, w ]
+EOF
+#
+# YACO Configuration file
+#
+cat > yaco.yml << EOF
+definitions:
+  fdb_pressure_levels: &fdb_pressure_levels # need to set those for FDB explicitely to ensure hPa unit
+    levelist:
+      source: yaco
+      key: collection_index
+      lookup: direct
+      lookup_table: [ $pressure_levels_fdb ]
+
+  fdb_levelist: &fdb_levelist
+    levelist:
+      source: grib
+      key: mars.levelist
+      maybeempty: true
+
+  grib_ocean_halflevels: &grib_ocean_halflevels
+    scaledValueOfFirstFixedSurface:
+      source: yaco
+      key: collection_index
+      offset: 1
+    scaleFactorOfFirstFixedSurface: 0
+
+  grib_ocean_levels: &grib_ocean_levels
+    scaledValueOfFirstFixedSurface:
+      source: yaco
+      key: collection_index
+    scaleFactorOfFirstFixedSurface: 0
+    scaledValueOfSecondFixedSurface:
+      source: yaco
+      key: collection_index
+      offset: 1
+    scaleFactorOfSecondFixedSurface: 0
+
+  grib_pressure_levels: &grib_pressure_levels
+    scaledValueOfFirstFixedSurface:
+      source: yaco
+      key: collection_index
+      lookup: direct
+      lookup_table: [ ${pressure_levels} ]
+    scaleFactorOfFirstFixedSurface: 0
+ 
+  yac_input_default: &yac_input_default
+    calendar: gregorian
+    end_date: ${end_date}
+    start_date: ${start_date}
+    time_lag: ${yaco_lag}
+    time_step: ${yacoTimeStep}
+    yac_yaml: coupling.yaml
+
+  # The following had to be separated into several maps as between
+  # them order has to be guaranteed (e.g.
+  # productDefinitionTemplateNumber set first), but YAML maps do not
+  # guarantee order!
+  grib_statistical_output: &grib_statistical_output
+    productDefinitionTemplateNumber: 8 # statistics over time
+
+  grib_statistical_range: &grib_statistical_range
+    typeOfTimeIncrement: 255
+    yearOfEndOfOverallTimeInterval:
+      source: yaco
+      key: timestep_end
+      format: "%Y"
+    monthOfEndOfOverallTimeInterval:
+      source: yaco
+      key: timestep_end
+      format: "%m"
+    dayOfEndOfOverallTimeInterval:
+      source: yaco
+      key: timestep_end
+      format: "%d"
+    hourOfEndOfOverallTimeInterval:
+      source: yaco
+      key: timestep_end
+      format: "%H"
+    minuteOfEndOfOverallTimeInterval:
+      source: yaco
+      key: timestep_end
+      format: "%M"
+    secondOfEndOfOverallTimeInterval:
+      source: yaco
+      key: timestep_end
+      format: "%S"
+
+  grib_time_span_1h: &grib_time_span_1h
+    indicatorOfUnitForTimeRange: h
+    lengthOfTimeRange: 1
+    indicatorOfUnitForTimeIncrement: s
+    timeIncrement: ${atmos_time_step_in_sec}
+    <<: *grib_statistical_range
+
+  grib_time_span_24h: &grib_time_span_24h
+    indicatorOfUnitForTimeRange: h
+    lengthOfTimeRange: 24
+    indicatorOfUnitForTimeIncrement: s
+    timeIncrement: ${ocean_time_step_in_sec}
+    <<: *grib_statistical_range
+
+fdb_writer:
+  collections:
+    #
+    # Atmosphere 2D variables (1h accumulated)
+    #
+    hfss: # 146 Surface sensible heat flux TODO yac
+      grib_metadata:
+        - discipline: 0
+        - parameterCategory: 0
+        - parameterNumber: 11
+        - vertical.typeOfLevel: surface
+        - *grib_statistical_output
+        - typeOfStatisticalProcessing: accum
+        - *grib_time_span_1h
+    hfls: # 147 Surface latent heat flux TODO yac
+      grib_metadata:
+        - discipline: 0
+        - parameterCategory: 0
+        - parameterNumber: 10
+        - vertical.typeOfLevel: surface
+        - *grib_statistical_output
+        - typeOfStatisticalProcessing: accum
+        - *grib_time_span_1h
+    rsds: # 169 Surface short-wave (solar) radiation downwards
+      grib_metadata:
+        - discipline: 0
+        - parameterCategory: 4
+        - parameterNumber: 7
+        - vertical.typeOfLevel: surface
+        - *grib_statistical_output
+        - typeOfStatisticalProcessing: accum
+        - *grib_time_span_1h
+    rlds: # 175 Surface long-wave (thermal) radiation downwards
+      grib_metadata:
+        - discipline: 0
+        - parameterCategory: 5
+        - parameterNumber: 3
+        - vertical.typeOfLevel: surface
+        - *grib_statistical_output
+        - typeOfStatisticalProcessing: accum
+        - *grib_time_span_1h
+    rsns: # 176 Surface net short-wave (solar) radiation
+      grib_metadata:
+        - discipline: 0
+        - parameterCategory: 4
+        - parameterNumber: 9
+        - vertical.typeOfLevel: surface
+        - *grib_statistical_output
+        - typeOfStatisticalProcessing: accum
+        - *grib_time_span_1h
+    rlns: # 177 Surface net long-wave (thermal) radiation
+      grib_metadata:
+        - discipline: 0
+        - parameterCategory: 5
+        - parameterNumber: 5
+        - vertical.typeOfLevel: surface
+        - *grib_statistical_output
+        - typeOfStatisticalProcessing: accum
+        - *grib_time_span_1h
+    rsnt: # 178 Top net short-wave (solar) radiation
+      grib_metadata:
+        - discipline: 0
+        - parameterCategory: 4
+        - parameterNumber: 9
+        - vertical.typeOfLevel: nominalTop
+        - *grib_statistical_output
+        - typeOfStatisticalProcessing: accum
+        - *grib_time_span_1h
+      fdb_metadata:
+        - *fdb_levelist
+    rlnt: # 179 Top net long-wave (thermal) radiation
+      grib_metadata:
+        - discipline: 0
+        - parameterCategory: 5
+        - parameterNumber: 5
+        - vertical.typeOfLevel: nominalTop
+        - *grib_statistical_output
+        - typeOfStatisticalProcessing: accum
+        - *grib_time_span_1h
+      fdb_metadata:
+        - *fdb_levelist
+    #
+    # TODO missing:
+    #   - 8 Surface runoff
+    #   - 9 Sub-surface runoff
+    #   - 144 Snowfall
+    #   - 180 Time-integrated eastward turbulent surface stress
+    #   - 181 Time-integrated northward turbulent surface stress
+    #   - 182 Evaporation
+    #   - 212 TOA incident short-wave (solar) radiation
+    #   - 228 Total precipitation
+    #
+    # Atmosphere 2D variables (1h instant)
+    #
+    cllvi: # 78 Total column cloud liquid water
+      grib_metadata:
+        - discipline: 0
+        - parameterCategory: 1
+        - parameterNumber: 69
+        - vertical.typeOfLevel: entireAtmosphere
+      fdb_metadata:
+        - *fdb_levelist
+    clivi: # 79 Total column cloud ice water
+      grib_metadata:
+        - discipline: 0
+        - parameterCategory: 1
+        - parameterNumber: 70
+        - vertical.typeOfLevel: entireAtmosphere
+      fdb_metadata:
+        - *fdb_levelist
+    ts: # 130 Temperature - TODO missing for IFS-NEMO
+      grib_metadata:
+        - discipline: 0
+        - parameterCategory: 0
+        - parameterNumber: 0
+        - vertical.typeOfLevel: surface
+    pres_sfc: # 134 Surface pressure
+      grib_metadata:
+        - discipline: 0
+        - parameterCategory: 3
+        - parameterNumber: 0
+        - vertical.typeOfLevel: surface
+    prw: # 137 Total column vertically-integrated water vapour
+      grib_metadata:
+        - discipline: 0
+        - parameterCategory: 1
+        - parameterNumber: 64
+        - vertical.typeOfLevel: entireAtmosphere
+      fdb_metadata:
+        - *fdb_levelist
+    pres_msl: # 151 Mean sea level pressure
+      grib_metadata:
+        - discipline: 0
+        - parameterCategory: 3
+        - parameterNumber: 0
+        - vertical.typeOfLevel: meanSea
+        - scaledValueOfFirstFixedSurface: 0
+        - scaleFactorOfFirstFixedSurface: 0
+    uas: # 165 10 metre U wind component
+      grib_metadata:
+        - discipline: 0
+        - parameterCategory: 2
+        - parameterNumber: 2
+        - vertical.typeOfLevel: heightAboveGround
+        - scaledValueOfFirstFixedSurface: 10
+        - scaleFactorOfFirstFixedSurface: 0
+    vas: # 166 10 metre V wind component
+      grib_metadata:
+        - discipline: 0
+        - parameterCategory: 2
+        - parameterNumber: 3
+        - vertical.typeOfLevel: heightAboveGround
+        - scaledValueOfFirstFixedSurface: 10
+        - scaleFactorOfFirstFixedSurface: 0
+    tas: # 167 2 metre temperature
+      grib_metadata:
+        - discipline: 0
+        - parameterCategory: 0
+        - parameterNumber: 0
+        - vertical.typeOfLevel: heightAboveGround
+        - scaledValueOfFirstFixedSurface: 2
+        - scaleFactorOfFirstFixedSurface: 0
+    dew2: # 168 2 metre dewpoint temperature
+      grib_metadata:
+        - discipline: 0
+        - parameterCategory: 0
+        - parameterNumber: 6
+        - vertical.typeOfLevel: heightAboveGround
+        - scaledValueOfFirstFixedSurface: 2
+        - scaleFactorOfFirstFixedSurface: 0
+    clt: # 228164 Total Cloud Cover (as 164 uses local tables)
+      grib_metadata:
+        - discipline: 0
+        - parameterCategory: 6
+        - parameterNumber: 1
+        - vertical.typeOfLevel: entireAtmosphere
+      fdb_metadata:
+        - *fdb_levelist
+    ts_rad: # 235 Skin temperature
+      grib_metadata:
+        - discipline: 0
+        - parameterCategory: 0
+        - parameterNumber: 17
+        - vertical.typeOfLevel: surface
+    pr: # 260048 Total precipitation rate
+      grib_metadata:
+        - discipline: 0
+        - parameterCategory: 1
+        - parameterNumber: 52
+        - vertical.typeOfLevel: surface
+      fdb_metadata:
+        - *fdb_levelist
+    tauu: # 260654 Time-integrated eastward turbulent surface stress due to surface roughness
+      grib_metadata:
+        - discipline: 0
+        - parameterCategory: 2
+        - parameterNumber: 66
+        - vertical.typeOfLevel: surface
+        - *grib_statistical_output
+        - typeOfStatisticalProcessing: accum
+        - *grib_time_span_1h
+    tauv: # 260655 Time-integrated northward turbulent surface stress due to surface roughness
+      grib_metadata:
+        - discipline: 0
+        - parameterCategory: 2
+        - parameterNumber: 67
+        - vertical.typeOfLevel: surface
+        - *grib_statistical_output
+        - typeOfStatisticalProcessing: accum
+        - *grib_time_span_1h
+    # TODO missing:
+    #   - 141 Snow depth
+    #   - 148 Charnock
+    #   - 151 Mean sea level pressure (writing 260074 here instead)
+    #   - 159 Boundary layer height
+    #   - 164 Total cloud cover (writing 228164 here instead)
+    #   - 186 Low cloud cover
+    #   - 187 Medium cloud cover
+    #   - 188 High cloud cover
+    #   - 228141 Snow depth water equivalent
+    #   - 228246 100 metre U wind component
+    #   - 228247 100 metre V wind component
+    #
+    # Atmosphere 3D variables (1h instant)
+    #
+    pressure_levels_gpsm: # 129 Geopotential
+      grib_metadata:
+        - discipline: 0
+        - parameterCategory: 3
+        - parameterNumber: 4
+        - vertical.typeOfLevel: isobaricInPa
+        - *grib_pressure_levels
+      fdb_metadata:
+        - *fdb_pressure_levels
+    pressure_levels_temp: # 130 Temperature
+      grib_metadata:
+        - discipline: 0
+        - parameterCategory: 0
+        - parameterNumber: 0
+        - vertical.typeOfLevel: isobaricInPa
+        - *grib_pressure_levels
+      fdb_metadata:
+        - *fdb_pressure_levels
+    pressure_levels_u: # 131 U component of wind
+      grib_metadata:
+        - discipline: 0
+        - parameterCategory: 2
+        - parameterNumber: 2
+        - vertical.typeOfLevel: isobaricInPa
+        - *grib_pressure_levels
+      fdb_metadata:
+        - *fdb_pressure_levels
+    pressure_levels_v: # 132 V component of wind
+      grib_metadata:
+        - discipline: 0
+        - parameterCategory: 2
+        - parameterNumber: 3
+        - vertical.typeOfLevel: isobaricInPa
+        - *grib_pressure_levels
+      fdb_metadata:
+        - *fdb_pressure_levels
+    pressure_levels_pv: # 60 potential vorticity
+      grib_metadata:
+        - discipline: 0
+        - parameterCategory: 2
+        - parameterNumber: 14
+        - vertical.typeOfLevel: isobaricInPa
+        - *grib_pressure_levels
+      fdb_metadata:
+        - *fdb_pressure_levels
+    pressure_levels_hus: # 133 Specific humidity
+      grib_metadata:
+        - discipline: 0
+        - parameterCategory: 1
+        - parameterNumber: 0
+        - vertical.typeOfLevel: isobaricInPa
+        - *grib_pressure_levels
+      fdb_metadata:
+        - *fdb_pressure_levels
+    pressure_levels_omega: # 135 Vertical velocity
+      grib_metadata:
+        - discipline: 0
+        - parameterCategory: 2
+        - parameterNumber: 8
+        - vertical.typeOfLevel: isobaricInPa
+        - *grib_pressure_levels
+      fdb_metadata:
+        - *fdb_pressure_levels
+    pressure_levels_hur: # 157 Relative humidity
+      grib_metadata:
+        - discipline: 0
+        - parameterCategory: 1
+        - parameterNumber: 1
+        - vertical.typeOfLevel: isobaricInPa
+        - *grib_pressure_levels
+      fdb_metadata:
+        - *fdb_pressure_levels
+    pressure_levels_clw: # 246 Specific cloud liquid water content
+      grib_metadata:
+        - discipline: 0
+        - parameterCategory: 1
+        - parameterNumber: 83
+        - vertical.typeOfLevel: isobaricInPa
+        - *grib_pressure_levels
+      fdb_metadata:
+        - *fdb_pressure_levels
+    # TODO missing:
+    #   - 60 Potential vorticity
+    #
+    # Ocean 2D variables (24h average)
+    #
+    hi: # 263000 Time-mean sea ice thickness
+      grib_metadata:
+        - discipline: 10
+        - parameterCategory: 2
+        - parameterNumber: 1
+        - vertical.typeOfLevel: iceLayerOnWater
+        - *grib_statistical_output
+        - typeOfStatisticalProcessing: avg
+        - *grib_time_span_24h
+      fdb_metadata:
+        - *fdb_levelist
+    conc: # 263001 Time-mean sea ice area fraction
+      grib_metadata:
+        - discipline: 10
+        - parameterCategory: 2
+        - parameterNumber: 0
+        - vertical.typeOfLevel: iceTopOnWater
+        - *grib_statistical_output
+        - typeOfStatisticalProcessing: avg
+        - *grib_time_span_24h
+      fdb_metadata:
+        - *fdb_levelist
+    ice_u: # 263003 Time-mean eastward sea ice velocity
+      grib_metadata:
+        - discipline: 10
+        - parameterCategory: 2
+        - parameterNumber: 4
+        - vertical.typeOfLevel: iceLayerOnWater
+        - *grib_statistical_output
+        - typeOfStatisticalProcessing: avg
+        - *grib_time_span_24h
+      fdb_metadata:
+        - *fdb_levelist
+    ice_v: # 263004 Time-mean northward sea ice velocity
+      grib_metadata:
+        - discipline: 10
+        - parameterCategory: 2
+        - parameterNumber: 5
+        - vertical.typeOfLevel: iceLayerOnWater
+        - *grib_statistical_output
+        - typeOfStatisticalProcessing: avg
+        - *grib_time_span_24h
+      fdb_metadata:
+        - *fdb_levelist
+    hs: # 263009 Time-mean snow volume over sea ice per unit area
+      grib_metadata:
+        - discipline: 10
+        - parameterCategory: 2
+        - parameterNumber: 16
+        - vertical.typeOfLevel: snowLayerOverIceOnWater
+        - *grib_statistical_output
+        - typeOfStatisticalProcessing: avg
+        - *grib_time_span_24h
+      fdb_metadata:
+        - *fdb_levelist
+    mlotst: # 263114 Time-mean ocean mixed layer depth defined by sigma theta 0.03 kg m-3 - TODO missing for IFS-NEMO
+      grib_metadata:
+        - discipline: 10
+        - parameterCategory: 4
+        - parameterNumber: 14
+        - vertical.typeOfLevel: mixedLayerDepthByDensity
+        - scaledValueOfFirstFixedSurface: 3
+        - scaleFactorOfFirstFixedSurface: 2
+        - *grib_statistical_output
+        - typeOfStatisticalProcessing: avg
+        - *grib_time_span_24h
+      fdb_metadata:
+        - *fdb_levelist
+    zos: # 263124 Time-mean sea surface height
+      grib_metadata:
+        - discipline: 10
+        - parameterCategory: 3
+        - parameterNumber: 1
+        - vertical.typeOfLevel: oceanSurface
+        - scaledValueOfFirstFixedSurface: 0
+        - scaleFactorOfFirstFixedSurface: 0
+        - *grib_statistical_output
+        - typeOfStatisticalProcessing: avg
+        - *grib_time_span_24h
+      fdb_metadata:
+        - *fdb_levelist
+    # TODO missing:
+    #   - 263008 Time-mean sea ice volume per unit area
+    #   - 263021 Time-mean X-component of sea ice velocity
+    #   - 263022 Time-mean Y-component of sea ice velocity
+    #   - 263100 Time-mean sea surface practical salinity
+    #   - 263101 Time-mean sea surface temperature
+    #   - 263121 Time-mean vertically-integrated heat content in the upper 300 m
+    #   - 263122 Time-mean vertically-integrated heat content in the upper 700 m
+    #
+    # Ocean 3D variables (24h averages)
+    #
+    so: # 263500 Time-mean sea water practical salinity
+      grib_metadata:
+        - discipline: 10
+        - parameterCategory: 4
+        - parameterNumber: 21
+        - vertical.typeOfLevel: oceanModelLayer
+        - *grib_ocean_levels
+        - *grib_statistical_output
+        - typeOfStatisticalProcessing: avg
+        - *grib_time_span_24h
+      fdb_metadata:
+        - *fdb_levelist
+    to: # 263501 Time-mean sea water potential temperature
+      grib_metadata:
+        - discipline: 10
+        - parameterCategory: 4
+        - parameterNumber: 18
+        - vertical.typeOfLevel: oceanModelLayer
+        - *grib_ocean_levels
+        - *grib_statistical_output
+        - typeOfStatisticalProcessing: avg
+        - *grib_time_span_24h
+      fdb_metadata:
+        - *fdb_levelist
+    v: # 263505 Time-mean northward sea water velocity
+      grib_metadata:
+        - discipline: 10
+        - parameterCategory: 4
+        - parameterNumber: 24
+        - vertical.typeOfLevel: oceanModelLayer
+        - *grib_ocean_levels
+        - *grib_statistical_output
+        - typeOfStatisticalProcessing: avg
+        - *grib_time_span_24h
+      fdb_metadata:
+        - *fdb_levelist
+    u: # 263506 Time-mean eastward sea water velocity
+      grib_metadata:
+        - discipline: 10
+        - parameterCategory: 4
+        - parameterNumber: 23
+        - vertical.typeOfLevel: oceanModelLayer
+        - *grib_ocean_levels
+        - *grib_statistical_output
+        - typeOfStatisticalProcessing: avg
+        - *grib_time_span_24h
+      fdb_metadata:
+        - *fdb_levelist
+    w: # 263507 Time-mean upward sea water velocity
+      grib_metadata:
+        - discipline: 10
+        - parameterCategory: 4
+        - parameterNumber: 27
+        - vertical.typeOfLevel: oceanModel
+        - *grib_ocean_halflevels
+        - *grib_statistical_output
+        - typeOfStatisticalProcessing: avg
+        - *grib_time_span_24h
+      fdb_metadata:
+        - *fdb_levelist
+
+  fdb_config: ${FDB_HOME}/etc/fdb/config.yaml
+  fdb_metadata:
+    - class:
+        source: grib
+        key: class
+    - dataset:
+        source: grib
+        key: dataset
+    - activity:
+        source: grib
+        key: activity
+    - experiment:
+        source: grib
+        key: experiment
+    - generation:
+        source: grib
+        key: generation
+    - model:
+        source: grib
+        key: model
+    - realization:
+        source: grib
+        key: realization
+    - expver:
+        source: grib
+        key: experimentVersionNumber
+    - stream:
+        source: grib
+        key: marsStream
+    - resolution:
+        source: grib
+        key: resolution
+    - type:
+        source: grib
+        key: mars.type
+    - time:
+        source: yaco
+        key: timestep_begin
+        format: "%H%M"
+    - date:
+        source: yaco
+        key: timestep_begin
+        format: "%Y%m%d"
+    - param:
+        source: grib
+        key: paramId
+    - levtype:
+        source: grib
+        key: mars.levtype
+
+  grib_metadata:
+    - centre: ecmf
+    - subCentre: 1003
+    - tablesVersion: 31
+    - typeOfProcessedData: fc
+    - setLocalDefinition: 1 # write section 2
+    - significanceOfReferenceTime: 2
+    - year:
+        source: yaco
+        key: timestep_begin
+        format: "%Y"
+    - month:
+        source: yaco
+        key: timestep_begin
+        format: "%m"
+    - day:
+        source: yaco
+        key: timestep_begin
+        format: "%d"
+    - hour:
+        source: yaco
+        key: timestep_begin
+        format: "%H"
+    - minute:
+        source: yaco
+        key: timestep_begin
+        format: "%M"
+    - second:
+        source: yaco
+        key: timestep_begin
+        format: "%S"
+    - productionStatusOfProcessedData: 12 # 12=destine production, 13=destine test
+    - generatingProcessIdentifier: 255
+    - hoursAfterDataCutoff: 65535
+    - minutesAfterDataCutoff: 255
+    - dataset: climate-dt
+    - class: d1
+    - activity: ${activity}
+    - experiment: ${experiment}
+    - generation: ${generation}
+    - mars.stream: clte
+    - mars.type: fc
+    - model: ICON
+    - realization: ${realization}
+    - resolution: ${resolution}
+    - experimentVersionNumber: ${EXPVER}
+    - gridType:
+        source: grid
+        key: type
+    - Nside:
+        source: grid
+        key: sides
+    - orderingConvention:
+        source: grid
+        key: order
+    - shapeOfTheEarth: 6
+    - longitudeOfFirstGridPoint: 0
+    - bitsPerValue: 16 # has to be set BEFORE packingType
+    - packingType: grid_ccsds
+    - missingValue:
+        source: yaco
+        key: missing_value
+    - bitmapPresent:
+        source: yaco
+        key: has_missing_values
+    - values:
+        source: data
+
+grid:
+  name: healpix # as identified in YAC
+  nside: 10
+  order: nested
+  type: healpix
+
+output: fdb
+
+yac_input:
+  ranks:
+    $(( tot_tasks + 0 )):
+      <<: *yac_input_default
+      name: yaco0
+      collections:
+        - name: pressure_levels_temp
+          size: ${npressure_levels}
+        - name: pressure_levels_u
+          size: ${npressure_levels}
+        - name: pressure_levels_v
+          size: ${npressure_levels}
+    $(( tot_tasks + 1 )):
+      <<: *yac_input_default
+      name: yaco1
+      collections:
+        - name: pressure_levels_hur
+          size: ${npressure_levels}
+        - name: pressure_levels_hus
+          size: ${npressure_levels}
+        - name: pressure_levels_clw
+          size: ${npressure_levels}
+    $(( tot_tasks + 2 )):
+      <<: *yac_input_default
+      name: yaco2
+      collections:
+        - name: pressure_levels_gpsm
+          size: ${npressure_levels}
+        - name: pressure_levels_omega
+          size: ${npressure_levels}
+        - name: pressure_levels_pv
+          size: ${npressure_levels}
+    $(( tot_tasks + 3 )):
+      <<: *yac_input_default
+      name: yaco3
+      collections:
+        - name: pr
+          size: 1
+        - name: tas
+          size: 1
+        - name: clt
+          size: 1
+        - name: uas
+          size: 1
+        - name: vas
+          size: 1
+        - name: dew2
+          size: 1
+        - name: hfss
+          size: 1
+        - name: hfls
+          size: 1
+        - name: clivi
+          size: 1
+        - name: cllvi
+          size: 1
+        - name: pres_sfc
+          size: 1
+        - name: pres_msl
+          size: 1
+    $(( tot_tasks + 4 )):
+      <<: *yac_input_default
+      name: yaco4
+      collections:
+        - name: ts_rad
+          size: 1
+        - name: rsds
+          size: 1
+        - name: rlds
+          size: 1
+        - name: rsns
+          size: 1
+        - name: rsnt
+          size: 1
+        - name: rlns
+          size: 1
+        - name: rlnt
+          size: 1
+        - name: prw
+          size: 1
+        - name: tauu
+          size: 1
+        - name: tauv
+          size: 1
+        - name: ts
+          size: 1
+    $(( tot_tasks + 5 )):
+      <<: *yac_input_default
+      name: yaco5
+      collections:
+        - name: conc
+          size: 1
+        - name: hi
+          size: 1
+        - name: hs
+          size: 1
+        - name: ice_u
+          size: 1
+        - name: ice_v
+          size: 1
+        - name: mlotst
+          size: 1
+        - name: zos
+          size: 1
+    $(( tot_tasks + 6 )):
+      <<: *yac_input_default
+      name: yaco6
+      collections:
+        - name: so
+          size: ${oce_levels}
+        - name: to
+          size: ${oce_levels}
+    $(( tot_tasks + 7 )):
+      <<: *yac_input_default
+      name: yaco7
+      collections:
+        - name: u
+          size: ${oce_levels}
+        - name: v
+          size: ${oce_levels}
+        - name: w
+          size: ${oce_halflevels}
+EOF
+
+#-----------------------------------------------------------------------------
+# II. ATMOSPHERE and LAND
+#-----------------------------------------------------------------------------
+#
+# atmosphere namelist
+# -------------------
+
+cat > NAMELIST_atm << EOF
+
+&coupling_mode_nml
+    coupled_to_ocean = .true.
+    coupled_to_output= .true.
+/
+&output_nml ! Cheat ICON to allocate memory.
+    output_filename  = "${EXPNAME}_atm_yaco"
+    filename_format  = "<output_filename>_<levtype_l>_<datetime2>"
+    filetype         = 5
+    operation        = 'none'
+    output_grid      = .FALSE.
+   !output_start     = "${start_date}"               ! output_start = output_end
+   !output_end       = "${start_date}"               ! --> write once only irrespective of
+    output_start     = "1850-01-01T00:00:00Z"               ! output_start = output_end
+    output_end       = "1850-01-01T00:00:00Z"               ! output_start = output_end
+    output_interval  = 'P1Y'         !     the output interval and
+    file_interval    = 'P1Y'         !     the file interval
+    include_last     = .FALSE.
+    ml_varlist       = 'cllvi' , 'clivi', 'prw', 'rlns', 'rsns', 'rsnt', 'rlnt'
+/
+&output_nml ! ATM-YACO comms for pressure levels
+    output_filename  = "pressure_levels"
+    filetype         = 999
+    !operation        = 'mean'
+    output_grid      = .FALSE.
+    output_start     = "${start_date}"
+    output_end       = "${end_date}"
+    output_interval  = "${atmTimeStep}"
+    steps_per_file   = 0
+    pl_varlist       = 'clw', 'gpsm', 'hur', 'hus', 'omega', 'pv', 'ta', 'ua', 'va'
+    p_levels         = ${pressure_levels}
+    remap            = 0
+/
+&parallel_nml
+    nproma = ${nproma_atm}
+   !nproma_sub = 500
+    num_io_procs = 0
+    nblocks_c = 1
+    io_proc_chunk_size = 46
+    io_process_stride = 8
+    num_restart_procs = $((atm_tasks/8))
+    iorder_sendrecv   = 3
+/
+&grid_nml
+    dynamics_grid_filename = 'icon_grid_G.nc'
+/
+&run_nml
+    num_lev = 90 ! number of full levels
+    modeltimestep = "${atmTimeStep}"
+    ltestcase = .false. ! run testcase
+    ldynamics = .true. ! dynamics
+    ltransport = .true. ! transport
+    iforcing = 2 ! 0: none, 1: HS, 2: ECHAM, 3: NWP
+    output = 'nml'
+    msg_level = 10 ! level of details report during integration
+    restart_filename = '${EXPNAME}_restart_atm_${end_date}.mfr'
+    activate_sync_timers = .true.
+    timers_level = 10
+/
+&extpar_nml
+    itopo = 1 ! 1: read topography from the grid file
+/
+&initicon_nml
+    init_mode = 2 ! 2: initialize from IFS analysis
+    ifs2icon_filename = 'ifs2icon.nc'
+/
+&nonhydrostatic_nml
+ ndyn_substeps    = 5 ! dtime/dt_dyn
+ damp_height      = 40000. ! [m]
+ rayleigh_coeff   = 1.0
+ vwind_offctr     = 0.2
+ divdamp_fac      = 0.004
+ divdamp_order    = 24
+ divdamp_trans_end = 17500
+ divdamp_trans_start = 12500
+ divdamp_type     = 32
+ exner_expol      = 0.333
+ hbot_qvsubstep   = 16000.
+ htop_moist_proc  = 22500.
+ iadv_rhotheta    = 2
+ igradp_method    = 3
+ itime_scheme     = 4
+ ivctype          = 2
+ l_zdiffu_t       = .true.
+ thhgtd_zdiffu    = 125.
+ thslp_zdiffu     = 0.02
+/
+&sleve_nml
+ min_lay_thckn    = 25. ! [m]
+ top_height       = 75000. ! [m]
+ stretch_fac      = 0.9
+ decay_scale_1    = 4000. ! [m]
+ decay_scale_2    = 2500. ! [m]
+ decay_exp        = 1.2
+ flat_height      = 16000. ! [m]
+ htop_thcknlimit  = 14000.
+ max_lay_thckn    = 400.
+/
+&diffusion_nml
+/
+&transport_nml
+    ihadv_tracer = 20, 20, 20, 20, 20, 20
+    itype_hlimit = 3, 4, 4, 4, 4, 4
+    ivadv_tracer = 3, 3, 3, 3, 3, 3
+    tracer_names = 'hus', 'clw', 'cli', 'qr', 'qs', 'qg'
+/
+&aes_phy_nml
+!
+! domain 1
+! --------
+!
+! atmospheric physics (""=never)
+ aes_phy_config(1)%dt_rad = "${radTimeStep}"
+ aes_phy_config(1)%dt_vdf = "${atmTimeStep}"
+ aes_phy_config(1)%dt_mig = "${atmTimeStep}"
+!
+! surface (.TRUE. or .FALSE.)
+ aes_phy_config(1)%ljsb   = .TRUE.
+ aes_phy_config(1)%lamip  = .FALSE.
+ aes_phy_config(1)%lice   = .TRUE.
+ aes_phy_config(1)%lmlo   = .FALSE.
+ aes_phy_config(1)%llake  = .FALSE.
+ aes_phy_config(1)%use_shflx_adjustment = .FALSE.
+ aes_phy_config(1)%iqneg_d2p = 2
+ aes_phy_config(1)%iqneg_p2d = 2
+/
+&aes_rad_nml
+  ! domain 1
+ aes_rad_config(1)%isolrad = 1
+ aes_rad_config(1)%irad_h2o = 1
+ aes_rad_config(1)%irad_co2 = 3
+ aes_rad_config(1)%irad_ch4 = 13
+ aes_rad_config(1)%irad_n2o = 13
+ aes_rad_config(1)%irad_o3 = 5 ! yearly ozone files
+ aes_rad_config(1)%irad_o2 = 2
+ aes_rad_config(1)%irad_cfc11 = 3
+ aes_rad_config(1)%irad_cfc12 = 3
+ aes_rad_config(1)%irad_aero = 13
+ aes_rad_config(1)%inhom_lts = .true.
+ aes_rad_config(1)%inhom_lts_max = 0.725
+ aes_rad_config(1)%lclearsky = .FALSE. 
+/
+&aes_vdf_nml
+ aes_vdf_config(1)%pr0        =  0.7
+ aes_vdf_config(1)%turb       =  2        ! TTE (2 for Smagorinsky)
+ aes_vdf_config(1)%use_tmx    = .TRUE.
+ aes_vdf_config(1)%energy_type = 2 ! Only used for tmx
+ aes_vdf_config(1)%dissipation_factor = 1.3 ! Only used for tmx
+/
+&aes_cov_nml
+    aes_cov_config(1)%cqx = 1.e-6
+/
+&aes_cop_nml
+    aes_cop_config(1)%cinhomi = 0.6
+    aes_cop_config(1)%cinhoms = 0.6
+    aes_cop_config(1)%cinhoml = 0.4
+    aes_cop_config(1)%cn1lnd = 50.0
+    aes_cop_config(1)%cn1sea = 50.0
+    aes_cop_config(1)%cn2lnd = 220.0
+    aes_cop_config(1)%cn2sea = 100.0
+/
+! Parameters for all output files
+! -------------------------------
+&io_nml
+    output_nml_dict = 'dict.txt'
+    netcdf_dict = 'dict.txt'
+    itype_pres_msl = 4
+    restart_file_type = 5
+    restart_write_mode = 'joint procs multifile'
+/
+&sea_ice_nml
+    albedow_sim  = 0.10
+    albi         = 0.70
+    albim        = 0.68
+    albs         = 0.81
+    albsm        = 0.77
+    i_ice_dyn    = 1
+    i_ice_therm  = 1
+    leadclose_1  = 0.25
+    leadclose_2n = 0.666
+    delta_min = 2.0e-09
+    cd_io = 5.5e-3
+    evp_rheol_steps = 240
+    luse_replacement_pressure = .true.
+/
+EOF
+
+# jsbach namelist
+# ---------------
+
+cat > NAMELIST_lnd << EOF
+&jsb_model_nml
+    usecase = 'jsbach_lite'
+    use_lakes = .true.
+    use_tmx = .true.
+    fract_filename = 'bc_land_frac.nc'
+    init_from_ifs = .true.
+/
+&jsb_seb_nml
+    bc_filename = 'bc_land_phys.nc'
+    ic_filename = 'ic_land_soil.nc'
+/
+&jsb_rad_nml
+    use_alb_veg_simple = .true. ! if jsbach_lite
+    bc_filename = 'bc_land_phys.nc'
+    ic_filename = 'ic_land_soil.nc'
+/
+&jsb_turb_nml
+    bc_filename = 'bc_land_phys.nc'
+    ic_filename = 'ic_land_soil.nc'
+    max_ini_rough_m      = 1.0
+/
+&jsb_sse_nml
+    l_heat_cap_map = .false.
+    l_heat_cond_map = .false.
+    l_heat_cap_dyn = .false.
+    l_heat_cond_dyn = .false.
+    l_snow = .true.
+    l_dynsnow = .true.
+    l_freeze = .true.
+    l_supercool = .false.
+    bc_filename = 'bc_land_soil.nc'
+    ic_filename = 'ic_land_soil.nc'
+    l_soil_texture       = .true.
+/
+&jsb_hydro_nml
+    l_organic            = .false.
+    l_socmap             = .false.
+    bc_filename          = 'bc_land_soil.nc'
+    ic_filename          = 'ic_land_soil.nc'
+    bc_sso_filename      = 'bc_land_sso.nc'
+    l_soil_texture       = .true.
+/
+&jsb_assimi_nml
+    active = .false. ! if jsbach_pfts
+/
+&jsb_pheno_nml
+    scheme = 'climatology' ! 'climatology' if jsbach_lite
+    bc_filename = 'bc_land_phys.nc'
+    ic_filename = 'ic_land_soil.nc'
+/
+&jsb_carbon_nml
+    active = .false.
+    bc_filename = 'bc_land_carbon.nc'
+    ic_filename = 'ic_land_carbon.nc'
+    read_cpools = .false.
+/
+&jsb_fuel_nml
+    active = .false.
+    fuel_algorithm = 1
+/
+&jsb_disturb_nml
+    active = .false.
+    ic_filename = 'ic_land_soil.nc'
+    bc_filename = 'bc_land_phys.nc'
+    fire_algorithm = 1
+    windbreak_algorithm = 1
+    lburn_pasture = .false.
+/
+&jsb_hd_nml
+    active = .true.
+    routing_scheme = 'full' ! 'zero': simple scheme with zero runoff everywhere
+    diag_water_budget = .true.
+    debug_hd = .false.
+    enforce_water_budget = .false. ! stop in case of water conservation problem
+    bc_filename = 'bc_land_hd.nc'
+    ic_filename = 'ic_land_hd.nc'
+    use_bifurcated_rivers = .TRUE.
+    read_initial_reservoirs = ${read_initial_reservoirs}
+/
+
+EOF
+
+#-----------------------------------------------------------------------------
+# III. OCEAN and SEA-ICE (and HAMOCC) 
+#-----------------------------------------------------------------------------
+#
+# ocean namelist
+# --------------
+
+cat > NAMELIST_oce << EOF
+
+&coupling_mode_nml
+    coupled_to_atmo = .true.
+    coupled_to_output= .true.
+/
+&output_nml ! Cheat ICON to allocate memory.
+    output_filename  = "${EXPNAME}_oce_yaco"
+    filename_format  = "<output_filename>_<levtype_l>_<datetime2>"
+    filetype         = 5              
+    operation        = 'none'         
+    output_grid      = .FALSE.
+    !output_start     = "${start_date}"               ! output_start = output_end
+    !output_end       = "${start_date}"               ! --> write once only irrespective of
+    output_start     = "1850-01-01T00:00:00Z"               ! output_start = output_end
+    output_end       = "1850-01-01T00:00:00Z"               ! output_start = output_end
+    output_interval  = 'PT6H'      !     the output interval and
+    file_interval    = "${restart_interval}"        !     the file interval
+    ml_varlist       = 'mlotst' , 'hs' , 'hi' , 'conc'
+/
+&output_nml ! OCE Netcdf output for diagnostics 'oce_mon'
+    output_filename = '${EXPNAME}_oce_mon'
+    filename_format = '<output_filename>_<datetime2>'
+    filetype = 5
+    mode = 1
+    output_start = "${start_date}"
+    output_end = "${end_date}"
+    output_interval = 'PT6H'
+    file_interval = "${restart_interval}"
+    include_last = .false.
+    output_grid = .true.
+    operation = 'mean'
+    ml_varlist = 'group:ocean_monitor'
+/ 
+&output_nml ! OCE Netcdf output for diagnostics 'oce_qps'
+    output_filename = '${EXPNAME}_oce_qps'
+    filename_format = '<output_filename>_<datetime2>'
+    filetype = 5
+    mode = 1
+    output_start = "${start_date}"
+    output_end = "${end_date}"
+    output_interval = 'P1M'
+    file_interval = 'P1M'
+    include_last = .false.
+    operation = 'mean'
+    ml_varlist = 'to', 'so', 'tke', 'u', 'v', 'w_deriv', 'zos', 'hi', 'hs',
+                 'conc', 'mlotst', 'verticallyTotal_mass_flux_e', 'ice_u',
+                 'ice_v', 'zos_square', 'HeatFlux_Total', 'FrshFlux_Runoff',
+                 'FrshFlux_Precipitation', 'FrshFlux_Evaporation',
+                 'FrshFlux_TotalOcean', 'FrshFlux_VolumeIce', 'totalsnowfall',
+                 'FrshFlux_VolumeTotal', 'group:ocean_moc'
+/
+&parallel_nml
+    nproma            = ${nproma_oce}
+    num_io_procs      = 0
+    num_prefetch_proc = 0
+    l_fast_sum        = .false.
+    num_restart_procs = $((oce_tasks/8))
+    p_test_run        = .false.
+    iorder_sendrecv   = 3
+/
+&grid_nml
+    dynamics_grid_filename = 'icon_grid_O.nc'
+    use_dummy_cell_closure = .true.
+    use_duplicated_connectivity = .false.
+/
+&run_nml
+    modeltimestep = "${oceTimeStep}"
+    output = 'nml' ! namelist controlled output scheme
+    activate_sync_timers = .true.
+    profiling_output = 1 ! aggregated: 1; detailed: 2; in files: 3
+    msg_timestamp = .false.
+    timers_level = 10
+    debug_check_level = 1
+    restart_filename = '${EXPNAME}_restart_oce_${end_date}.mfr'
+/
+&dbg_index_nml
+  idbg_mxmn                  = 0                                ! initialize MIN/MAX  debug output
+  idbg_val                   = 0                                ! initialize one cell debug output
+  idbg_slev                  = 1                                ! initialize start level for debug output
+  idbg_elev                  = 5                                ! initialize end level for debug output
+  dbg_lat_in                 = 30.0                             ! latitude location of one cell debug output
+  dbg_lon_in                 = -30.0                            ! longitude location of one cell debug output
+  str_mod_tst                = 'all'                            ! define modules to print out in debug mode
+/
+&ocean_dynamics_nml
+
+    vert_cor_type     = 1
+    minVerticalLevels = 10
+    n_zlev            = ${oce_levels}
+    dzlev_m = ${OCE_LEVELS_LIST}
+    
+    l_edge_based                  = .FALSE. ! edge- or cell-based mimetic discretization
+    select_solver                 = 4       ! 1=gmres_oce_old; 2=ocean_restart_gmres, 3=mixed precisison restart, 
+                                            ! 4=CG (default) 5=CGJ 6=BiCG 7=GMRES restart (legacy) 8=MINRES
+    use_absolute_solver_tolerance = .TRUE.
+    fast_performance_level        = 200     ! performance level 12: for cell-based; 5: default
+    use_continuity_correction     = .TRUE.  ! height adjustment according to vertical velocity in dynamics
+    cfl_check                     = .FALSE.
+    cfl_write                     = .FALSE.
+    i_bc_veloc_top                = 1
+    i_bc_veloc_bot                = 1       ! 0: (def) bottom friction off, 1: on
+    l_lhs_direct                  = .FALSE.
+    l_partial_cells               = .FALSE.
+    select_lhs                    = 1
+    solver_max_restart_iterations = 100
+    solver_tolerance = 1.0E-10
+    solver_max_iter_per_restart = 14
+/
+&ocean_tracer_transport_nml
+    flux_calculation_horz = 5 ! 1=upwind, 2=central, 3=Lax-Friedrichs, 4=Miura, 5=FCT with Zalesak limiter (default)
+    flux_calculation_vert = 7 ! 6=adpo; 7=upwind biased ppm (default); 8=FCT with Zalesak limiter
+    ! define low and high order methods to be used in
+    ! horizontal flux corrected transport methods
+    ! (flux_calculation_horz=4,5)
+    fct_low_order_flux = 1 ! horizontal low  order method: 1=upwind (def), no other implemented
+    fct_high_order_flux = 5 ! horizontal high order method: 1=upwind, 2=central, 3=lax_friedrichs, 4=miura_order1
+    fct_limiter_horz = 100 ! Zalesak
+    threshold_min_t = -2.0
+/
+&ocean_horizontal_diffusion_nml
+    laplacian_form                             = 1                ! 1=curlcurl-graddiv
+    VelocityDiffusion_order                    = 2                ! 21=biharmonic+laplacian (for the laplacian leith)
+    BiharmonicViscosity_scaling                = 4
+    BiharmonicViscosity_reference              = 2.7E-2           ! [m2/s] constant horizontal viscosity coefficient for velocity
+    BiharmonicViscosity_background             = 0.0              ! [m2/s] constant horizontal viscosity coefficient for velocity
+    HarmonicViscosity_scaling                  = 1
+    HarmonicViscosity_reference                = 2.0              ! [m2/s] constant horizontal viscosity coefficient for velocity
+    TracerHorizontalDiffusion_scaling          = 1
+    Temperature_HorizontalDiffusion_Background = 0.0
+    Temperature_HorizontalDiffusion_Reference  = 0
+    Salinity_HorizontalDiffusion_Background    = 0.0
+    Salinity_HorizontalDiffusion_Reference     = 0
+/
+&ocean_vertical_diffusion_nml
+    alpha_tke                                  = 30.0
+    c_eps                                      = 0.7
+    c_k                                        = 0.1
+    cd                                         = 3.75
+    kappam_max                                 = 100.0
+    kappam_min                                 = 0.0
+    mxl_min                                    = 1.D-8
+    only_tke                                   = .TRUE.
+    ppscheme_type                              = 0
+    tke_min                                    = 1.D-6
+    tke_mxl_choice                             = 2
+    tke_surf_min                               = 1.d-4
+    use_lbound_dirichlet                       = .FALSE.
+    use_ubound_dirichlet                       = .FALSE.
+    vert_mix_type                              = 2
+    clc                                        = 0.15
+    l_lc                                       = .TRUE.
+/
+&ocean_gentmcwilliamsredi_nml
+    gmredi_configuration = 0 ! 0=cartesian diffusion; 1=GM-Redi: bolus advection + isopycnal diffusion
+    tapering_scheme = 1
+    gmredi_usesrelativemaxslopes = .false.
+    s_max = 1.0e-3 ! 1.0
+    s_d = 1.0e-4 ! 5e-3 to 5e-4
+    k_tracer_gm_kappa_parameter = 0.0
+    k_tracer_isoneutral_parameter = 0.0 ! value for cell-based cartesian diffusion - mpiom: 1000/400km = 400/160km
+    k_tracer_dianeutral_parameter = 0.0 ! 1.0E-5
+    switch_off_diagonal_vert_expl = .true.
+    gmredi_combined_diagnostic = .false.
+    revert_vertical_recon_and_transposed = .true.
+    slope_calc_via_temperture_salinity = .true.
+    include_slope_squared_implicit = .true. ! think of l_with_vert_tracer_diffusion
+    switch_on_tapering_horizontal_diffusion = .true.
+/
+&ocean_physics_nml
+    i_sea_ice = 1 ! 0 = no sea ice; 1 = sea ice model on; default=1
+/
+&ocean_forcing_nml
+    iforc_oce = 14 ! ocean forcing: 14 from coupling via YAC
+    forcing_windstress_u_type = 2 ! 0: zero wind stress, 1: read from file, 2: none
+    forcing_windstress_v_type = 2 ! 0: zero wind stress, 1: read from file, 2: none
+    limit_seaice = .true. ! default: TRUE
+    seaice_limit = 6.0 ! hard limit set to 80% of upper layer for sea ice
+    lfix_salt_content = .false. ! fix global ocean+ice salt content to constant (false)
+    jerlov_atten = 0.08
+    jerlov_bluefrac = 0.36
+    lcheck_salt_content = .false.
+    limit_elevation = .false.
+    limit_seaice_type = 1
+    lswr_jerlov = .true.
+    tides_mod = 1
+    use_tides = .false.
+    atm_pressure_included_in_icedyn = .true.
+    atm_pressure_included_in_ocedyn = .true.
+/
+&ocean_diagnostics_nml
+    diagnose_for_heat_content = .true.
+    diagnose_for_horizontalvelocity = .false.
+    diagnose_for_tendencies = .false.
+    diagnostics_level = 1
+/
+&io_nml
+    restart_file_type = 5
+    write_last_restart = .true.
+    ! restart_write_mode = 'joint procs multifile' ! not yet available in ocean model
+    ! lnetcdf_flt64_output = .true. ! 64 bit output in all files
+    ! lkeep_in_sync = .true. ! sync after each timestep
+    write_initial_state = .false.
+    restart_write_mode = 'joint procs multifile'
+/
+&sea_ice_nml
+    albedow_sim = 0.10
+    albi = 0.70
+    albim = 0.68
+    albs = 0.81
+    albsm = 0.77
+    i_ice_dyn = 1
+    i_ice_therm = 1
+    leadclose_1 = 0.25
+    leadclose_2n = 0.666
+    delta_min = 2.0E-09
+    cd_io = 5.5E-3
+    evp_rheol_steps = 240
+    luse_replacement_pressure = .true.
+/
+&ocean_initialConditions_nml
+    initial_salinity_type                      = 0                ! 0: none, 1: read S from initial_state.nc
+    initial_temperature_type                   = 0                ! 0: none, 1: read T from initial_state.nc
+    initialize_fromRestart                     = ${initialize_fromrestart}
+/
+EOF
+
+# Selectively add disturbance to overcome model failure
+# ------------------------------------------------
+
+if [[ "$disturbance_command" ]]
+then   
+    echo "disturbing model for start date ${start_date}, using '$disturbance_command'"
+    eval "$disturbance_command"
+fi
+
+#-----------------------------------------------------------------------------
+
+#=============================================================================
+#
+# This section of the run script prepares and starts the model integration. 
+#
+#-----------------------------------------------------------------------------
+
+#-----------------------------------------------------------------------------
+# Provide input files
+# $Id: format.tmpl 9264 2021-06-21 21:24:57Z m221078 $
+#
+# [files]
+
+# [files.atmosphere]
+atmosphere_dir="${icon_data_rootFolder}"/grids/public/mpim
+
+# [files.atmosphere.mapped]
+mapped_dir=$atmosphere_dir/0033
+ln -snvf $mapped_dir/icon_grid_0033_R02B08_G.nc icon_grid_G.nc
+
+# [files.atmosphere.mapped.initial]
+initial_dir=$mapped_dir/initial_condition
+ln -snvf $initial_dir/ifs2icon_1990010100_R02B08_G.nc ifs2icon.nc
+
+# [files.atmosphere.common]
+common_dir=$atmosphere_dir/common
+
+# [files.atmosphere.common.greenhouse]
+greenhouse_dir=$common_dir/greenhouse_gases
+ln -snvf $greenhouse_dir/greenhouse_ssp370.nc bc_greenhouse_gases.nc
+
+# [files.atmosphere.common.solar_radiation]
+solar_radiation_dir=$common_dir/solar_radiation
+ln -snvf $solar_radiation_dir/swflux_14band_cmip6_1850-2299-v3.2.nc bc_solar_irradiance_sw_b14.nc 
+
+y0=${start_date::4}
+yN=${end_date::4}
+
+ozone_dir=$mapped_dir/ozone
+
+# [files.atmosphere.mapped.ozone]
+for((yr = y0 + -1; yr <= yN + 1; ++yr))
+do
+    ((yr < 2015)) && label=historical
+    ((yr > 2014)) && label=ssp370
+    ln -snvf $ozone_dir/bc_ozone_${label}_${yr}.nc bc_ozone_${yr}.nc
+done
+
+# [files.atmosphere.mapped.ocean_surface]
+ocean_surface_dir=$mapped_dir/sst_and_seaice
+ln -snvf $ocean_surface_dir/bc_sic_1988-1992.nc bc_sic.nc
+ln -snvf $ocean_surface_dir/bc_sst_1988-1992.nc bc_sst.nc
+
+# [files.atmosphere.mapped.aerosols]
+aerosols_dir=$mapped_dir/aerosol_kinne
+ln -snvf $aerosols_dir/bc_aeropt_kinne_lw_b16_coa.nc .
+ln -snvf $aerosols_dir/bc_aeropt_kinne_sw_b14_coa.nc .
+
+y0=${start_date::4}
+yN=${end_date::4}
+
+for((yr = y0 + -1; yr <= yN + 1; ++yr)) 
+do
+    ln -snvf $aerosols_dir/bc_aeropt_kinne_sw_b14_fin_${yr}.nc .
+done
+
+# [files.atmosphere.restart]
+restart_dir="${experiments_dir}"/"${EXPNAME}"/restarts 
+
+if [ ! -d "${restart_dir}" ]; then
+   mkdir ${restart_dir}
+fi
+
+# If second chunk read/write from mfr (multirestartfile)
+if [ "${lrestart}" == ".true." ]; then
+      ln -snvf $restart_dir/"${EXPNAME}"_restart_atm_${start_date}.mfr \
+      multifile_restart_atm.mfr
+fi
+# [files.atmosphere.model]
+model_dir="${MODEL_DIR}"
+
+# [files.atmosphere.model.data]
+data_dir=$model_dir/data
+ln -snvf $data_dir/ECHAM6_CldOptProps_rrtmgp_lw.nc \
+    rrtmgp-cloud-optics-coeffs-lw.nc
+ln -snvf $data_dir/ECHAM6_CldOptProps_rrtmgp_sw.nc \
+    rrtmgp-cloud-optics-coeffs-sw.nc
+
+# [files.atmosphere.model.rrtmgp]
+rrtmgp_dir=$model_dir/data
+ln -snvf $rrtmgp_dir/rrtmgp-gas-lw-g128.nc coefficients_lw.nc
+ln -snvf $rrtmgp_dir/rrtmgp-gas-sw-g112.nc coefficients_sw.nc
+
+# [files.atmosphere.model.run]
+run_dir=$model_dir/run
+cp -fv $run_dir/dict.iconam.mpim dict.txt
+
+# [files.land]
+land_dir="${icon_data_rootFolder}"/grids/public/mpim
+
+# [files.land.mapped]
+mapped_dir=$land_dir/0033-0016/land
+ln -snvf $mapped_dir/ic_land_soil_2015.nc ic_land_soil.nc
+ln -snvf $mapped_dir/bc_land_frac_2015.nc bc_land_frac.nc
+ln -snvf $mapped_dir/bc_land_phys_2015.nc bc_land_phys.nc
+ln -snvf $mapped_dir/bc_land_soil_2015.nc bc_land_soil.nc
+ln -snvf $mapped_dir/bc_land_sso_2015.nc bc_land_sso.nc
+ln -snvf $mapped_dir/hdpara_r2b8_0033_0016_mc_maxl_s_v1.nc    bc_land_hd.nc
+ln -snvf $mapped_dir/hdstart_r2b8_0033_0016_mc_maxl_s_v1_1.nc ic_land_hd.nc
+
+# [files.land.model]
+model_dir="${MODEL_DIR}"/externals/jsbach/data
+ln -snvf $model_dir/lctlib_nlct21.def .
+
+# [files.ocean]
+ocean_dir="${icon_data_rootFolder}"/grids/public/mpim
+
+# [files.ocean.grids]
+grids_dir=$ocean_dir/0016
+ln -snvf $grids_dir/icon_grid_0016_R02B09_O.nc icon_grid_O.nc
+
+# [files.ocean.restart]
+restart_dir="${experiments_dir}"/"${EXPNAME}"/restarts
+
+# If second chunk read/write from mfr (multirestartfile)
+# If running first chunk then itialize ocean from excisting restart data
+
+if [ "${initialize_fromrestart}" == ".false." ]; then
+   ln -snvf $restart_dir/"${EXPNAME}"_restart_oce_${start_date}.mfr \
+      multifile_restart_ocean.mfr
+else
+   restart_dir=$grids_dir"/ocean/restart"
+   ln -snvf $restart_dir/exp.ocean_era51h_zstar_r2b9_23097-ERA_restart_oce_19900101T000000Z.nc \
+      multifile_restart_ocean.mfr
+fi
+
+#-----------------------------------------------------------------------------
+#  get model
+#
+ls -l ${MODEL_C}
+check_error $? "${MODEL_C} does not exist?"
+#
+ldd ${MODEL_C}
+#
+ls -l ${MODEL_G}
+check_error $? "${MODEL_G} does not exist?"
+#
+ldd ${MODEL_G}
+#-----------------------------------------------------------------------------
+#
+# start experiment
+#
+
+rm -f finish.status
+#
+date
+set -x
+
+# Environment for ICON gpu 
+cat > icon.gpu << 'EOF'
+source $BASH_ENV
+module load rocm
+
+device=$(($SLURM_LOCALID%8))
+
+export ROCR_VISIBLE_DEVICES=$device
+export MPICH_GPU_SUPPORT_ENABLED=1
+
+export PMI_SIGNAL_STARTUP_COMPLETION=1
+export PMI_VERSION_DISPLAY=1
+
+export FI_MP_CACHE_MONITOR="memhooks"
+export FI_CXI_OPTIMIZED_MRS=FALSE
+
+${MODEL_G}
+EOF
+
+# Environment for ICON CPU
+cat > icon.cpu << 'EOF'
+source $BASH_ENV
+
+export FI_MP_CACHE_MONITOR="memhooks"
+export FI_CXI_OPTIMIZED_MRS=FALSE
+
+export PMI_SIGNAL_STARTUP_COMPLETION=1
+export PMI_VERSION_DISPLAY=1
+
+export OMP_STACKSIZE=256M
+export OMP_NUM_THREADS=1
+export ICON_THREADS=1
+
+${MODEL_C}
+EOF
+
+cat > yaco.cpu << 'EOF'
+source $BASH_ENV
+module load rocm
+
+export FI_MP_CACHE_MONITOR="memhooks"
+export FI_CXI_OPTIMIZED_MRS=FALSE
+
+export PMI_SIGNAL_STARTUP_COMPLETION=1
+export PMI_VERSION_DISPLAY=1
+
+${OUTPUT_TASK} yaco.yml
+EOF
+
+chmod 755 ./icon.gpu
+chmod 755 ./icon.cpu
+chmod 755 ./yaco.cpu
+
+# Run and set hetjob environments
+
+export MODELg="${MODEL_DIR}/scripts/lumi_scripts/run4lumi.sh ./icon.gpu"
+export MODELc="${MODEL_DIR}/scripts/lumi_scripts/run4lumi.sh ./icon.cpu"
+export OUTPUTc="${MODEL_DIR}/scripts/lumi_scripts/run4lumi.sh ./yaco.cpu"
+
+set | grep SLURM
+
+date
+export LD_PRELOAD="/scratch/project_465000454/lunttila/libpreload-me.so"
+srun --export=ALL -l -n $atm_tasks ${MODELg} : -n $oce_tasks ${MODELc} : -n $yaco_tasks --cpus-per-task 7 ${OUTPUTc} || exit 1
+date
+
+if [ -r finish.status ] ; then
+  check_final_status 0 "${START} ${MODEL}"
+else
+  check_final_status -1 "${START} ${MODEL}"
+fi
+
+# Handle restart hand-over
+
+cp -lrfv ${EXPNAME}_restart_atm_${end_date}.mfr "${experiments_dir}"/"${EXPNAME}"/restarts
+cp -lrfv ${EXPNAME}_restart_oce_${end_date}.mfr "${experiments_dir}"/"${EXPNAME}"/restarts
+
+# Clean up our restart
+
+rm -rfv ${EXPNAME}_restart_atm_${end_date}.mfr
+rm -rfv ${EXPNAME}_restart_oce_${end_date}.mfr
+#
+#-----------------------------------------------------------------------------
+#
+
+finish_status=`cat finish.status`
+echo $finish_status
+echo "============================"
+echo "Script run successfully: $finish_status"
+echo "============================"
+
+#-----------------------------------------------------------------------------
+
+# Mark current run as successful in log
+echo $(date -u +'%Y-%m-%dT%H:%M:%SZ') ${start_date%:*} ${end_date%:*} ${SLURM_JOBID} end
+
+cp finish.status ${run_dir}
+
+status=0
+exit $status
+
+#-----------------------------------------------------------------------------
+# vim:ft=sh
+#-----------------------------------------------------------------------------

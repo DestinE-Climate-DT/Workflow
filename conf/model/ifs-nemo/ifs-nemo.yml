@@ -2,3 +2,5 @@ JOBS:
   SIM:
     FILE: templates/sim_ifs-nemo.sh
 
+RUN:
+  TYPE: test

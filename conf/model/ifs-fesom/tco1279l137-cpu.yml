@@ -1,0 +1,22 @@
+CONFIGURATION:
+  IFS:
+    GTYPE: tco
+    RESOL: 1279
+    LEVELS: 137
+    LABEL: LWDA
+    IO_NODES: 15
+    IO_PPN: 16
+  FESOM:
+    IO_NODES: 10
+    IO_PPN: 8
+
+PLATFORMS: 
+  LUMI:
+    TYPE: slurm
+    PARTITION: "ju-strategic"
+    MAX_WALLCLOCK: "06:00"
+    NODES: 201
+    TASKS: 16
+    THREADS: 8
+    CUSTOM_DIRECTIVES: "['#SBATCH --hint=nomultithread', '#SBATCH --exclusive', '#SBATCH --mem=0']"
+

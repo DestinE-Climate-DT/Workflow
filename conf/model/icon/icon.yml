@@ -1,9 +1,6 @@
-MODEL:
-  SOURCE: git@gitlab.dkrz.de:icon/icon-mpim.git
-  BRANCH: feature-destine-ngc3-wo-hiopy
-  VERSION: icon-mpim
-  NAME: icon
-
 JOBS:
   SIM:
     FILE: templates/sim_icon.sh
+
+RUN:
+  TYPE: test

@@ -7,14 +7,14 @@ set -xuve
 # Interface
 ROOTDIR=${1:-%ROOTDIR%}
 PROJDEST=${2:-%PROJECT.PROJECT_DESTINATION%}
-MODEL_NAME=${3:-%RUN.MODEL%}
+MODEL_NAME=${3:-%MODEL.NAME%}
 HPCARCH=${4:-%HPCARCH%}
-MODEL_VERSION=${5:-%RUN.MODEL_VERSION%}
+MODEL_VERSION=${5:-%MODEL.VERSION%}
 ENVIRONMENT=${6:-%RUN.ENVIRONMENT%}
-MODEL=${3:-%MODEL.MODEL_NAME%}
-MODEL_SOURCE=${4:-%MODEL.SOURCE%}
-MODEL_BRANCH=${5:-%MODEL.BRANCH%}
-APP=${7:-%RUN.APP%}
+INPUTS=${7:-%CONFIGURATION.INPUTS%}
+APP=${8:-%APP.NAMES%}
+WORKFLOW=${9:-%RUN.WORKFLOW%}
+MAESTRO=${10:-%RUN.MAESTRO%}
 
 LIBDIR="${ROOTDIR}"/proj/"${PROJDEST}"/lib
 
@@ -30,86 +30,137 @@ ATM_MODEL=${MODEL_NAME%%-*}
 . "${LIBDIR}"/"${HPCARCH}"/config.sh
 
 #####################################################
-# Compresses specified directory using tar command 
+# Compresses specified directory using tar command
 # Globals:
 # Arguments:
 #   Project directory
 #####################################################
 function tar_project() {
-  echo "Compressing project"
-  PROJ=$1
-  tar -czvf "${PROJ}".tar.gz "${PROJ}"
+    echo "Compressing project"
+    PROJ=$1
+    tar -czvf "${PROJ}".tar.gz "${PROJ}"
 
 }
 
 #####################################################
-# Checker for xproc and yproc variables in ifs-nemo. 
+# Checker for xproc and yproc variables in ifs-nemo.
 #####################################################
 function checker_ifs-nemo() {
-	NEMO_XPROC=%CONFIGURATION.IFS.NEMO_XPROC%
-	NEMO_YPROC=%CONFIGURATION.IFS.NEMO_YPROC%
+    NEMO_XPROC=%CONFIGURATION.IFS.NEMO_XPROC%
+    NEMO_YPROC=%CONFIGURATION.IFS.NEMO_YPROC%
 
-	TOTAL_NEMO_PROCS=-1
+    TOTAL_NEMO_PROCS=-1
 
-	IO_NODES=%CONFIGURATION.IFS.IO_NODES%
+    IO_NODES=%CONFIGURATION.IFS.IO_NODES%
 
-# Put this into a lib function?
-	NODES=%PLATFORMS.LUMI.NODES%
-	TASKS=%PLATFORMS.LUMI.TASKS%
+    # Put this into a lib function?
+    NODES=%PLATFORMS.LUMI.NODES%
+    TASKS=%PLATFORMS.LUMI.TASKS%
 
-	IFS_PROCESSORS=$(($(($NODES-$IO_NODES))*$TASKS))
+    IFS_IO_PPN=%CONFIGURATION.IFS.IO_PPN%
+    IFS_IO_PPN=${IFS_IO_PPN:-0}
+    NEMO_IO_PPN=%CONFIGURATION.NEMO.IO_PPN%
+    NEMO_IO_PPN=${NEMO_IO_PPN:-0}
+    IFS_IO_NODES=%CONFIGURATION.IFS.IO_NODES%
+    NEMO_IO_NODES=%CONFIGURATION.NEMO.IO_NODES%
+    IFS_IO_TASKS=%CONFIGURATION.IFS.IO_TASKS%
+    NEMO_IO_TASKS=%CONFIGURATION.NEMO.IO_TASKS%
 
-	if [ ! -z $NEMO_XPROC ] && [ ! -z $NEMO_YPROC ]; then
-        	TOTAL_NEMO_PROCS=$(($NEMO_XPROC*$NEMO_YPROC))
-	fi
+    IFS_PROCESSORS=$(($(($NODES - $IO_NODES)) * $TASKS))
 
-	if [ $IFS_PROCESSORS = $TOTAL_NEMO_PROCS ]; then
-        	echo "IFS processors match the total number of nemo processors (XPROC*YPROC)"
-	elif [ -z $NEMO_XPROC ] && [ -z $NEMO_YPROC ]; then
-        	echo "NEMO XPROC and NEMO YPROC will be automatically calculated"
-	else
-        	echo "Invalid xproc and yproc decomposition. Check NODES, IO_NODES, XPROC and YPROC variables."
-        	exit 1
-	fi
+    if [ ! -z $NEMO_XPROC ] && [ ! -z $NEMO_YPROC ]; then
+        TOTAL_NEMO_PROCS=$(($NEMO_XPROC * $NEMO_YPROC))
+    fi
+
+    if [ $IFS_PROCESSORS = $TOTAL_NEMO_PROCS ]; then
+        echo "IFS processors match the total number of nemo processors (XPROC*YPROC)"
+    elif [ -z $NEMO_XPROC ] && [ -z $NEMO_YPROC ]; then
+        echo "NEMO XPROC and NEMO YPROC will be automatically calculated"
+    else
+        echo "Invalid xproc and yproc decomposition. Check NODES, IO_NODES, XPROC and YPROC variables."
+        exit 1
+    fi
+
+    # Undefined IO for NEMO, default configuration. Uses half of the IO resources for IFS and half for NEMO.
+    if [ -z "${NEMO_IO_TASKS}" ] && [ -z "${NEMO_IO_NODES}" ] && [ -n "${IFS_IO_NODES}" ]; then
+        echo "Same tasks for IFS and NEMO"
+        echo "The io_flags used will be --io-tasks=(calculated in SIM) --nemo-multio-server-num=(calculated in SIM)"
+    # Check for IFS and NEMO server resources
+    elif [ -n "${IFS_IO_TASKS}" ] && [ -n "${NEMO_IO_TASKS}" ]; then
+        echo "The io_flags used will be --io-tasks=${IFS_IO_TASKS} --nemo-multio-server-num=${NEMO_IO_TASKS}"
+    elif [ -n "${IFS_IO_NODES}" ] && [ -n "${NEMO_IO_NODES}" ]; then
+        echo "The io_flags used will be --io-nodes=${IFS_IO_NODES} --io-ppn=${IFS_IO_PPN} --nemo-multio-server-nodes=${NEMO_IO_NODES} --nemo-multio-server-ppn=${NEMO_IO_PPN}"
+    else
+        echo 'Error: No resources selected for IFS or NEMO servers. Add IFS_IO_NODES and NEMO_IO_NODES or IFS_IO_TASKS and NEMO_IO_TASKS variables.'
+        exit 1
+    fi
 
 }
 
-
 function checker_icon() {
-true
+    true
 }
 
 function checker_ifs-fesom() {
-true
+    true
 }
 
-
 function checker_model_version() {
-	if [ ${MODEL_VERSION} == "None" ]; then
-		echo "Bad definition of MODEL_VERSION." 
-		echo "Insert a string if you want to use an existing precompiled binary (MODEL_VERSION: 'string')"
-		echo "Or leave empty if you want the model to be automatically compiled (MODEL_VERSION: '')"
-		echo "For more information, please see https://earth.bsc.es/gitlab/digital-twins/de_340/workflow/-/wikis/Readme-for-advanced-users#how-to-use-your-own-input-data-and-model-installation"
-		exit 1
-	fi
+    if [ "${MODEL_VERSION}" == "None" ]; then
+        echo "Bad definition of MODEL_VERSION."
+        echo "Insert a string if you want to use an existing precompiled binary (MODEL_VERSION: 'string')"
+        echo "Or leave empty if you want the model to be automatically compiled (MODEL_VERSION: '')"
+        echo "For more information, please see https://earth.bsc.es/gitlab/digital-twins/de_340/workflow/-/wikis/Readme-for-advanced-users#how-to-use-your-own-input-data-and-model-installation"
+        exit 1
+    fi
+}
+
+# CHECKS OUT THE INPUTS FROM THE DVC REPOSITORY
+function inputs_checkout_ifs-nemo() {
+    if [ -n "${INPUTS}" ]; then
+        cd "${ROOTDIR}"/proj/"${PROJDEST}"/dvc-cache-de340/
+        git checkout "${INPUTS}"
+    fi
+}
+
+function inputs_checkout_icon() {
+    true
+}
+
+function inputs_checkout_ifs-fesom() {
+    true
+}
+
+#####################################################
+# Direct download of maestro-core. (not used for now)
+#####################################################
+function download_maestro() {
+    pushd ${ROOTDIR}/proj/${PROJDEST}
+    if [ ! -d "maestro-core" ] || [ -z "$(ls -A maestro-core)" ]; then
+        git clone https://gitlab.com/maestro-data/maestro-core.git
+    fi
+    pushd maestro-core
+    git checkout de-340
+    popd
+    popd
 }
 
 # MAIN code
 
-load_model_dir
-load_inproot_precomp_path
+# Download RAPS dependencies when needed  / Check out and update sources and submodules
+if [ "${WORKFLOW}" != "apps" ] && [ "${WORKFLOW}" != "maestro-apps" ]; then
+    pre-configuration-"${ATM_MODEL}"
 
-# Download RAPS dependencies when needed  / Check out and update sources and submodules 
-pre-configuration-${ATM_MODEL}
+    # configuration checker
+    checker_model_version
+    checker_"${MODEL_NAME}"
+    inputs_checkout_"${MODEL_NAME}"
+fi
 
-# configuration checker
-checker_model_version
-checker_${MODEL_NAME}
-
-# Tar project 
+# Tar project
 
 cd "${ROOTDIR}"/proj
 tar_project "${PROJDEST}"
 
 # Remove the sent tarball flag
-rm -f flag_tarball_sent 
+rm -f flag_tarball_sent

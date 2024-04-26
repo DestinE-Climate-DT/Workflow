@@ -3,56 +3,7 @@
 # Configuration for BSC platform
 
 #####################################################
-# Set environment to be able to run DUMMY application
-# Globals:
-# Arguments:
-#  
-######################################################
-function load_compile_env_icon() {
-
-    local ICON_PATH=${HPCROOTDIR}/${PROJDEST}/icon-mpim
-
-    # Load enviroment and create Makefile
-    cd "${ICON_PATH}"
-    
-    # Check if Makefile already exists
-    if [ ! -f Makefile ]; then 
-    	./config/bsc/marenostrum.intel.openmpi-4.0.2
-    else
-	echo "An old version of Makefile exists"
-    fi
-}    
-function load_environment_DUMMY() {
-
-	# Enviroment vars
-	# env-generic
-	export SOME_VARIABLE=1
-	
-	# DUMMY-specific
-	export SOME_DUMMY_VAR="I am a dummy var"
-	
-	# Load env modules
-	moddule load python/3.9.10	
-}
-
-#####################################################
-# Set environment to be able to run gsv interface in mn4
-# Globals:
-#    HPCROOTDIR
-# Arguments:
-#  
-#####################################################
-function rm_restarts_icon() {
-   # Delete restarts for clean new run 
-   if [ -d "${HPCROOTDIR}"/"${PROJDEST}"/icon-mpim/experiments ]; then
-         rm -rf "${HPCROOTDIR}"/"${PROJDEST}"/icon-mpim/experiments
-   else
-        echo "Restart files don't exist"
-   fi
-}
-
-#####################################################
-# Loads and sets, most SIM variables needed by the 
+# Loads and sets, most SIM variables needed by the
 # ICON run-script. Some settings will be included
 # custom confs
 # Globals:
@@ -60,34 +11,80 @@ function rm_restarts_icon() {
 #    PROJDEST
 #    INPROOT
 # Arguments:
-#  
+#
 ######################################################
-function load_sim_env_icon() {
+function load_compile_env_icon_cpu() {
+
+    local ICON_PATH=${HPCROOTDIR}/${PROJDEST}/icon-mpim
+
+    # Load enviroment and create Makefile
+    cd "${ICON_PATH}"
+
+    # Check if Makefile already exists
+    if [ ! -f Makefile ]; then
+        ./config/bsc/marenostrum.intel.openmpi-4.0.2
+    else
+        echo "An old version of Makefile exists"
+    fi
+}
+
+#####################################################
+# Loads and sets, most SIM variables needed by the
+# ICON run-script. Some settings will be included
+# custom confs
+# Globals:
+#    HPCROOTDIR
+#    PROJDEST
+#    INPROOT
+# Arguments:
+#
+######################################################
+function load_SIM_env_icon_cpu() {
     #OpenMPI Enviroment vars
-    export OMP_NUM_THREADS=$((4*1))
-    export ICON_THREADS=$((4*1))
+    export OMP_NUM_THREADS=$((4 * 1))
+    export ICON_THREADS=$((4 * 1))
     export OMP_SCHEDULE="guided"
     export OMP_DYNAMIC="false"
     export OMP_STACKSIZE=1G
     export HDF5_USE_FILE_LOCKING=FALSE
     export FI_CXI_OPTIMIZED_MRS="false"
-    
+
     # LD MN4 dependant enviroment vars
     module purge
     module load intel/2019.5
     module load openmpi/4.0.2
-    module load hdf5/1.8.19        
+    module load hdf5/1.8.19
+
+    # directories with absolute paths
+    export MODEL_DIR="${HPCROOTDIR}"/"${PROJDEST}"/icon-mpim
+    export thisdir="${HPCROOTDIR}"/"${PROJDEST}"/icon-mpim/run
+    export basedir="${MODEL_DIR}"
+    export icon_data_rootFolder="${INPROOT}"
+
+    export MODEL="${basedir}"/bin/icon
+    set | grep SLURM
+
+    # how to submit the next job
+    # --------------------------
+    export job_name=$SLURM_JOB_NAME
 }
 
+#####################################################
+# Set environment to be able to run gsv interface in mn4
+# Globals:
+#    HPCROOTDIR
 # Arguments:
-#  
-######################################################
+#
+#####################################################
 function load_environment_gsv() {
+    set +xuve
     # Load modules
+    set +xuve
     module purge
     module load mkl gcc/8.1.0 openmpi/4.0.2 python/3.10.2 hdf5/1.10.1-ts netcdf/4.6.1 eccodes/2.22.1-gcc-openmpi cmake/3.23.2 lapack/3.8.0 ecbuild/3.7.0 openblas/0.3.6 eckit/1.20.2 metkit/1.9.2 fdb/5.11.17 multio
     module load intel udunits
     module load CDO
+    set -xuve
 
     export FDB5_CONFIG_FILE=$1/experiments/$2/config.yaml
 
@@ -98,8 +95,8 @@ function load_environment_gsv() {
 
     # Load interface src
     export PYTHONPATH=${HPCROOTDIR}/${PROJDEST}/gsv_interface:$PYTHONPATH
+    set -xuve
 }
-
 
 #####################################################
 # Set the enviroment for compiling IFS
@@ -116,8 +113,6 @@ function load_compile_env_ifs_cpu() {
     export OTHERS=""
 }
 
-
-
 #####################################################
 # Set the enviroment for running IFS
 # Globals:
@@ -130,6 +125,7 @@ function load_SIM_env_ifs_cpu() {
     export host=mn4
     export bin_hpc_name=mn4
     export compiler="intel"
+    module load impi/2017.4 intel/2017.4 mkl/2017.4 python/2.7.16 CMOR/3.5.0 CDO/1.8.2 gsl/2.4 nco/4.6.7 git eccodes/2.8.0
 }
 
 #####################################################
@@ -150,8 +146,8 @@ function rm_restarts_ifs() {
 # Arguments:
 #
 #####################################################
-function load_model_dir(){
-        export HPC_MODEL_DIR=/gpfs/projects/dese28/models/${MODEL_NAME}
+function load_model_dir() {
+    export HPC_MODEL_DIR=/gpfs/projects/dese28/models/${MODEL_NAME}
 }
 
 #####################################################
@@ -161,29 +157,12 @@ function load_model_dir(){
 # Arguments:
 #
 #####################################################
-
 function pre-configuration-ifs() {
     if [ -z "${MODEL_VERSION}" ]; then
         cd "${ROOTDIR}"/proj/"${PROJDEST}"/"${MODEL_NAME}"/
         ./ifs-bundle create
     fi
 }
-
-#####################################################
-# Checks out know working branch and submodules of 
-#    ICON on MN4
-# Globals:
-#    ROOTDIR
-#    PROJDEST
-# Arguments:
-#
-#####################################################
-function pre-configuration-icon(){
-    
-    cd "${ROOTDIR}"/proj/"${PROJDEST}"/icon-mpim
-    git checkout 3deba29a732941f2a300834595fa01736f9ed629
-}
-    
 function load_environment_opa() {
     # Load modules
     #module purge
@@ -191,10 +170,12 @@ function load_environment_opa() {
     #module load mkl
     #module load python/3.10.2
     export PYTHONPATH=${HPCROOTDIR}/${PROJDEST}/one_pass:$PYTHONPATH
+    set +xuve
+    module load singularity
+    set -xuve
 }
 
 ################################################################
-#################################################################
 #################################################################
 
 #####################################################
@@ -206,11 +187,12 @@ function load_environment_opa() {
 function load_environment_AQUA() {
 
     # Load env modules
+    set +xuve
     module purge
     module load intel
     module load mkl
     module load python/3.10.2
-
+    set -xuve
 
 }
 
@@ -221,13 +203,28 @@ function load_environment_AQUA() {
 # Arguments:
 #
 #####################################################
-function load_dirs(){
-	module load singularity
-	export HPC_CONTAINER_DIR=/gpfs/projects/dese28/containers
-	export HPC_SCRATCH=/gpfs/scratch/dese28/
-	export HPC_PROJECT=/gpfs/projects/dese28/
+function load_dirs() {
+    module load singularity
+    export HPC_CONTAINER_DIR=/gpfs/projects/dese28/containers
+    export HPC_SCRATCH=/gpfs/scratch/dese28/
+    export HPC_PROJECT=/gpfs/projects/dese28/
 }
 
+#####################################################
+# Loads containers directory
+# Globals:
+#    MODEL_NAME
+# Arguments:
+#
+#####################################################
+function load_dirs() {
+    set +xuve
+    module load singularity
+    set -xuve
+    export HPC_CONTAINER_DIR=/gpfs/projects/dese28/containers
+    export HPC_SCRATCH=/gpfs/scratch/dese28/
+    export HPC_PROJECT=/gpfs/projects/dese28/
+}
 
 #####################################################
 # Set environment to be able to run ENERGY_ONSHORE application
@@ -238,10 +235,12 @@ function load_dirs(){
 function load_environment_ENERGY_ONSHORE() {
 
     # Load env modules
+    set +xuve
     module purge
     module load intel
     module load mkl
     module load python/3.10.2
+    set -xuve
 }
 
 #####################################################
@@ -253,10 +252,12 @@ function load_environment_ENERGY_ONSHORE() {
 function load_environment_ENERGY_OFFSHORE() {
 
     # Load env modules
+    set +xuve
     module purge
     module load intel
     module load mkl
     module load python/3.10.2
+    set -xuve
 }
 
 #####################################################
@@ -268,10 +269,12 @@ function load_environment_ENERGY_OFFSHORE() {
 function load_environment_URBAN() {
 
     # Load env modules
+    set +xuve
     module purge
     module load intel
     module load mkl
     module load python/3.10.2
+    set -xuve
 }
 
 #####################################################
@@ -283,10 +286,12 @@ function load_environment_URBAN() {
 function load_environment_HYDROMET() {
 
     # Load env modules
+    set +xuve
     module purge
     module load intel
     module load mkl
     module load python/3.10.2
+    set -xuve
 }
 
 #####################################################
@@ -298,10 +303,12 @@ function load_environment_HYDROMET() {
 function load_environment_MHM() {
 
     # Load env modules
+    set +xuve
     module purge
     module load intel
     module load mkl
     module load python/3.10.2
+    set -xuve
 }
 
 #####################################################
@@ -313,10 +320,12 @@ function load_environment_MHM() {
 function load_environment_WILDFIRES_WISE() {
 
     # Load env modules
+    set +xuve
     module purge
     module load intel
     module load mkl
     module load python/3.10.2
+    set -xuve
 }
 
 #####################################################
@@ -328,10 +337,12 @@ function load_environment_WILDFIRES_WISE() {
 function load_environment_WILDFIRES_SPITFIRE() {
 
     # Load env modules
+    set +xuve
     module purge
     module load intel
     module load mkl
     module load python/3.10.2
+    set -xuve
 }
 
 #####################################################
@@ -358,10 +369,12 @@ function load_environment_WILDFIRES_FWI() {
 function load_environment_WILDFIRES_FWI() {
 
     # Load env modules
+    set +xuve
     module purge
     module load intel
     module load mkl
     module load python/3.10.2
+    set -xuve
 }
 
 #####################################################
@@ -373,10 +386,12 @@ function load_environment_WILDFIRES_FWI() {
 function load_environment_OBS() {
 
     # Load env modules
+    set +xuve
     module purge
     module load intel
     module load mkl
     module load python/3.10.2
+    set -xuve
 }
 
 #####################################################
@@ -403,8 +418,6 @@ function install_GSV_INTERFACE() {
     echo "nothing is insalled here"
 }
 
-
-
 #####################################################
 # Loads containers directory
 # Globals:
@@ -412,9 +425,26 @@ function install_GSV_INTERFACE() {
 # Arguments:
 #
 #####################################################
-function load_dirs(){
-        export HPC_CONTAINER_DIR=/gpfs/projects/dese28/containers
-        export HPC_SCRATCH=/gpfs/scratch/dese28/
-        export HPC_PROJECT=/gpfs/projects/dese28/
+function load_dirs() {
+    export HPC_CONTAINER_DIR=/gpfs/projects/dese28/containers
+    export HPC_SCRATCH=/gpfs/scratch/dese28/
+    export HPC_PROJECT=/gpfs/projects/dese28/
 }
 
+#####################################################
+# Set environment to be able to run opa in mn4
+# Globals:
+# Arguments:
+#
+######################################################
+function load_environment_opa() {
+    # Load modules
+    #module purge
+    #module load intel
+    #module load mkl
+    #module load python/3.10.2
+    export PYTHONPATH=${HPCROOTDIR}/${PROJDEST}/one_pass:$PYTHONPATH
+}
+function rm_restarts_ifs() {
+    rm -rf $HPCROOTDIR/restarts
+}

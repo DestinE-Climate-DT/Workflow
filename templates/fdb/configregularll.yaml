@@ -1,0 +1,13 @@
+---
+type: local
+engine: toc
+schema: %CURRENT_FDB_DIR%/%DEFAULT.EXPID%/fdb/REGULARLL_grids/etc/fdb/schema
+spaces:
+- handler: Default
+  roots:
+  - path: %CURRENT_FDB_DIR%/%DEFAULT.EXPID%/fdb/REGULARLL_grids
+    wipe: true
+    archive: true
+    list: true
+    retrieve: true
+

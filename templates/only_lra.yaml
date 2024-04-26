@@ -11,7 +11,7 @@ loglevel: INFO
 
 # all the variable listed here will be processed by the LRA creator
 catalog:
-  IFS:
-    control-1950-devcon:
-      hourly-native:
-        vars: ['skt_mean']
+  %AQUA.MODEL%:
+    %AQUA.EXP%: 
+      %AQUA.SOURCE%:
+        vars: [%AQUA.VARS%]

@@ -21,3 +21,5 @@ JOBS:
    SIM:
        WALLCLOCK: "00:30"
 
+CONFIGURATION:
+        RAPS_EXPERIMENT: "hist"

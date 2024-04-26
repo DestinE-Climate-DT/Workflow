@@ -1,6 +1,6 @@
 #! /bin/bash
 
-set -e
+set -xve
 # Utilities
 PATH="${MODEL_DIR}":$PATH
 
@@ -29,6 +29,15 @@ job_name="${EXPNAME}"
 # -----------------------
 cdo="cdo"
 cdo_diff="cdo diffn"
+
+#
+# Support log style output
+#
+pipe=icon_esm_run_$$.pipe
+mkfifo $pipe
+trap "cd $PWD && rm -f $pipe" EXIT
+awk '{print strftime("%FT%T:"), $0; fflush()}' $pipe &
+exec > $pipe 2>&1
 
 #=============================================================================
 
@@ -141,7 +150,7 @@ cat > icon_master.namelist << EOF
 &jsb_control_nml
     is_standalone = .false.
     debug_level = 0
-    restart_jsbach = .true.
+    restart_jsbach = ${restart_jsbach}
     timer_level = 0
 /
 &jsb_model_nml
@@ -161,214 +170,221 @@ EOF
 #-----------------------------------------------------------------------------
 # component names in coupling.xml must (!) match with modelname_list[*]
 cat > coupling.xml << EOF
-<?xml version='1.0' encoding='UTF-8'?>
+<?xml version="1.0" encoding="UTF-8"?>
 <coupling xmlns="http://www.w3schools.com" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.w3schools.com coupling.xsd">
-  <redirect redirect_of_root="false" redirect_stdout="false" />
+  <redirect redirect_of_root="false" redirect_stdout="false"/>
   <components>
     <component id="1">
       <name>ocean</name>
       <model>ICON</model>
       <simulated>atmosphere</simulated>
       <transient_grid_refs>
-        <transient_grid_ref collection_size="1" grid_ref="1" id="1" transient_ref="1" />
-        <transient_grid_ref collection_size="1" grid_ref="1" id="2" transient_ref="2" />
-        <transient_grid_ref collection_size="1" grid_ref="1" id="3" transient_ref="3" />
-        <transient_grid_ref collection_size="1" grid_ref="1" id="4" transient_ref="4" />
-        <transient_grid_ref collection_size="1" grid_ref="1" id="5" transient_ref="5" />
-        <transient_grid_ref collection_size="${oce_levels}" grid_ref="1" id="6" transient_ref="6" />
-        <transient_grid_ref collection_size="${oce_levels}" grid_ref="1" id="7" transient_ref="7" />
-        <transient_grid_ref collection_size="${oce_levels}" grid_ref="1" id="8" transient_ref="8" />
-        <transient_grid_ref collection_size="${oce_levels}" grid_ref="1" id="9" transient_ref="9" />
-        <transient_grid_ref collection_size="${oce_halflevels}" grid_ref="1" id="10" transient_ref="10" />
-        <transient_grid_ref collection_size="1" grid_ref="1" id="11" transient_ref="11" />
-        <transient_grid_ref collection_size="1" grid_ref="1" id="12" transient_ref="12" />
-        <transient_grid_ref collection_size="1" grid_ref="1" id="13" transient_ref="13" />
-        <transient_grid_ref collection_size="3" grid_ref="1" id="14" transient_ref="14" />
-        <transient_grid_ref collection_size="2" grid_ref="1" id="15" transient_ref="43" />
-        <transient_grid_ref collection_size="2" grid_ref="1" id="16" transient_ref="44" />
-        <transient_grid_ref collection_size="3" grid_ref="1" id="17" transient_ref="45" />
-        <transient_grid_ref collection_size="4" grid_ref="1" id="18" transient_ref="46" />
-        <transient_grid_ref collection_size="2" grid_ref="1" id="19" transient_ref="47" />
-        <transient_grid_ref collection_size="1" grid_ref="1" id="20" transient_ref="48" />
-        <transient_grid_ref collection_size="1" grid_ref="1" id="21" transient_ref="49" />
-        <transient_grid_ref collection_size="1" grid_ref="1" id="22" transient_ref="50" />
-        <transient_grid_ref collection_size="1" grid_ref="1" id="23" transient_ref="51" />
-        <transient_grid_ref collection_size="1" grid_ref="1" id="24" transient_ref="52" />
+        <transient_grid_ref collection_size="1" grid_ref="1" id="1" transient_ref="1"/>
+        <transient_grid_ref collection_size="1" grid_ref="1" id="2" transient_ref="2"/>
+        <transient_grid_ref collection_size="1" grid_ref="1" id="3" transient_ref="3"/>
+        <transient_grid_ref collection_size="1" grid_ref="1" id="4" transient_ref="4"/>
+        <transient_grid_ref collection_size="3" grid_ref="1" id="5" transient_ref="5"/>
+        <transient_grid_ref collection_size="1" grid_ref="1" id="6" transient_ref="6"/>
+        <transient_grid_ref collection_size="1" grid_ref="1" id="7" transient_ref="7"/>
+        <transient_grid_ref collection_size="2" grid_ref="1" id="8" transient_ref="8"/>
+        <transient_grid_ref collection_size="4" grid_ref="1" id="9" transient_ref="9"/>
+        <transient_grid_ref collection_size="1" grid_ref="1" id="10" transient_ref="10"/>
+        <transient_grid_ref collection_size="2" grid_ref="1" id="11" transient_ref="11"/>
+        <transient_grid_ref collection_size="2" grid_ref="1" id="12" transient_ref="12"/>
+        <transient_grid_ref collection_size="3" grid_ref="1" id="13" transient_ref="13"/>
+        <transient_grid_ref collection_size="1" grid_ref="1" id="14" transient_ref="14"/>
+        <transient_grid_ref collection_size="1" grid_ref="1" id="15" transient_ref="35"/>
+        <transient_grid_ref collection_size="1" grid_ref="1" id="16" transient_ref="36"/>
+        <transient_grid_ref collection_size="1" grid_ref="1" id="17" transient_ref="37"/>
+        <transient_grid_ref collection_size="1" grid_ref="1" id="18" transient_ref="38"/>
+        <transient_grid_ref collection_size="1" grid_ref="1" id="19" transient_ref="39"/>
+        <transient_grid_ref collection_size="${oce_levels}" grid_ref="1" id="20" transient_ref="40"/>
       </transient_grid_refs>
     </component>
     <component id="2">
-      <name>healpix_io</name>
-      <model>none</model>
-      <simulated>none</simulated>
-      <transient_grid_refs>
-        <transient_grid_ref collection_size="1" grid_ref="2" id="1" transient_ref="20" />
-        <transient_grid_ref collection_size="1" grid_ref="2" id="2" transient_ref="33" />
-        <transient_grid_ref collection_size="1" grid_ref="2" id="3" transient_ref="38" />
-        <transient_grid_ref collection_size="1" grid_ref="2" id="4" transient_ref="40" />
-        <transient_grid_ref collection_size="1" grid_ref="2" id="5" transient_ref="1" />
-        <transient_grid_ref collection_size="1" grid_ref="2" id="6" transient_ref="18" />
-        <transient_grid_ref collection_size="1" grid_ref="2" id="7" transient_ref="17" />
-        <transient_grid_ref collection_size="1" grid_ref="2" id="8" transient_ref="29" />
-        <transient_grid_ref collection_size="1" grid_ref="2" id="9" transient_ref="28" />
-        <transient_grid_ref collection_size="1" grid_ref="2" id="10" transient_ref="27" />
-        <transient_grid_ref collection_size="1" grid_ref="2" id="11" transient_ref="26" />
-        <transient_grid_ref collection_size="1" grid_ref="2" id="12" transient_ref="23" />
-        <transient_grid_ref collection_size="1" grid_ref="2" id="13" transient_ref="24" />
-        <transient_grid_ref collection_size="1" grid_ref="2" id="14" transient_ref="25" />
-        <transient_grid_ref collection_size="1" grid_ref="2" id="15" transient_ref="15" />
-        <transient_grid_ref collection_size="1" grid_ref="2" id="16" transient_ref="16" />
-        <transient_grid_ref collection_size="${atm_levels}" grid_ref="2" id="17" transient_ref="37" />
-        <transient_grid_ref collection_size="${atm_levels}" grid_ref="2" id="18" transient_ref="39" />
-        <transient_grid_ref collection_size="${atm_levels}" grid_ref="2" id="19" transient_ref="32" />
-        <transient_grid_ref collection_size="1" grid_ref="2" id="20" transient_ref="42" />
-        <transient_grid_ref collection_size="1" grid_ref="2" id="21" transient_ref="21" />
-        <transient_grid_ref collection_size="1" grid_ref="2" id="22" transient_ref="22" />
-        <transient_grid_ref collection_size="${atm_levels}" grid_ref="2" id="23" transient_ref="41" />
-        <transient_grid_ref collection_size="${atm_levels}" grid_ref="2" id="24" transient_ref="19" />
-        <transient_grid_ref collection_size="1" grid_ref="2" id="25" transient_ref="34" />
-        <transient_grid_ref collection_size="1" grid_ref="2" id="26" transient_ref="35" />
-        <transient_grid_ref collection_size="1" grid_ref="2" id="27" transient_ref="30" />
-        <transient_grid_ref collection_size="1" grid_ref="2" id="28" transient_ref="31" />
-        <transient_grid_ref collection_size="1" grid_ref="2" id="29" transient_ref="2" />
-        <transient_grid_ref collection_size="1" grid_ref="2" id="30" transient_ref="3" />
-        <transient_grid_ref collection_size="1" grid_ref="2" id="31" transient_ref="36" />
-        <transient_grid_ref collection_size="${oce_levels}" grid_ref="2" id="32" transient_ref="9" />
-        <transient_grid_ref collection_size="${oce_levels}" grid_ref="2" id="33" transient_ref="8" />
-        <transient_grid_ref collection_size="${oce_levels}" grid_ref="2" id="34" transient_ref="7" />
-        <transient_grid_ref collection_size="${oce_levels}" grid_ref="2" id="35" transient_ref="6" />
-        <transient_grid_ref collection_size="1" grid_ref="2" id="36" transient_ref="4" />
-        <transient_grid_ref collection_size="${oce_halflevels}" grid_ref="2" id="37" transient_ref="10" />
-      </transient_grid_refs>
-    </component>
-    <component id="3">
-      <name>dummy</name>
-      <model>none</model>
-      <simulated>none</simulated>
-      <transient_grid_refs />
-    </component>
-    <component id="4">
       <name>atmo</name>
       <model>ICON</model>
       <simulated>atmosphere</simulated>
       <transient_grid_refs>
-        <transient_grid_ref collection_size="1" grid_ref="3" id="1" transient_ref="15" />
-        <transient_grid_ref collection_size="1" grid_ref="3" id="2" transient_ref="16" />
-        <transient_grid_ref collection_size="1" grid_ref="3" id="3" transient_ref="17" />
-        <transient_grid_ref collection_size="1" grid_ref="3" id="4" transient_ref="18" />
-        <transient_grid_ref collection_size="${atm_levels}" grid_ref="3" id="5" transient_ref="19" />
-        <transient_grid_ref collection_size="1" grid_ref="3" id="6" transient_ref="20" />
-        <transient_grid_ref collection_size="1" grid_ref="3" id="7" transient_ref="21" />
-        <transient_grid_ref collection_size="1" grid_ref="3" id="8" transient_ref="22" />
-        <transient_grid_ref collection_size="1" grid_ref="3" id="9" transient_ref="23" />
-        <transient_grid_ref collection_size="1" grid_ref="3" id="10" transient_ref="24" />
-        <transient_grid_ref collection_size="1" grid_ref="3" id="11" transient_ref="25" />
-        <transient_grid_ref collection_size="1" grid_ref="3" id="12" transient_ref="26" />
-        <transient_grid_ref collection_size="1" grid_ref="3" id="13" transient_ref="27" />
-        <transient_grid_ref collection_size="1" grid_ref="3" id="14" transient_ref="28" />
-        <transient_grid_ref collection_size="1" grid_ref="3" id="15" transient_ref="29" />
-        <transient_grid_ref collection_size="1" grid_ref="3" id="16" transient_ref="30" />
-        <transient_grid_ref collection_size="1" grid_ref="3" id="17" transient_ref="31" />
-        <transient_grid_ref collection_size="${atm_levels}" grid_ref="3" id="18" transient_ref="32" />
-        <transient_grid_ref collection_size="1" grid_ref="3" id="19" transient_ref="33" />
-        <transient_grid_ref collection_size="1" grid_ref="3" id="20" transient_ref="34" />
-        <transient_grid_ref collection_size="1" grid_ref="3" id="21" transient_ref="35" />
-        <transient_grid_ref collection_size="1" grid_ref="3" id="22" transient_ref="36" />
-        <transient_grid_ref collection_size="${atm_levels}" grid_ref="3" id="23" transient_ref="37" />
-        <transient_grid_ref collection_size="1" grid_ref="3" id="24" transient_ref="38" />
-        <transient_grid_ref collection_size="${atm_levels}" grid_ref="3" id="25" transient_ref="39" />
-        <transient_grid_ref collection_size="1" grid_ref="3" id="26" transient_ref="40" />
-        <transient_grid_ref collection_size="${atm_levels}" grid_ref="3" id="27" transient_ref="41" />
-        <transient_grid_ref collection_size="1" grid_ref="3" id="28" transient_ref="42" />
-        <transient_grid_ref collection_size="2" grid_ref="3" id="29" transient_ref="43" />
-        <transient_grid_ref collection_size="2" grid_ref="3" id="30" transient_ref="44" />
-        <transient_grid_ref collection_size="3" grid_ref="3" id="31" transient_ref="45" />
-        <transient_grid_ref collection_size="4" grid_ref="3" id="32" transient_ref="46" />
-        <transient_grid_ref collection_size="2" grid_ref="3" id="33" transient_ref="47" />
-        <transient_grid_ref collection_size="1" grid_ref="3" id="34" transient_ref="48" />
-        <transient_grid_ref collection_size="1" grid_ref="3" id="35" transient_ref="49" />
-        <transient_grid_ref collection_size="1" grid_ref="3" id="36" transient_ref="5" />
-        <transient_grid_ref collection_size="1" grid_ref="3" id="37" transient_ref="11" />
-        <transient_grid_ref collection_size="1" grid_ref="3" id="38" transient_ref="12" />
-        <transient_grid_ref collection_size="1" grid_ref="3" id="39" transient_ref="13" />
-        <transient_grid_ref collection_size="3" grid_ref="3" id="40" transient_ref="14" />
-        <transient_grid_ref collection_size="1" grid_ref="3" id="41" transient_ref="50" />
-        <transient_grid_ref collection_size="1" grid_ref="3" id="42" transient_ref="51" />
-        <transient_grid_ref collection_size="1" grid_ref="3" id="43" transient_ref="52" />
+        <transient_grid_ref collection_size="1" grid_ref="2" id="1" transient_ref="1"/>
+        <transient_grid_ref collection_size="1" grid_ref="2" id="2" transient_ref="2"/>
+        <transient_grid_ref collection_size="1" grid_ref="2" id="3" transient_ref="3"/>
+        <transient_grid_ref collection_size="1" grid_ref="2" id="4" transient_ref="4"/>
+        <transient_grid_ref collection_size="3" grid_ref="2" id="5" transient_ref="5"/>
+        <transient_grid_ref collection_size="1" grid_ref="2" id="6" transient_ref="6"/>
+        <transient_grid_ref collection_size="1" grid_ref="2" id="7" transient_ref="7"/>
+        <transient_grid_ref collection_size="2" grid_ref="2" id="8" transient_ref="8"/>
+        <transient_grid_ref collection_size="4" grid_ref="2" id="9" transient_ref="9"/>
+        <transient_grid_ref collection_size="1" grid_ref="2" id="10" transient_ref="10"/>
+        <transient_grid_ref collection_size="2" grid_ref="2" id="11" transient_ref="11"/>
+        <transient_grid_ref collection_size="2" grid_ref="2" id="12" transient_ref="12"/>
+        <transient_grid_ref collection_size="3" grid_ref="2" id="13" transient_ref="13"/>
+        <transient_grid_ref collection_size="1" grid_ref="2" id="14" transient_ref="14"/>
+        <transient_grid_ref collection_size="${atm_levels}" grid_ref="2" id="15" transient_ref="15"/>
+        <transient_grid_ref collection_size="${atm_levels}" grid_ref="2" id="16" transient_ref="16"/>
+        <transient_grid_ref collection_size="${atm_levels}" grid_ref="2" id="17" transient_ref="17"/>
+        <transient_grid_ref collection_size="${atm_levels}" grid_ref="2" id="18" transient_ref="18"/>
+        <transient_grid_ref collection_size="${atm_levels}" grid_ref="2" id="19" transient_ref="19"/>
+        <transient_grid_ref collection_size="${atm_levels}" grid_ref="2" id="20" transient_ref="20"/>
+        <transient_grid_ref collection_size="${atm_levels}" grid_ref="2" id="21" transient_ref="21"/>
+        <transient_grid_ref collection_size="1" grid_ref="2" id="22" transient_ref="22"/>
+        <transient_grid_ref collection_size="1" grid_ref="2" id="23" transient_ref="23"/>
+        <transient_grid_ref collection_size="1" grid_ref="2" id="24" transient_ref="24"/>
+        <transient_grid_ref collection_size="1" grid_ref="2" id="25" transient_ref="25"/>
+        <transient_grid_ref collection_size="1" grid_ref="2" id="26" transient_ref="26"/>
+        <transient_grid_ref collection_size="1" grid_ref="2" id="27" transient_ref="27"/>
+        <transient_grid_ref collection_size="1" grid_ref="2" id="28" transient_ref="28"/>
+        <transient_grid_ref collection_size="1" grid_ref="2" id="29" transient_ref="29"/>
+        <transient_grid_ref collection_size="1" grid_ref="2" id="30" transient_ref="30"/>
+        <transient_grid_ref collection_size="1" grid_ref="2" id="31" transient_ref="31"/>
+        <transient_grid_ref collection_size="1" grid_ref="2" id="32" transient_ref="32"/>
+        <transient_grid_ref collection_size="1" grid_ref="2" id="33" transient_ref="33"/>
+        <transient_grid_ref collection_size="1" grid_ref="2" id="34" transient_ref="34"/>
+      </transient_grid_refs>
+    </component>
+    <component id="3">
+      <name>yaco0</name>
+      <model>none</model>
+      <simulated>none</simulated>
+      <transient_grid_refs>
+        <transient_grid_ref collection_size="${atm_levels}" grid_ref="3" id="1" transient_ref="15"/>
+        <transient_grid_ref collection_size="${atm_levels}" grid_ref="3" id="2" transient_ref="16"/>
+      </transient_grid_refs>
+    </component>
+    <component id="4">
+      <name>yaco1</name>
+      <model>none</model>
+      <simulated>none</simulated>
+      <transient_grid_refs>
+        <transient_grid_ref collection_size="${atm_levels}" grid_ref="3" id="1" transient_ref="17"/>
+        <transient_grid_ref collection_size="${atm_levels}" grid_ref="3" id="2" transient_ref="18"/>
+      </transient_grid_refs>
+    </component>
+    <component id="5">
+      <name>yaco2</name>
+      <model>none</model>
+      <simulated>none</simulated>
+      <transient_grid_refs>
+        <transient_grid_ref collection_size="${atm_levels}" grid_ref="3" id="1" transient_ref="19"/>
+        <transient_grid_ref collection_size="${atm_levels}" grid_ref="3" id="2" transient_ref="20"/>
+      </transient_grid_refs>
+    </component>
+    <component id="6">
+      <name>yaco3</name>
+      <model>none</model>
+      <simulated>none</simulated>
+      <transient_grid_refs>
+        <transient_grid_ref collection_size="${atm_levels}" grid_ref="3" id="1" transient_ref="21"/>
+      </transient_grid_refs>
+    </component>
+    <component id="7">
+      <name>yaco4</name>
+      <model>none</model>
+      <simulated>none</simulated>
+      <transient_grid_refs>
+        <transient_grid_ref collection_size="1" grid_ref="3" id="1" transient_ref="22"/>
+        <transient_grid_ref collection_size="1" grid_ref="3" id="2" transient_ref="23"/>
+        <transient_grid_ref collection_size="1" grid_ref="3" id="3" transient_ref="24"/>
+        <transient_grid_ref collection_size="1" grid_ref="3" id="4" transient_ref="25"/>
+        <transient_grid_ref collection_size="1" grid_ref="3" id="5" transient_ref="26"/>
+        <transient_grid_ref collection_size="1" grid_ref="3" id="6" transient_ref="27"/>
+      </transient_grid_refs>
+    </component>
+    <component id="8">
+      <name>yaco5</name>
+      <model>none</model>
+      <simulated>none</simulated>
+      <transient_grid_refs>
+        <transient_grid_ref collection_size="1" grid_ref="3" id="1" transient_ref="28"/>
+        <transient_grid_ref collection_size="1" grid_ref="3" id="2" transient_ref="29"/>
+        <transient_grid_ref collection_size="1" grid_ref="3" id="3" transient_ref="30"/>
+        <transient_grid_ref collection_size="1" grid_ref="3" id="4" transient_ref="31"/>
+        <transient_grid_ref collection_size="1" grid_ref="3" id="5" transient_ref="32"/>
+        <transient_grid_ref collection_size="1" grid_ref="3" id="6" transient_ref="33"/>
+        <transient_grid_ref collection_size="1" grid_ref="3" id="7" transient_ref="34"/>
+      </transient_grid_refs>
+    </component>
+    <component id="9">
+      <name>yaco6</name>
+      <model>none</model>
+      <simulated>none</simulated>
+      <transient_grid_refs>
+        <transient_grid_ref collection_size="1" grid_ref="3" id="1" transient_ref="35"/>
+        <transient_grid_ref collection_size="1" grid_ref="3" id="2" transient_ref="36"/>
+        <transient_grid_ref collection_size="1" grid_ref="3" id="3" transient_ref="37"/>
+        <transient_grid_ref collection_size="1" grid_ref="3" id="4" transient_ref="38"/>
+        <transient_grid_ref collection_size="1" grid_ref="3" id="5" transient_ref="39"/>
+      </transient_grid_refs>
+    </component>
+    <component id="10">
+      <name>yaco7</name>
+      <model>none</model>
+      <simulated>none</simulated>
+      <transient_grid_refs>
+        <transient_grid_ref collection_size="${oce_levels}" grid_ref="3" id="1" transient_ref="40"/>
       </transient_grid_refs>
     </component>
   </components>
   <transients>
-    <transient id="1" transient_standard_name="hs" />
-    <transient id="2" transient_standard_name="ice_u" />
-    <transient id="3" transient_standard_name="ice_v" />
-    <transient id="4" transient_standard_name="mlotst" />
-    <transient id="5" transient_standard_name="sea_level_pressure" />
-    <transient id="6" transient_standard_name="so" />
-    <transient id="7" transient_standard_name="to" />
-    <transient id="8" transient_standard_name="u" />
-    <transient id="9" transient_standard_name="v" />
-    <transient id="10" transient_standard_name="w" />
-    <transient id="11" transient_standard_name="sea_surface_temperature" />
-    <transient id="12" transient_standard_name="eastward_sea_water_velocity" />
-    <transient id="13" transient_standard_name="northward_sea_water_velocity" />
-    <transient id="14" transient_standard_name="ocean_sea_ice_bundle" />
-    <transient id="15" transient_standard_name="clivi" />
-    <transient id="16" transient_standard_name="cllvi" />
-    <transient id="17" transient_standard_name="hfls" />
-    <transient id="18" transient_standard_name="hfss" />
-    <transient id="19" transient_standard_name="hus" />
-    <transient id="20" transient_standard_name="pr" />
-    <transient id="21" transient_standard_name="ps" />
-    <transient id="22" transient_standard_name="pres_msl" />
-    <transient id="23" transient_standard_name="rlds" />
-    <transient id="24" transient_standard_name="rlus" />
-    <transient id="25" transient_standard_name="rlut" />
-    <transient id="26" transient_standard_name="rsds" />
-    <transient id="27" transient_standard_name="rsdt" />
-    <transient id="28" transient_standard_name="rsus" />
-    <transient id="29" transient_standard_name="rsut" />
-    <transient id="30" transient_standard_name="sic" />
-    <transient id="31" transient_standard_name="sit" />
-    <transient id="32" transient_standard_name="ta" />
-    <transient id="33" transient_standard_name="tas" />
-    <transient id="34" transient_standard_name="tauu" />
-    <transient id="35" transient_standard_name="tauv" />
-    <transient id="36" transient_standard_name="ts" />
-    <transient id="37" transient_standard_name="ua" />
-    <transient id="38" transient_standard_name="uas" />
-    <transient id="39" transient_standard_name="va" />
-    <transient id="40" transient_standard_name="vas" />
-    <transient id="41" transient_standard_name="omega" />
-    <transient id="42" transient_standard_name="hydro_runoff_box" />
-    <transient id="43" transient_standard_name="surface_downward_eastward_stress" />
-    <transient id="44" transient_standard_name="surface_downward_northward_stress" />
-    <transient id="45" transient_standard_name="surface_fresh_water_flux" />
-    <transient id="46" transient_standard_name="total_heat_flux" />
-    <transient id="47" transient_standard_name="atmosphere_sea_ice_bundle" />
-    <transient id="48" transient_standard_name="10m_wind_speed" />
-    <transient id="49" transient_standard_name="river_runoff" />
-    <transient id="50" transient_standard_name="co2_mixing_ratio"/>
-    <transient id="51" transient_standard_name="co2_flux"/>
-    <transient id="52" transient_standard_name="sea_level_pressure"/>
+    <transient id="1" transient_standard_name="co2_mixing_ratio"/>
+    <transient id="2" transient_standard_name="co2_flux"/>
+    <transient id="3" transient_standard_name="eastward_sea_water_velocity"/>
+    <transient id="4" transient_standard_name="northward_sea_water_velocity"/>
+    <transient id="5" transient_standard_name="ocean_sea_ice_bundle"/>
+    <transient id="6" transient_standard_name="sea_surface_temperature"/>
+    <transient id="7" transient_standard_name="10m_wind_speed"/>
+    <transient id="8" transient_standard_name="atmosphere_sea_ice_bundle"/>
+    <transient id="9" transient_standard_name="total_heat_flux"/>
+    <transient id="10" transient_standard_name="sea_level_pressure"/>
+    <transient id="11" transient_standard_name="surface_downward_eastward_stress"/>
+    <transient id="12" transient_standard_name="surface_downward_northward_stress"/>
+    <transient id="13" transient_standard_name="surface_fresh_water_flux"/>
+    <transient id="14" transient_standard_name="river_runoff"/>
+    <transient id="15" transient_standard_name="ua"/>
+    <transient id="16" transient_standard_name="va"/>
+    <transient id="17" transient_standard_name="hus"/>
+    <transient id="18" transient_standard_name="hur"/>
+    <transient id="19" transient_standard_name="ta"/>
+    <transient id="20" transient_standard_name="gpsm"/>
+    <transient id="21" transient_standard_name="omega_phy"/>
+    <transient id="22" transient_standard_name="pr"/>
+    <transient id="23" transient_standard_name="tas"/>
+    <transient id="24" transient_standard_name="clt"/>
+    <transient id="25" transient_standard_name="uas"/>
+    <transient id="26" transient_standard_name="vas"/>
+    <transient id="27" transient_standard_name="dew2"/>
+    <transient id="28" transient_standard_name="hfss"/>
+    <transient id="29" transient_standard_name="hfls"/>
+    <transient id="30" transient_standard_name="clivi"/>
+    <transient id="31" transient_standard_name="cllvi"/>
+    <transient id="32" transient_standard_name="pres_sfc"/>
+    <transient id="33" transient_standard_name="pres_msl"/>
+    <transient id="34" transient_standard_name="ts_rad"/>
+    <transient id="35" transient_standard_name="conc"/>
+    <transient id="36" transient_standard_name="hi"/>
+    <transient id="37" transient_standard_name="ice_u"/>
+    <transient id="38" transient_standard_name="ice_v"/>
+    <transient id="39" transient_standard_name="mlotst"/>
+    <transient id="40" transient_standard_name="to"/>
   </transients>
   <grids>
-    <grid id="1" alias_name="icon_ocean_grid" />
-    <grid id="2" alias_name="healpix_2" />
-    <grid id="3" alias_name="icon_atmos_grid" />
+    <grid id="1" alias_name="icon_ocean_grid"/>
+    <grid id="2" alias_name="icon_atmos_grid"/>
+    <grid id="3" alias_name="healpix_2"/>
   </grids>
   <dates>
-    <start_date>${start_date}</start_date>
-    <end_date>${end_date}</end_date>
+    <start_date>1800-01-01T00:00:00.000</start_date>
+    <end_date>2100-01-01T00:00:00.000</end_date>
     <calendar>proleptic-gregorian</calendar>
   </dates>
   <timestep_unit>ISO_format</timestep_unit>
   <couples>
     <couple>
-      <component1 component_id="1" />
-      <component2 component_id="4" />
-      <transient_couple transient_id="11">
-        <source component_ref="1" transient_grid_ref="11" />
-        <target transient_grid_ref="37" />
+      <component1 component_id="1"/>
+      <component2 component_id="2"/>
+      <transient_couple transient_id="3">
+        <source component_ref="1" transient_grid_ref="3"/>
+        <target transient_grid_ref="3"/>
         <timestep>
           <source>${oceTimeStep}</source>
           <target>${atmTimeStep}</target>
@@ -378,14 +394,14 @@ cat > coupling.xml << EOF
         </timestep>
         <mapping_on_source>true</mapping_on_source>
         <interpolation_requirements>
-          <interpolation method="n-nearest_neighbor" n="1" weighted="ARITHMETIC_AVERAGE" />
-          <interpolation method="fixed_value" user_value="-999.9" />
+          <interpolation method="n-nearest_neighbor" n="1" weighted="ARITHMETIC_AVERAGE"/>
+          <interpolation method="fixed_value" user_value="-999.9"/>
         </interpolation_requirements>
         <enforce_write_weight_file>false</enforce_write_weight_file>
       </transient_couple>
-      <transient_couple transient_id="13">
-        <source component_ref="1" transient_grid_ref="13" />
-        <target transient_grid_ref="39" />
+      <transient_couple transient_id="4">
+        <source component_ref="1" transient_grid_ref="4"/>
+        <target transient_grid_ref="4"/>
         <timestep>
           <source>${oceTimeStep}</source>
           <target>${atmTimeStep}</target>
@@ -395,116 +411,48 @@ cat > coupling.xml << EOF
         </timestep>
         <mapping_on_source>true</mapping_on_source>
         <interpolation_requirements>
-          <interpolation method="n-nearest_neighbor" n="1" weighted="ARITHMETIC_AVERAGE" />
-          <interpolation method="fixed_value" user_value="-999.9" />
-        </interpolation_requirements>
-        <enforce_write_weight_file>false</enforce_write_weight_file>
-      </transient_couple>
-      <transient_couple transient_id="14">
-        <source component_ref="1" transient_grid_ref="14" />
-        <target transient_grid_ref="40" />
-        <timestep>
-          <source>${oceTimeStep}</source>
-          <target>${atmTimeStep}</target>
-          <coupling_period operation="average">${couplingTimeStep}</coupling_period>
-          <source_timelag>${oce_lag}</source_timelag>
-          <target_timelag>${atm_lag}</target_timelag>
-        </timestep>
-        <mapping_on_source>true</mapping_on_source>
-        <interpolation_requirements>
-          <interpolation method="n-nearest_neighbor" n="1" weighted="ARITHMETIC_AVERAGE" />
-          <interpolation method="fixed_value" user_value="-999.9" />
-        </interpolation_requirements>
-        <enforce_write_weight_file>false</enforce_write_weight_file>
-      </transient_couple>
-      <transient_couple transient_id="12">
-        <source component_ref="1" transient_grid_ref="12" />
-        <target transient_grid_ref="38" />
-        <timestep>
-          <source>${oceTimeStep}</source>
-          <target>${atmTimeStep}</target>
-          <coupling_period operation="average">${couplingTimeStep}</coupling_period>
-          <source_timelag>${oce_lag}</source_timelag>
-          <target_timelag>${atm_lag}</target_timelag>
-        </timestep>
-        <mapping_on_source>true</mapping_on_source>
-        <interpolation_requirements>
-          <interpolation method="n-nearest_neighbor" n="1" weighted="ARITHMETIC_AVERAGE" />
-          <interpolation method="fixed_value" user_value="-999.9" />
-        </interpolation_requirements>
-        <enforce_write_weight_file>false</enforce_write_weight_file>
-      </transient_couple>
-      <transient_couple transient_id="45">
-        <source component_ref="2" transient_grid_ref="31" />
-        <target transient_grid_ref="17" />
-        <timestep>
-          <source>${atmTimeStep}</source>
-          <target>${oceTimeStep}</target>
-          <coupling_period operation="average">${couplingTimeStep}</coupling_period>
-          <source_timelag>${atm_lag}</source_timelag>
-          <target_timelag>${oce_lag}</target_timelag>
-        </timestep>
-        <mapping_on_source>true</mapping_on_source>
-        <interpolation_requirements>
-          <interpolation method="n-nearest_neighbor" n="1" weighted="ARITHMETIC_AVERAGE" />
-          <interpolation method="fixed_value" user_value="-999.9" />
-        </interpolation_requirements>
-        <enforce_write_weight_file>false</enforce_write_weight_file>
-      </transient_couple>
-      <transient_couple transient_id="46">
-        <source component_ref="2" transient_grid_ref="32" />
-        <target transient_grid_ref="18" />
-        <timestep>
-          <source>${atmTimeStep}</source>
-          <target>${oceTimeStep}</target>
-          <coupling_period operation="average">${couplingTimeStep}</coupling_period>
-          <source_timelag>${atm_lag}</source_timelag>
-          <target_timelag>${oce_lag}</target_timelag>
-        </timestep>
-        <mapping_on_source>true</mapping_on_source>
-        <interpolation_requirements>
-          <interpolation method="n-nearest_neighbor" n="1" weighted="ARITHMETIC_AVERAGE" />
-          <interpolation method="fixed_value" user_value="-999.9" />
+          <interpolation method="n-nearest_neighbor" n="1" weighted="ARITHMETIC_AVERAGE"/>
+          <interpolation method="fixed_value" user_value="-999.9"/>
         </interpolation_requirements>
         <enforce_write_weight_file>false</enforce_write_weight_file>
       </transient_couple>
       <transient_couple transient_id="5">
-        <source component_ref="2" transient_grid_ref="36" />
-        <target transient_grid_ref="5" />
+        <source component_ref="1" transient_grid_ref="5"/>
+        <target transient_grid_ref="5"/>
         <timestep>
-          <source>${atmTimeStep}</source>
-          <target>${oceTimeStep}</target>
+          <source>${oceTimeStep}</source>
+          <target>${atmTimeStep}</target>
           <coupling_period operation="average">${couplingTimeStep}</coupling_period>
-          <source_timelag>${atm_lag}</source_timelag>
-          <target_timelag>${oce_lag}</target_timelag>
+          <source_timelag>${oce_lag}</source_timelag>
+          <target_timelag>${atm_lag}</target_timelag>
         </timestep>
         <mapping_on_source>true</mapping_on_source>
         <interpolation_requirements>
-          <interpolation method="n-nearest_neighbor" n="1" weighted="ARITHMETIC_AVERAGE" />
-          <interpolation method="fixed_value" user_value="-999.9" />
+          <interpolation method="n-nearest_neighbor" n="1" weighted="ARITHMETIC_AVERAGE"/>
+          <interpolation method="fixed_value" user_value="-999.9"/>
         </interpolation_requirements>
         <enforce_write_weight_file>false</enforce_write_weight_file>
       </transient_couple>
-      <transient_couple transient_id="44">
-        <source component_ref="2" transient_grid_ref="30" />
-        <target transient_grid_ref="16" />
+      <transient_couple transient_id="6">
+        <source component_ref="1" transient_grid_ref="6"/>
+        <target transient_grid_ref="6"/>
         <timestep>
-          <source>${atmTimeStep}</source>
-          <target>${oceTimeStep}</target>
+          <source>${oceTimeStep}</source>
+          <target>${atmTimeStep}</target>
           <coupling_period operation="average">${couplingTimeStep}</coupling_period>
-          <source_timelag>${atm_lag}</source_timelag>
-          <target_timelag>${oce_lag}</target_timelag>
+          <source_timelag>${oce_lag}</source_timelag>
+          <target_timelag>${atm_lag}</target_timelag>
         </timestep>
         <mapping_on_source>true</mapping_on_source>
         <interpolation_requirements>
-          <interpolation method="n-nearest_neighbor" n="1" weighted="ARITHMETIC_AVERAGE" />
-          <interpolation method="fixed_value" user_value="-999.9" />
+          <interpolation method="n-nearest_neighbor" n="1" weighted="ARITHMETIC_AVERAGE"/>
+          <interpolation method="fixed_value" user_value="-999.9"/>
         </interpolation_requirements>
         <enforce_write_weight_file>false</enforce_write_weight_file>
       </transient_couple>
-      <transient_couple transient_id="47">
-        <source component_ref="2" transient_grid_ref="33" />
-        <target transient_grid_ref="19" />
+      <transient_couple transient_id="7">
+        <source component_ref="2" transient_grid_ref="7"/>
+        <target transient_grid_ref="7"/>
         <timestep>
           <source>${atmTimeStep}</source>
           <target>${oceTimeStep}</target>
@@ -514,14 +462,14 @@ cat > coupling.xml << EOF
         </timestep>
         <mapping_on_source>true</mapping_on_source>
         <interpolation_requirements>
-          <interpolation method="n-nearest_neighbor" n="1" weighted="ARITHMETIC_AVERAGE" />
-          <interpolation method="fixed_value" user_value="-999.9" />
+          <interpolation method="n-nearest_neighbor" n="1" weighted="ARITHMETIC_AVERAGE"/>
+          <interpolation method="fixed_value" user_value="-999.9"/>
         </interpolation_requirements>
         <enforce_write_weight_file>false</enforce_write_weight_file>
       </transient_couple>
-      <transient_couple transient_id="48">
-        <source component_ref="2" transient_grid_ref="34" />
-        <target transient_grid_ref="20" />
+      <transient_couple transient_id="8">
+        <source component_ref="2" transient_grid_ref="8"/>
+        <target transient_grid_ref="8"/>
         <timestep>
           <source>${atmTimeStep}</source>
           <target>${oceTimeStep}</target>
@@ -531,14 +479,14 @@ cat > coupling.xml << EOF
         </timestep>
         <mapping_on_source>true</mapping_on_source>
         <interpolation_requirements>
-          <interpolation method="n-nearest_neighbor" n="1" weighted="ARITHMETIC_AVERAGE" />
-          <interpolation method="fixed_value" user_value="-999.9" />
+          <interpolation method="n-nearest_neighbor" n="1" weighted="ARITHMETIC_AVERAGE"/>
+          <interpolation method="fixed_value" user_value="-999.9"/>
         </interpolation_requirements>
         <enforce_write_weight_file>false</enforce_write_weight_file>
       </transient_couple>
-      <transient_couple transient_id="43">
-        <source component_ref="2" transient_grid_ref="29" />
-        <target transient_grid_ref="15" />
+      <transient_couple transient_id="9">
+        <source component_ref="2" transient_grid_ref="9"/>
+        <target transient_grid_ref="9"/>
         <timestep>
           <source>${atmTimeStep}</source>
           <target>${oceTimeStep}</target>
@@ -548,14 +496,14 @@ cat > coupling.xml << EOF
         </timestep>
         <mapping_on_source>true</mapping_on_source>
         <interpolation_requirements>
-          <interpolation method="n-nearest_neighbor" n="1" weighted="ARITHMETIC_AVERAGE" />
-          <interpolation method="fixed_value" user_value="-999.9" />
+          <interpolation method="n-nearest_neighbor" n="1" weighted="ARITHMETIC_AVERAGE"/>
+          <interpolation method="fixed_value" user_value="-999.9"/>
         </interpolation_requirements>
         <enforce_write_weight_file>false</enforce_write_weight_file>
       </transient_couple>
-      <transient_couple transient_id="49">
-        <source component_ref="2" transient_grid_ref="35" />
-        <target transient_grid_ref="21" />
+      <transient_couple transient_id="10">
+        <source component_ref="2" transient_grid_ref="10"/>
+        <target transient_grid_ref="10"/>
         <timestep>
           <source>${atmTimeStep}</source>
           <target>${oceTimeStep}</target>
@@ -565,594 +513,1101 @@ cat > coupling.xml << EOF
         </timestep>
         <mapping_on_source>true</mapping_on_source>
         <interpolation_requirements>
-          <interpolation method="source_to_target_map" spread_distance="0.3" weighted="ARITHMETIC_AVERAGE" />
+          <interpolation method="n-nearest_neighbor" n="1" weighted="ARITHMETIC_AVERAGE"/>
+          <interpolation method="fixed_value" user_value="-999.9"/>
+        </interpolation_requirements>
+        <enforce_write_weight_file>false</enforce_write_weight_file>
+      </transient_couple>
+      <transient_couple transient_id="11">
+        <source component_ref="2" transient_grid_ref="11"/>
+        <target transient_grid_ref="11"/>
+        <timestep>
+          <source>${atmTimeStep}</source>
+          <target>${oceTimeStep}</target>
+          <coupling_period operation="average">${couplingTimeStep}</coupling_period>
+          <source_timelag>${atm_lag}</source_timelag>
+          <target_timelag>${oce_lag}</target_timelag>
+        </timestep>
+        <mapping_on_source>true</mapping_on_source>
+        <interpolation_requirements>
+          <interpolation method="n-nearest_neighbor" n="1" weighted="ARITHMETIC_AVERAGE"/>
+          <interpolation method="fixed_value" user_value="-999.9"/>
+        </interpolation_requirements>
+        <enforce_write_weight_file>false</enforce_write_weight_file>
+      </transient_couple>
+      <transient_couple transient_id="12">
+        <source component_ref="2" transient_grid_ref="12"/>
+        <target transient_grid_ref="12"/>
+        <timestep>
+          <source>${atmTimeStep}</source>
+          <target>${oceTimeStep}</target>
+          <coupling_period operation="average">${couplingTimeStep}</coupling_period>
+          <source_timelag>${atm_lag}</source_timelag>
+          <target_timelag>${oce_lag}</target_timelag>
+        </timestep>
+        <mapping_on_source>true</mapping_on_source>
+        <interpolation_requirements>
+          <interpolation method="n-nearest_neighbor" n="1" weighted="ARITHMETIC_AVERAGE"/>
+          <interpolation method="fixed_value" user_value="-999.9"/>
+        </interpolation_requirements>
+        <enforce_write_weight_file>false</enforce_write_weight_file>
+      </transient_couple>
+      <transient_couple transient_id="13">
+        <source component_ref="2" transient_grid_ref="13"/>
+        <target transient_grid_ref="13"/>
+        <timestep>
+          <source>${atmTimeStep}</source>
+          <target>${oceTimeStep}</target>
+          <coupling_period operation="average">${couplingTimeStep}</coupling_period>
+          <source_timelag>${atm_lag}</source_timelag>
+          <target_timelag>${oce_lag}</target_timelag>
+        </timestep>
+        <mapping_on_source>true</mapping_on_source>
+        <interpolation_requirements>
+          <interpolation method="n-nearest_neighbor" n="1" weighted="ARITHMETIC_AVERAGE"/>
+          <interpolation method="fixed_value" user_value="-999.9"/>
+        </interpolation_requirements>
+        <enforce_write_weight_file>false</enforce_write_weight_file>
+      </transient_couple>
+      <transient_couple transient_id="14">
+        <source component_ref="2" transient_grid_ref="14"/>
+        <target transient_grid_ref="14"/>
+        <timestep>
+          <source>${atmTimeStep}</source>
+          <target>${oceTimeStep}</target>
+          <coupling_period operation="average">${couplingTimeStep}</coupling_period>
+          <source_timelag>${atm_lag}</source_timelag>
+          <target_timelag>${oce_lag}</target_timelag>
+        </timestep>
+        <mapping_on_source>true</mapping_on_source>
+        <interpolation_requirements>
+          <interpolation method="source_to_target_map" spread_distance="0.3" weighted="ARITHMETIC_AVERAGE"/>
         </interpolation_requirements>
         <enforce_write_weight_file>false</enforce_write_weight_file>
       </transient_couple>
     </couple>
-
-
-
-
-
-
     <couple>
-      <component1 component_id="2" />
-      <component2 component_id="4" />
-
-      <!--
-      <transient_couple transient_id="36">
-        <source component_ref="2" transient_grid_ref="22" />
-        <target transient_grid_ref="31" />
+      <component1 component_id="2"/>
+      <component2 component_id="3"/>
+      <transient_couple transient_id="15">
+        <source component_ref="1" transient_grid_ref="15"/>
+        <target transient_grid_ref="1"/>
         <timestep>
           <source>${atmTimeStep}</source>
-          <target>${outTimeStep}</target>
-          <coupling_period operation="average">${outTimeStep}</coupling_period>
+          <target>${yacoTimeStep}</target>
+          <coupling_period operation="none">PT6H</coupling_period>
           <source_timelag>${atm_lag}</source_timelag>
-          <target_timelag>${out_lag}</target_timelag>
+          <target_timelag>${yaco_lag}</target_timelag>
         </timestep>
         <mapping_on_source>true</mapping_on_source>
         <interpolation_requirements>
-          <interpolation method="n-nearest_neighbor" n="1" weighted="ARITHMETIC_AVERAGE" />
-          <interpolation method="fixed_value" user_value="-999.9" />
+          <interpolation method="n-nearest_neighbor" n="1" weighted="ARITHMETIC_AVERAGE"/>
+          <interpolation method="fixed_value" user_value="-999.9"/>
         </interpolation_requirements>
         <enforce_write_weight_file>false</enforce_write_weight_file>
       </transient_couple>
-      <transient_couple transient_id="38">
-        <source component_ref="2" transient_grid_ref="24" />
-        <target transient_grid_ref="3" />
-        <timestep>
-          <source>${atmTimeStep}</source>
-          <target>${outTimeStep}</target>
-          <coupling_period operation="average">${outTimeStep}</coupling_period>
-          <source_timelag>${atm_lag}</source_timelag>
-          <target_timelag>${out_lag}</target_timelag>
-        </timestep>
-        <mapping_on_source>true</mapping_on_source>
-        <interpolation_requirements>
-          <interpolation method="n-nearest_neighbor" n="1" weighted="ARITHMETIC_AVERAGE" />
-          <interpolation method="fixed_value" user_value="-999.9" />
-        </interpolation_requirements>
-        <enforce_write_weight_file>false</enforce_write_weight_file>
-      </transient_couple>
-      <transient_couple transient_id="35">
-        <source component_ref="2" transient_grid_ref="21" />
-        <target transient_grid_ref="26" />
-        <timestep>
-          <source>${atmTimeStep}</source>
-          <target>${outTimeStep}</target>
-          <coupling_period operation="average">${outTimeStep}</coupling_period>
-          <source_timelag>${atm_lag}</source_timelag>
-          <target_timelag>${out_lag}</target_timelag>
-        </timestep>
-        <mapping_on_source>true</mapping_on_source>
-        <interpolation_requirements>
-          <interpolation method="n-nearest_neighbor" n="1" weighted="ARITHMETIC_AVERAGE" />
-          <interpolation method="fixed_value" user_value="-999.9" />
-        </interpolation_requirements>
-        <enforce_write_weight_file>false</enforce_write_weight_file>
-      </transient_couple>
-      -->
-
-
-      <transient_couple transient_id="37">
-        <source component_ref="2" transient_grid_ref="23" />
-        <target transient_grid_ref="17" />
-        <timestep>
-          <source>${atmTimeStep}</source>
-          <target>${outTimeStep}</target>
-          <coupling_period operation="average">${outTimeStep}</coupling_period>
-          <source_timelag>${atm_lag}</source_timelag>
-          <target_timelag>${out_lag}</target_timelag>
-        </timestep>
-        <mapping_on_source>true</mapping_on_source>
-        <interpolation_requirements>
-          <interpolation method="n-nearest_neighbor" n="1" weighted="ARITHMETIC_AVERAGE" />
-          <interpolation method="fixed_value" user_value="-999.9" />
-        </interpolation_requirements>
-        <enforce_write_weight_file>false</enforce_write_weight_file>
-      </transient_couple>
-
-      <!--
       <transient_couple transient_id="16">
-        <source component_ref="2" transient_grid_ref="2" />
-        <target transient_grid_ref="16" />
+        <source component_ref="1" transient_grid_ref="16"/>
+        <target transient_grid_ref="2"/>
         <timestep>
           <source>${atmTimeStep}</source>
-          <target>${outTimeStep}</target>
-          <coupling_period operation="average">${outTimeStep}</coupling_period>
+          <target>${yacoTimeStep}</target>
+          <coupling_period operation="none">PT6H</coupling_period>
           <source_timelag>${atm_lag}</source_timelag>
-          <target_timelag>${out_lag}</target_timelag>
+          <target_timelag>${yaco_lag}</target_timelag>
         </timestep>
         <mapping_on_source>true</mapping_on_source>
         <interpolation_requirements>
-          <interpolation method="n-nearest_neighbor" n="1" weighted="ARITHMETIC_AVERAGE" />
-          <interpolation method="fixed_value" user_value="-999.9" />
+          <interpolation method="n-nearest_neighbor" n="1" weighted="ARITHMETIC_AVERAGE"/>
+          <interpolation method="fixed_value" user_value="-999.9"/>
         </interpolation_requirements>
         <enforce_write_weight_file>false</enforce_write_weight_file>
       </transient_couple>
-      <transient_couple transient_id="30">
-        <source component_ref="2" transient_grid_ref="16" />
-        <target transient_grid_ref="27" />
-        <timestep>
-          <source>${atmTimeStep}</source>
-          <target>${outTimeStep}</target>
-          <coupling_period operation="average">${outTimeStep}</coupling_period>
-          <source_timelag>${atm_lag}</source_timelag>
-          <target_timelag>${out_lag}</target_timelag>
-        </timestep>
-        <mapping_on_source>true</mapping_on_source>
-        <interpolation_requirements>
-          <interpolation method="n-nearest_neighbor" n="1" weighted="ARITHMETIC_AVERAGE" />
-          <interpolation method="fixed_value" user_value="-999.9" />
-        </interpolation_requirements>
-        <enforce_write_weight_file>false</enforce_write_weight_file>
-      </transient_couple>
-      <transient_couple transient_id="29">
-        <source component_ref="2" transient_grid_ref="15" />
-        <target transient_grid_ref="8" />
-        <timestep>
-          <source>${atmTimeStep}</source>
-          <target>${outTimeStep}</target>
-          <coupling_period operation="average">${outTimeStep}</coupling_period>
-          <source_timelag>${atm_lag}</source_timelag>
-          <target_timelag>${out_lag}</target_timelag>
-        </timestep>
-        <mapping_on_source>true</mapping_on_source>
-        <interpolation_requirements>
-          <interpolation method="n-nearest_neighbor" n="1" weighted="ARITHMETIC_AVERAGE" />
-          <interpolation method="fixed_value" user_value="-999.9" />
-        </interpolation_requirements>
-        <enforce_write_weight_file>false</enforce_write_weight_file>
-      </transient_couple>
-      <transient_couple transient_id="40">
-        <source component_ref="2" transient_grid_ref="26" />
-        <target transient_grid_ref="4" />
-        <timestep>
-          <source>${atmTimeStep}</source>
-          <target>${outTimeStep}</target>
-          <coupling_period operation="average">${outTimeStep}</coupling_period>
-          <source_timelag>${atm_lag}</source_timelag>
-          <target_timelag>${out_lag}</target_timelag>
-        </timestep>
-        <mapping_on_source>true</mapping_on_source>
-        <interpolation_requirements>
-          <interpolation method="n-nearest_neighbor" n="1" weighted="ARITHMETIC_AVERAGE" />
-          <interpolation method="fixed_value" user_value="-999.9" />
-        </interpolation_requirements>
-        <enforce_write_weight_file>false</enforce_write_weight_file>
-      </transient_couple>
-      <transient_couple transient_id="19">
-        <source component_ref="2" transient_grid_ref="5" />
-        <target transient_grid_ref="24" />
-        <timestep>
-          <source>${atmTimeStep}</source>
-          <target>${outTimeStep}</target>
-          <coupling_period operation="average">${outTimeStep}</coupling_period>
-          <source_timelag>${atm_lag}</source_timelag>
-          <target_timelag>${out_lag}</target_timelag>
-        </timestep>
-        <mapping_on_source>true</mapping_on_source>
-        <interpolation_requirements>
-          <interpolation method="n-nearest_neighbor" n="1" weighted="ARITHMETIC_AVERAGE" />
-          <interpolation method="fixed_value" user_value="-999.9" />
-        </interpolation_requirements>
-        <enforce_write_weight_file>false</enforce_write_weight_file>
-      </transient_couple>
-      <transient_couple transient_id="22">
-        <source component_ref="2" transient_grid_ref="8" />
-        <target transient_grid_ref="22" />
-        <timestep>
-          <source>${atmTimeStep}</source>
-          <target>${outTimeStep}</target>
-          <coupling_period operation="average">${outTimeStep}</coupling_period>
-          <source_timelag>${atm_lag}</source_timelag>
-          <target_timelag>${out_lag}</target_timelag>
-        </timestep>
-        <mapping_on_source>true</mapping_on_source>
-        <interpolation_requirements>
-          <interpolation method="n-nearest_neighbor" n="1" weighted="ARITHMETIC_AVERAGE" />
-          <interpolation method="fixed_value" user_value="-999.9" />
-        </interpolation_requirements>
-        <enforce_write_weight_file>false</enforce_write_weight_file>
-      </transient_couple>
+    </couple>
+    <couple>
+      <component1 component_id="2"/>
+      <component2 component_id="4"/>
       <transient_couple transient_id="17">
-        <source component_ref="2" transient_grid_ref="3" />
-        <target transient_grid_ref="7" />
+        <source component_ref="1" transient_grid_ref="17"/>
+        <target transient_grid_ref="1"/>
         <timestep>
           <source>${atmTimeStep}</source>
-          <target>${outTimeStep}</target>
-          <coupling_period operation="average">${outTimeStep}</coupling_period>
+          <target>${yacoTimeStep}</target>
+          <coupling_period operation="none">PT6H</coupling_period>
           <source_timelag>${atm_lag}</source_timelag>
-          <target_timelag>${out_lag}</target_timelag>
+          <target_timelag>${yaco_lag}</target_timelag>
         </timestep>
         <mapping_on_source>true</mapping_on_source>
         <interpolation_requirements>
-          <interpolation method="n-nearest_neighbor" n="1" weighted="ARITHMETIC_AVERAGE" />
-          <interpolation method="fixed_value" user_value="-999.9" />
+          <interpolation method="n-nearest_neighbor" n="1" weighted="ARITHMETIC_AVERAGE"/>
+          <interpolation method="fixed_value" user_value="-999.9"/>
         </interpolation_requirements>
         <enforce_write_weight_file>false</enforce_write_weight_file>
       </transient_couple>
       <transient_couple transient_id="18">
-        <source component_ref="2" transient_grid_ref="4" />
-        <target transient_grid_ref="6" />
+        <source component_ref="1" transient_grid_ref="18"/>
+        <target transient_grid_ref="2"/>
         <timestep>
           <source>${atmTimeStep}</source>
-          <target>${outTimeStep}</target>
-          <coupling_period operation="average">${outTimeStep}</coupling_period>
+          <target>${yacoTimeStep}</target>
+          <coupling_period operation="none">PT6H</coupling_period>
           <source_timelag>${atm_lag}</source_timelag>
-          <target_timelag>${out_lag}</target_timelag>
+          <target_timelag>${yaco_lag}</target_timelag>
         </timestep>
         <mapping_on_source>true</mapping_on_source>
         <interpolation_requirements>
-          <interpolation method="n-nearest_neighbor" n="1" weighted="ARITHMETIC_AVERAGE" />
-          <interpolation method="fixed_value" user_value="-999.9" />
+          <interpolation method="n-nearest_neighbor" n="1" weighted="ARITHMETIC_AVERAGE"/>
+          <interpolation method="fixed_value" user_value="-999.9"/>
         </interpolation_requirements>
         <enforce_write_weight_file>false</enforce_write_weight_file>
       </transient_couple>
-      <transient_couple transient_id="25">
-        <source component_ref="2" transient_grid_ref="11" />
-        <target transient_grid_ref="14" />
+    </couple>
+    <couple>
+      <component1 component_id="2"/>
+      <component2 component_id="5"/>
+      <transient_couple transient_id="19">
+        <source component_ref="1" transient_grid_ref="19"/>
+        <target transient_grid_ref="1"/>
         <timestep>
           <source>${atmTimeStep}</source>
-          <target>${outTimeStep}</target>
-          <coupling_period operation="average">${outTimeStep}</coupling_period>
+          <target>${yacoTimeStep}</target>
+          <coupling_period operation="none">PT6H</coupling_period>
           <source_timelag>${atm_lag}</source_timelag>
-          <target_timelag>${out_lag}</target_timelag>
+          <target_timelag>${yaco_lag}</target_timelag>
         </timestep>
         <mapping_on_source>true</mapping_on_source>
         <interpolation_requirements>
-          <interpolation method="n-nearest_neighbor" n="1" weighted="ARITHMETIC_AVERAGE" />
-          <interpolation method="fixed_value" user_value="-999.9" />
-        </interpolation_requirements>
-        <enforce_write_weight_file>false</enforce_write_weight_file>
-      </transient_couple>
-      <transient_couple transient_id="28">
-        <source component_ref="2" transient_grid_ref="14" />
-        <target transient_grid_ref="9" />
-        <timestep>
-          <source>${atmTimeStep}</source>
-          <target>${outTimeStep}</target>
-          <coupling_period operation="average">${outTimeStep}</coupling_period>
-          <source_timelag>${atm_lag}</source_timelag>
-          <target_timelag>${out_lag}</target_timelag>
-        </timestep>
-        <mapping_on_source>true</mapping_on_source>
-        <interpolation_requirements>
-          <interpolation method="n-nearest_neighbor" n="1" weighted="ARITHMETIC_AVERAGE" />
-          <interpolation method="fixed_value" user_value="-999.9" />
-        </interpolation_requirements>
-        <enforce_write_weight_file>false</enforce_write_weight_file>
-      </transient_couple>
-      <transient_couple transient_id="27">
-        <source component_ref="2" transient_grid_ref="13" />
-        <target transient_grid_ref="10" />
-        <timestep>
-          <source>${atmTimeStep}</source>
-          <target>${outTimeStep}</target>
-          <coupling_period operation="average">${outTimeStep}</coupling_period>
-          <source_timelag>${atm_lag}</source_timelag>
-          <target_timelag>${out_lag}</target_timelag>
-        </timestep>
-        <mapping_on_source>true</mapping_on_source>
-        <interpolation_requirements>
-          <interpolation method="n-nearest_neighbor" n="1" weighted="ARITHMETIC_AVERAGE" />
-          <interpolation method="fixed_value" user_value="-999.9" />
-        </interpolation_requirements>
-        <enforce_write_weight_file>false</enforce_write_weight_file>
-      </transient_couple>
-      <transient_couple transient_id="33">
-        <source component_ref="2" transient_grid_ref="19" />
-        <target transient_grid_ref="2" />
-        <timestep>
-          <source>${atmTimeStep}</source>
-          <target>${outTimeStep}</target>
-          <coupling_period operation="average">${outTimeStep}</coupling_period>
-          <source_timelag>${atm_lag}</source_timelag>
-          <target_timelag>${out_lag}</target_timelag>
-        </timestep>
-        <mapping_on_source>true</mapping_on_source>
-        <interpolation_requirements>
-          <interpolation method="n-nearest_neighbor" n="1" weighted="ARITHMETIC_AVERAGE" />
-          <interpolation method="fixed_value" user_value="-999.9" />
-        </interpolation_requirements>
-        <enforce_write_weight_file>false</enforce_write_weight_file>
-      </transient_couple>
-      <transient_couple transient_id="15">
-        <source component_ref="2" transient_grid_ref="1" />
-        <target transient_grid_ref="15" />
-        <timestep>
-          <source>${atmTimeStep}</source>
-          <target>${outTimeStep}</target>
-          <coupling_period operation="average">${outTimeStep}</coupling_period>
-          <source_timelag>${atm_lag}</source_timelag>
-          <target_timelag>${out_lag}</target_timelag>
-        </timestep>
-        <mapping_on_source>true</mapping_on_source>
-        <interpolation_requirements>
-          <interpolation method="n-nearest_neighbor" n="1" weighted="ARITHMETIC_AVERAGE" />
-          <interpolation method="fixed_value" user_value="-999.9" />
-        </interpolation_requirements>
-        <enforce_write_weight_file>false</enforce_write_weight_file>
-      </transient_couple>
-      <transient_couple transient_id="34">
-        <source component_ref="2" transient_grid_ref="20" />
-        <target transient_grid_ref="25" />
-        <timestep>
-          <source>${atmTimeStep}</source>
-          <target>${outTimeStep}</target>
-          <coupling_period operation="average">${outTimeStep}</coupling_period>
-          <source_timelag>${atm_lag}</source_timelag>
-          <target_timelag>${out_lag}</target_timelag>
-        </timestep>
-        <mapping_on_source>true</mapping_on_source>
-        <interpolation_requirements>
-          <interpolation method="n-nearest_neighbor" n="1" weighted="ARITHMETIC_AVERAGE" />
-          <interpolation method="fixed_value" user_value="-999.9" />
-        </interpolation_requirements>
-        <enforce_write_weight_file>false</enforce_write_weight_file>
-      </transient_couple>
-      <transient_couple transient_id="21">
-        <source component_ref="2" transient_grid_ref="7" />
-        <target transient_grid_ref="21" />
-        <timestep>
-          <source>${atmTimeStep}</source>
-          <target>${outTimeStep}</target>
-          <coupling_period operation="average">${outTimeStep}</coupling_period>
-          <source_timelag>${atm_lag}</source_timelag>
-          <target_timelag>${out_lag}</target_timelag>
-        </timestep>
-        <mapping_on_source>true</mapping_on_source>
-        <interpolation_requirements>
-          <interpolation method="n-nearest_neighbor" n="1" weighted="ARITHMETIC_AVERAGE" />
-          <interpolation method="fixed_value" user_value="-999.9" />
-        </interpolation_requirements>
-        <enforce_write_weight_file>false</enforce_write_weight_file>
-      </transient_couple>
-      <transient_couple transient_id="39">
-        <source component_ref="2" transient_grid_ref="25" />
-        <target transient_grid_ref="18" />
-        <timestep>
-          <source>${atmTimeStep}</source>
-          <target>${outTimeStep}</target>
-          <coupling_period operation="average">${outTimeStep}</coupling_period>
-          <source_timelag>${atm_lag}</source_timelag>
-          <target_timelag>${out_lag}</target_timelag>
-        </timestep>
-        <mapping_on_source>true</mapping_on_source>
-        <interpolation_requirements>
-          <interpolation method="n-nearest_neighbor" n="1" weighted="ARITHMETIC_AVERAGE" />
-          <interpolation method="fixed_value" user_value="-999.9" />
-        </interpolation_requirements>
-        <enforce_write_weight_file>false</enforce_write_weight_file>
-      </transient_couple>
-      <transient_couple transient_id="42">
-        <source component_ref="2" transient_grid_ref="28" />
-        <target transient_grid_ref="20" />
-        <timestep>
-          <source>${atmTimeStep}</source>
-          <target>${outTimeStep}</target>
-          <coupling_period operation="average">${outTimeStep}</coupling_period>
-          <source_timelag>${atm_lag}</source_timelag>
-          <target_timelag>${out_lag}</target_timelag>
-        </timestep>
-        <mapping_on_source>true</mapping_on_source>
-        <interpolation_requirements>
-          <interpolation method="n-nearest_neighbor" n="1" weighted="ARITHMETIC_AVERAGE" />
-          <interpolation method="fixed_value" user_value="-999.9" />
-        </interpolation_requirements>
-        <enforce_write_weight_file>false</enforce_write_weight_file>
-      </transient_couple>
-      <transient_couple transient_id="24">
-        <source component_ref="2" transient_grid_ref="10" />
-        <target transient_grid_ref="13" />
-        <timestep>
-          <source>${atmTimeStep}</source>
-          <target>${outTimeStep}</target>
-          <coupling_period operation="average">${outTimeStep}</coupling_period>
-          <source_timelag>${atm_lag}</source_timelag>
-          <target_timelag>${out_lag}</target_timelag>
-        </timestep>
-        <mapping_on_source>true</mapping_on_source>
-        <interpolation_requirements>
-          <interpolation method="n-nearest_neighbor" n="1" weighted="ARITHMETIC_AVERAGE" />
-          <interpolation method="fixed_value" user_value="-999.9" />
-        </interpolation_requirements>
-        <enforce_write_weight_file>false</enforce_write_weight_file>
-      </transient_couple>
-      <transient_couple transient_id="26">
-        <source component_ref="2" transient_grid_ref="12" />
-        <target transient_grid_ref="11" />
-        <timestep>
-          <source>${atmTimeStep}</source>
-          <target>${outTimeStep}</target>
-          <coupling_period operation="average">${outTimeStep}</coupling_period>
-          <source_timelag>${atm_lag}</source_timelag>
-          <target_timelag>${out_lag}</target_timelag>
-        </timestep>
-        <mapping_on_source>true</mapping_on_source>
-        <interpolation_requirements>
-          <interpolation method="n-nearest_neighbor" n="1" weighted="ARITHMETIC_AVERAGE" />
-          <interpolation method="fixed_value" user_value="-999.9" />
-        </interpolation_requirements>
-        <enforce_write_weight_file>false</enforce_write_weight_file>
-      </transient_couple>
-      <transient_couple transient_id="32">
-        <source component_ref="2" transient_grid_ref="18" />
-        <target transient_grid_ref="19" />
-        <timestep>
-          <source>${atmTimeStep}</source>
-          <target>${outTimeStep}</target>
-          <coupling_period operation="average">${outTimeStep}</coupling_period>
-          <source_timelag>${atm_lag}</source_timelag>
-          <target_timelag>${out_lag}</target_timelag>
-        </timestep>
-        <mapping_on_source>true</mapping_on_source>
-        <interpolation_requirements>
-          <interpolation method="n-nearest_neighbor" n="1" weighted="ARITHMETIC_AVERAGE" />
-          <interpolation method="fixed_value" user_value="-999.9" />
-        </interpolation_requirements>
-        <enforce_write_weight_file>false</enforce_write_weight_file>
-      </transient_couple>
-      <transient_couple transient_id="41">
-        <source component_ref="2" transient_grid_ref="27" />
-        <target transient_grid_ref="23" />
-        <timestep>
-          <source>${atmTimeStep}</source>
-          <target>${outTimeStep}</target>
-          <coupling_period operation="average">${outTimeStep}</coupling_period>
-          <source_timelag>${atm_lag}</source_timelag>
-          <target_timelag>${out_lag}</target_timelag>
-        </timestep>
-        <mapping_on_source>true</mapping_on_source>
-        <interpolation_requirements>
-          <interpolation method="n-nearest_neighbor" n="1" weighted="ARITHMETIC_AVERAGE" />
-          <interpolation method="fixed_value" user_value="-999.9" />
+          <interpolation method="n-nearest_neighbor" n="1" weighted="ARITHMETIC_AVERAGE"/>
+          <interpolation method="fixed_value" user_value="-999.9"/>
         </interpolation_requirements>
         <enforce_write_weight_file>false</enforce_write_weight_file>
       </transient_couple>
       <transient_couple transient_id="20">
-        <source component_ref="2" transient_grid_ref="6" />
-        <target transient_grid_ref="1" />
+        <source component_ref="1" transient_grid_ref="20"/>
+        <target transient_grid_ref="2"/>
         <timestep>
           <source>${atmTimeStep}</source>
-          <target>${outTimeStep}</target>
-          <coupling_period operation="average">${outTimeStep}</coupling_period>
+          <target>${yacoTimeStep}</target>
+          <coupling_period operation="none">PT6H</coupling_period>
           <source_timelag>${atm_lag}</source_timelag>
-          <target_timelag>${out_lag}</target_timelag>
+          <target_timelag>${yaco_lag}</target_timelag>
         </timestep>
         <mapping_on_source>true</mapping_on_source>
         <interpolation_requirements>
-          <interpolation method="n-nearest_neighbor" n="1" weighted="ARITHMETIC_AVERAGE" />
-          <interpolation method="fixed_value" user_value="-999.9" />
+          <interpolation method="n-nearest_neighbor" n="1" weighted="ARITHMETIC_AVERAGE"/>
+          <interpolation method="fixed_value" user_value="-999.9"/>
+        </interpolation_requirements>
+        <enforce_write_weight_file>false</enforce_write_weight_file>
+      </transient_couple>
+    </couple>
+    <couple>
+      <component1 component_id="2"/>
+      <component2 component_id="6"/>
+      <transient_couple transient_id="21">
+        <source component_ref="1" transient_grid_ref="21"/>
+        <target transient_grid_ref="1"/>
+        <timestep>
+          <source>${atmTimeStep}</source>
+          <target>${yacoTimeStep}</target>
+          <coupling_period operation="none">PT6H</coupling_period>
+          <source_timelag>${atm_lag}</source_timelag>
+          <target_timelag>${yaco_lag}</target_timelag>
+        </timestep>
+        <mapping_on_source>true</mapping_on_source>
+        <interpolation_requirements>
+          <interpolation method="n-nearest_neighbor" n="1" weighted="ARITHMETIC_AVERAGE"/>
+          <interpolation method="fixed_value" user_value="-999.9"/>
+        </interpolation_requirements>
+        <enforce_write_weight_file>false</enforce_write_weight_file>
+      </transient_couple>
+    </couple>
+    <couple>
+      <component1 component_id="2"/>
+      <component2 component_id="7"/>
+      <transient_couple transient_id="22">
+        <source component_ref="1" transient_grid_ref="22"/>
+        <target transient_grid_ref="1"/>
+        <timestep>
+          <source>${atmTimeStep}</source>
+          <target>${yacoTimeStep}</target>
+          <coupling_period operation="none">${yaco_PT1H_CouplingTimeStep}</coupling_period>
+          <source_timelag>${atm_lag}</source_timelag>
+          <target_timelag>${yaco_lag}</target_timelag>
+        </timestep>
+        <mapping_on_source>true</mapping_on_source>
+        <interpolation_requirements>
+          <interpolation method="n-nearest_neighbor" n="1" weighted="ARITHMETIC_AVERAGE"/>
+          <interpolation method="fixed_value" user_value="-999.9"/>
         </interpolation_requirements>
         <enforce_write_weight_file>false</enforce_write_weight_file>
       </transient_couple>
       <transient_couple transient_id="23">
-        <source component_ref="2" transient_grid_ref="9" />
-        <target transient_grid_ref="12" />
+        <source component_ref="1" transient_grid_ref="23"/>
+        <target transient_grid_ref="2"/>
         <timestep>
           <source>${atmTimeStep}</source>
-          <target>${outTimeStep}</target>
-          <coupling_period operation="average">${outTimeStep}</coupling_period>
+          <target>${yacoTimeStep}</target>
+          <coupling_period operation="none">${yaco_PT1H_CouplingTimeStep}</coupling_period>
           <source_timelag>${atm_lag}</source_timelag>
-          <target_timelag>${out_lag}</target_timelag>
+          <target_timelag>${yaco_lag}</target_timelag>
         </timestep>
         <mapping_on_source>true</mapping_on_source>
         <interpolation_requirements>
-          <interpolation method="n-nearest_neighbor" n="1" weighted="ARITHMETIC_AVERAGE" />
-          <interpolation method="fixed_value" user_value="-999.9" />
+          <interpolation method="n-nearest_neighbor" n="1" weighted="ARITHMETIC_AVERAGE"/>
+          <interpolation method="fixed_value" user_value="-999.9"/>
+        </interpolation_requirements>
+        <enforce_write_weight_file>false</enforce_write_weight_file>
+      </transient_couple>
+      <transient_couple transient_id="24">
+        <source component_ref="1" transient_grid_ref="24"/>
+        <target transient_grid_ref="3"/>
+        <timestep>
+          <source>${atmTimeStep}</source>
+          <target>${yacoTimeStep}</target>
+          <coupling_period operation="none">${yaco_PT1H_CouplingTimeStep}</coupling_period>
+          <source_timelag>${atm_lag}</source_timelag>
+          <target_timelag>${yaco_lag}</target_timelag>
+        </timestep>
+        <mapping_on_source>true</mapping_on_source>
+        <interpolation_requirements>
+          <interpolation method="n-nearest_neighbor" n="1" weighted="ARITHMETIC_AVERAGE"/>
+          <interpolation method="fixed_value" user_value="-999.9"/>
+        </interpolation_requirements>
+        <enforce_write_weight_file>false</enforce_write_weight_file>
+      </transient_couple>
+      <transient_couple transient_id="25">
+        <source component_ref="1" transient_grid_ref="25"/>
+        <target transient_grid_ref="4"/>
+        <timestep>
+          <source>${atmTimeStep}</source>
+          <target>${yacoTimeStep}</target>
+          <coupling_period operation="none">${yaco_PT1H_CouplingTimeStep}</coupling_period>
+          <source_timelag>${atm_lag}</source_timelag>
+          <target_timelag>${yaco_lag}</target_timelag>
+        </timestep>
+        <mapping_on_source>true</mapping_on_source>
+        <interpolation_requirements>
+          <interpolation method="n-nearest_neighbor" n="1" weighted="ARITHMETIC_AVERAGE"/>
+          <interpolation method="fixed_value" user_value="-999.9"/>
+        </interpolation_requirements>
+        <enforce_write_weight_file>false</enforce_write_weight_file>
+      </transient_couple>
+      <transient_couple transient_id="26">
+        <source component_ref="1" transient_grid_ref="26"/>
+        <target transient_grid_ref="5"/>
+        <timestep>
+          <source>${atmTimeStep}</source>
+          <target>${yacoTimeStep}</target>
+          <coupling_period operation="none">${yaco_PT1H_CouplingTimeStep}</coupling_period>
+          <source_timelag>${atm_lag}</source_timelag>
+          <target_timelag>${yaco_lag}</target_timelag>
+        </timestep>
+        <mapping_on_source>true</mapping_on_source>
+        <interpolation_requirements>
+          <interpolation method="n-nearest_neighbor" n="1" weighted="ARITHMETIC_AVERAGE"/>
+          <interpolation method="fixed_value" user_value="-999.9"/>
+        </interpolation_requirements>
+        <enforce_write_weight_file>false</enforce_write_weight_file>
+      </transient_couple>
+      <transient_couple transient_id="27">
+        <source component_ref="1" transient_grid_ref="27"/>
+        <target transient_grid_ref="6"/>
+        <timestep>
+          <source>${atmTimeStep}</source>
+          <target>${yacoTimeStep}</target>
+          <coupling_period operation="none">${yaco_PT1H_CouplingTimeStep}</coupling_period>
+          <source_timelag>${atm_lag}</source_timelag>
+          <target_timelag>${yaco_lag}</target_timelag>
+        </timestep>
+        <mapping_on_source>true</mapping_on_source>
+        <interpolation_requirements>
+          <interpolation method="n-nearest_neighbor" n="1" weighted="ARITHMETIC_AVERAGE"/>
+          <interpolation method="fixed_value" user_value="-999.9"/>
+        </interpolation_requirements>
+        <enforce_write_weight_file>false</enforce_write_weight_file>
+      </transient_couple>
+    </couple>
+    <couple>
+      <component1 component_id="2"/>
+      <component2 component_id="8"/>
+      <transient_couple transient_id="28">
+        <source component_ref="1" transient_grid_ref="28"/>
+        <target transient_grid_ref="1"/>
+        <timestep>
+          <source>${atmTimeStep}</source>
+          <target>${yacoTimeStep}</target>
+          <coupling_period operation="none">${yaco_PT1H_CouplingTimeStep}</coupling_period>
+          <source_timelag>${atm_lag}</source_timelag>
+          <target_timelag>${yaco_lag}</target_timelag>
+        </timestep>
+        <mapping_on_source>true</mapping_on_source>
+        <interpolation_requirements>
+          <interpolation method="n-nearest_neighbor" n="1" weighted="ARITHMETIC_AVERAGE"/>
+          <interpolation method="fixed_value" user_value="-999.9"/>
+        </interpolation_requirements>
+        <enforce_write_weight_file>false</enforce_write_weight_file>
+      </transient_couple>
+      <transient_couple transient_id="29">
+        <source component_ref="1" transient_grid_ref="29"/>
+        <target transient_grid_ref="2"/>
+        <timestep>
+          <source>${atmTimeStep}</source>
+          <target>${yacoTimeStep}</target>
+          <coupling_period operation="none">${yaco_PT1H_CouplingTimeStep}</coupling_period>
+          <source_timelag>${atm_lag}</source_timelag>
+          <target_timelag>${yaco_lag}</target_timelag>
+        </timestep>
+        <mapping_on_source>true</mapping_on_source>
+        <interpolation_requirements>
+          <interpolation method="n-nearest_neighbor" n="1" weighted="ARITHMETIC_AVERAGE"/>
+          <interpolation method="fixed_value" user_value="-999.9"/>
+        </interpolation_requirements>
+        <enforce_write_weight_file>false</enforce_write_weight_file>
+      </transient_couple>
+      <transient_couple transient_id="30">
+        <source component_ref="1" transient_grid_ref="30"/>
+        <target transient_grid_ref="3"/>
+        <timestep>
+          <source>${atmTimeStep}</source>
+          <target>${yacoTimeStep}</target>
+          <coupling_period operation="none">${yaco_PT1H_CouplingTimeStep}</coupling_period>
+          <source_timelag>${atm_lag}</source_timelag>
+          <target_timelag>${yaco_lag}</target_timelag>
+        </timestep>
+        <mapping_on_source>true</mapping_on_source>
+        <interpolation_requirements>
+          <interpolation method="n-nearest_neighbor" n="1" weighted="ARITHMETIC_AVERAGE"/>
+          <interpolation method="fixed_value" user_value="-999.9"/>
         </interpolation_requirements>
         <enforce_write_weight_file>false</enforce_write_weight_file>
       </transient_couple>
       <transient_couple transient_id="31">
-        <source component_ref="2" transient_grid_ref="17" />
-        <target transient_grid_ref="28" />
+        <source component_ref="1" transient_grid_ref="31"/>
+        <target transient_grid_ref="4"/>
         <timestep>
           <source>${atmTimeStep}</source>
-          <target>${outTimeStep}</target>
-          <coupling_period operation="average">${outTimeStep}</coupling_period>
+          <target>${yacoTimeStep}</target>
+          <coupling_period operation="none">${yaco_PT1H_CouplingTimeStep}</coupling_period>
           <source_timelag>${atm_lag}</source_timelag>
-          <target_timelag>${out_lag}</target_timelag>
+          <target_timelag>${yaco_lag}</target_timelag>
         </timestep>
         <mapping_on_source>true</mapping_on_source>
         <interpolation_requirements>
-          <interpolation method="n-nearest_neighbor" n="1" weighted="ARITHMETIC_AVERAGE" />
-          <interpolation method="fixed_value" user_value="-999.9" />
+          <interpolation method="n-nearest_neighbor" n="1" weighted="ARITHMETIC_AVERAGE"/>
+          <interpolation method="fixed_value" user_value="-999.9"/>
         </interpolation_requirements>
         <enforce_write_weight_file>false</enforce_write_weight_file>
       </transient_couple>
-      -->
-
+      <transient_couple transient_id="32">
+        <source component_ref="1" transient_grid_ref="32"/>
+        <target transient_grid_ref="5"/>
+        <timestep>
+          <source>${atmTimeStep}</source>
+          <target>${yacoTimeStep}</target>
+          <coupling_period operation="none">${yaco_PT1H_CouplingTimeStep}</coupling_period>
+          <source_timelag>${atm_lag}</source_timelag>
+          <target_timelag>${yaco_lag}</target_timelag>
+        </timestep>
+        <mapping_on_source>true</mapping_on_source>
+        <interpolation_requirements>
+          <interpolation method="n-nearest_neighbor" n="1" weighted="ARITHMETIC_AVERAGE"/>
+          <interpolation method="fixed_value" user_value="-999.9"/>
+        </interpolation_requirements>
+        <enforce_write_weight_file>false</enforce_write_weight_file>
+      </transient_couple>
+      <transient_couple transient_id="33">
+        <source component_ref="1" transient_grid_ref="33"/>
+        <target transient_grid_ref="6"/>
+        <timestep>
+          <source>${atmTimeStep}</source>
+          <target>${yacoTimeStep}</target>
+          <coupling_period operation="none">${yaco_PT1H_CouplingTimeStep}</coupling_period>
+          <source_timelag>${atm_lag}</source_timelag>
+          <target_timelag>${yaco_lag}</target_timelag>
+        </timestep>
+        <mapping_on_source>true</mapping_on_source>
+        <interpolation_requirements>
+          <interpolation method="n-nearest_neighbor" n="1" weighted="ARITHMETIC_AVERAGE"/>
+          <interpolation method="fixed_value" user_value="-999.9"/>
+        </interpolation_requirements>
+        <enforce_write_weight_file>false</enforce_write_weight_file>
+      </transient_couple>
+      <transient_couple transient_id="34">
+        <source component_ref="1" transient_grid_ref="34"/>
+        <target transient_grid_ref="7"/>
+        <timestep>
+          <source>${atmTimeStep}</source>
+          <target>${yacoTimeStep}</target>
+          <coupling_period operation="none">${yaco_PT1H_CouplingTimeStep}</coupling_period>
+          <source_timelag>${atm_lag}</source_timelag>
+          <target_timelag>${yaco_lag}</target_timelag>
+        </timestep>
+        <mapping_on_source>true</mapping_on_source>
+        <interpolation_requirements>
+          <interpolation method="n-nearest_neighbor" n="1" weighted="ARITHMETIC_AVERAGE"/>
+          <interpolation method="fixed_value" user_value="-999.9"/>
+        </interpolation_requirements>
+        <enforce_write_weight_file>false</enforce_write_weight_file>
+      </transient_couple>
+    </couple>
+    <couple>
+      <component1 component_id="1"/>
+      <component2 component_id="9"/>
+      <transient_couple transient_id="35">
+        <source component_ref="1" transient_grid_ref="15"/>
+        <target transient_grid_ref="1"/>
+        <timestep>
+          <source>${oceTimeStep}</source>
+          <target>${yacoTimeStep}</target>
+          <coupling_period operation="none">${yaco_PT1H_CouplingTimeStep}</coupling_period>
+          <source_timelag>${oce_lag}</source_timelag>
+          <target_timelag>${yaco_lag}</target_timelag>
+        </timestep>
+        <mapping_on_source>true</mapping_on_source>
+        <interpolation_requirements>
+          <interpolation method="n-nearest_neighbor" n="1" weighted="ARITHMETIC_AVERAGE"/>
+          <interpolation method="fixed_value" user_value="-999.9"/>
+        </interpolation_requirements>
+        <enforce_write_weight_file>false</enforce_write_weight_file>
+      </transient_couple>
+      <transient_couple transient_id="36">
+        <source component_ref="1" transient_grid_ref="16"/>
+        <target transient_grid_ref="2"/>
+        <timestep>
+          <source>${oceTimeStep}</source>
+          <target>${yacoTimeStep}</target>
+          <coupling_period operation="none">${yaco_PT1H_CouplingTimeStep}</coupling_period>
+          <source_timelag>${oce_lag}</source_timelag>
+          <target_timelag>${yaco_lag}</target_timelag>
+        </timestep>
+        <mapping_on_source>true</mapping_on_source>
+        <interpolation_requirements>
+          <interpolation method="n-nearest_neighbor" n="1" weighted="ARITHMETIC_AVERAGE"/>
+          <interpolation method="fixed_value" user_value="-999.9"/>
+        </interpolation_requirements>
+        <enforce_write_weight_file>false</enforce_write_weight_file>
+      </transient_couple>
+      <transient_couple transient_id="37">
+        <source component_ref="1" transient_grid_ref="17"/>
+        <target transient_grid_ref="3"/>
+        <timestep>
+          <source>${oceTimeStep}</source>
+          <target>${yacoTimeStep}</target>
+          <coupling_period operation="none">${yaco_PT1H_CouplingTimeStep}</coupling_period>
+          <source_timelag>${oce_lag}</source_timelag>
+          <target_timelag>${yaco_lag}</target_timelag>
+        </timestep>
+        <mapping_on_source>true</mapping_on_source>
+        <interpolation_requirements>
+          <interpolation method="n-nearest_neighbor" n="1" weighted="ARITHMETIC_AVERAGE"/>
+          <interpolation method="fixed_value" user_value="-999.9"/>
+        </interpolation_requirements>
+        <enforce_write_weight_file>false</enforce_write_weight_file>
+      </transient_couple>
+      <transient_couple transient_id="38">
+        <source component_ref="1" transient_grid_ref="18"/>
+        <target transient_grid_ref="4"/>
+        <timestep>
+          <source>${oceTimeStep}</source>
+          <target>${yacoTimeStep}</target>
+          <coupling_period operation="none">${yaco_PT1H_CouplingTimeStep}</coupling_period>
+          <source_timelag>${oce_lag}</source_timelag>
+          <target_timelag>${yaco_lag}</target_timelag>
+        </timestep>
+        <mapping_on_source>true</mapping_on_source>
+        <interpolation_requirements>
+          <interpolation method="n-nearest_neighbor" n="1" weighted="ARITHMETIC_AVERAGE"/>
+          <interpolation method="fixed_value" user_value="-999.9"/>
+        </interpolation_requirements>
+        <enforce_write_weight_file>false</enforce_write_weight_file>
+      </transient_couple>
+      <transient_couple transient_id="39">
+        <source component_ref="1" transient_grid_ref="19"/>
+        <target transient_grid_ref="5"/>
+        <timestep>
+          <source>${oceTimeStep}</source>
+          <target>${yacoTimeStep}</target>
+          <coupling_period operation="none">${yaco_PT1H_CouplingTimeStep}</coupling_period>
+          <source_timelag>${oce_lag}</source_timelag>
+          <target_timelag>${yaco_lag}</target_timelag>
+        </timestep>
+        <mapping_on_source>true</mapping_on_source>
+        <interpolation_requirements>
+          <interpolation method="n-nearest_neighbor" n="1" weighted="ARITHMETIC_AVERAGE"/>
+          <interpolation method="fixed_value" user_value="-999.9"/>
+        </interpolation_requirements>
+        <enforce_write_weight_file>false</enforce_write_weight_file>
+      </transient_couple>
+    </couple>
+    <couple>
+      <component1 component_id="1"/>
+      <component2 component_id="10"/>
+      <transient_couple transient_id="40">
+        <source component_ref="1" transient_grid_ref="20"/>
+        <target transient_grid_ref="1"/>
+        <timestep>
+          <source>${oceTimeStep}</source>
+          <target>${yacoTimeStep}</target>
+          <coupling_period operation="none">PT6H</coupling_period>
+          <source_timelag>${oce_lag}</source_timelag>
+          <target_timelag>${yaco_lag}</target_timelag>
+        </timestep>
+        <mapping_on_source>true</mapping_on_source>
+        <interpolation_requirements>
+          <interpolation method="n-nearest_neighbor" n="1" weighted="ARITHMETIC_AVERAGE"/>
+          <interpolation method="fixed_value" user_value="-999.9"/>
+        </interpolation_requirements>
+        <enforce_write_weight_file>false</enforce_write_weight_file>
+      </transient_couple>
     </couple>
   </couples>
-  <created tool="build_coupling.py" />
 </coupling>
 EOF
+
+atm_vgrid_uuid=bd44d42adfa5e0a829e93b98afcb2d20
+atm_vgrid_type=4
 
 # yac-io configuration
 
 cat > yaco.yml << EOF
-output: fdb
-
-grid:
-  type: healpix
-  nside: 2
-  order: nested
-  name: healpix_2
-
-yac_input:
-  ranks:
-    ${tot_tasks}:
-      name: healpix_io
-      yac_xml: coupling.xml
-      yac_xsd: coupling.xsd
-      collections:
-        - name: ua
-          size: ${atm_levels}
-      start_date: ${start_date}
-      end_date: ${end_date}
-      time_step: ${outTimeStep}
-      calendar: gregorian
-
 fdb_writer:
-  fdb_config: fdb.yml
-  fdb_key:
-    class: de
-    expid: de1
-    version: 1
-    source: icon
-    levtype: 1
-    grid:
-      use: grid
-    level: 0
-    datetime:
-      use: datetime
-      datetime: "%Y%m%D %H%M%S"
-  grib:
-    centre: ecmf
-    gridType: unstructured_grid # TODO replace with below
-    # gridType: healpix
-    # orderingConvention: nested
-    # Nside: 2
-    significanceOfReferenceTime: 2
-    typeOfProcessedData: 1
-    typeOfGeneratingProcess: 2
   collections:
-    ua:
+    clivi:
       fdb_key:
-        variable: u_component_of_wind
-        levtype: 150
+        level: 0
+        levtype: 1
+        variable: total_column_cloud_ice_water
+      grib:
+        discipline: 0
+        parameterCategory: 1
+        parameterNumber: 70
+        typeOfFirstFixedSurface: 1
+        typeOfSecondFixedSurface: 8
+    cllvi:
+      fdb_key:
+        level: 0
+        levtype: 1
+        variable: total_column_cloud_liquid_water
+      grib:
+        discipline: 0
+        parameterCategory: 1
+        parameterNumber: 69
+        typeOfFirstFixedSurface: 1
+        typeOfSecondFixedSurface: 8
+    clt:
+      fdb_key:
+        levtype: 1
+        variable: total_cloud_cover
+      grib:
+        discipline: 0
+        parameterCategory: 6
+        parameterNumber: 1
+        typeOfFirstFixedSurface: 1
+    conc:
+      fdb_key:
+        levtype: 1
+        variable: sea_ice_area_fraction
+      grib:
+        discipline: 10
+        parameterCategory: 2
+        parameterNumber: 0
+        typeOfFirstFixedSurface: 174
+    dew2:
+      fdb_key:
+        level: 2
+        levtype: 103
+        variable: 2m_dewpoint_temperature
+      grib:
+        discipline: 0
+        parameterCategory: 0
+        parameterNumber: 6
+        scaleFactorOfFirstFixedSurface: 0
+        scaledValueOfFirstFixedSurface: 2
+        typeOfFirstFixedSurface: 103
+    gpsm:
+      fdb_key:
         level:
           use: collection_index
+        levtype: 150
+        variable: geopotential
+      grib:
+        discipline: 0
+        genVertHeightCoords: 1
+        nlev: ${atm_levels}
+        numberOfVGridUsed: ${atm_vgrid_type}
+        NV: 6
+        parameterCategory: 3
+        parameterNumber: 4
+        scaledValueOfFirstFixedSurface:
+          add: 1
+          use: collection_index
+        scaledValueOfSecondFixedSurface:
+          add: 2
+          use: collection_index
+        typeOfFirstFixedSurface: 150
+        uuidOfVGrid: ${atm_vgrid_uuid}
+    hfls:
+      fdb_key:
+        level: 0
+        levtype: 1
+        variable: surface_latent_heat_flux
+      grib:
+        discipline: 0
+        parameterCategory: 0
+        parameterNumber: 10
+        typeOfFirstFixedSurface: 1
+    hfss:
+      fdb_key:
+        level: 0
+        levtype: 1
+        variable: surface_sensible_heat_flux
+      grib:
+        discipline: 0
+        parameterCategory: 0
+        parameterNumber: 11
+        typeOfFirstFixedSurface: 1
+    hi:
+      fdb_key:
+        levtype: 174
+        variable: sea_ice_thickness
+      grib:
+        discipline: 10
+        parameterCategory: 2
+        parameterNumber: 1
+        typeOfFirstFixedSurface: 174
+        typeOfSecondFixedSurface: 176
+    hur:
+      fdb_key:
+        level:
+          use: collection_index
+        levtype: 150
+        variable: relative_humidity
+      grib:
+        discipline: 0
+        genVertHeightCoords: 1
+        nlev: ${atm_levels}
+        numberOfVGridUsed: ${atm_vgrid_type}
+        NV: 6
+        parameterCategory: 1
+        parameterNumber: 1
+        scaledValueOfFirstFixedSurface:
+          add: 1
+          use: collection_index
+        scaledValueOfSecondFixedSurface:
+          add: 2
+          use: collection_index
+        typeOfFirstFixedSurface: 150
+        uuidOfVGrid: ${atm_vgrid_uuid}
+    hus:
+      fdb_key:
+        level:
+          use: collection_index
+        levtype: 150
+        variable: specific_humidity
+      grib:
+        discipline: 0
+        genVertHeightCoords: 1
+        nlev: ${atm_levels}
+        numberOfVGridUsed: ${atm_vgrid_type}
+        NV: 6
+        parameterCategory: 1
+        parameterNumber: 0
+        scaledValueOfFirstFixedSurface:
+          add: 1
+          use: collection_index
+        scaledValueOfSecondFixedSurface:
+          add: 2
+          use: collection_index
+        typeOfFirstFixedSurface: 150
+        uuidOfVGrid: ${atm_vgrid_uuid}
+    ice_u:
+      fdb_key:
+        levtype: 174
+        variable: eastward_component_of_sea_ice_velocity
+      grib:
+        discipline: 10
+        parameterCategory: 2
+        parameterNumber: 4
+        typeOfFirstFixedSurface: 174
+        typeOfSecondFixedSurface: 176
+    ice_v:
+      fdb_key:
+        levtype: 174
+        variable: northward_component_of_sea_ice_velocity
+      grib:
+        discipline: 10
+        parameterCategory: 2
+        parameterNumber: 5
+        typeOfFirstFixedSurface: 174
+        typeOfSecondFixedSurface: 176
+    mlotst:
+      fdb_key:
+        levtype: 117
+        variable: water_depth
+      grib:
+        discipline: 10
+        parameterCategory: 4
+        parameterNumber: 14
+        typeOfFirstFixedSurface: 117
+    omega_phy:
+      fdb_key:
+        level:
+          use: collection_index
+        levtype: 150
+        variable: vertical_velocity
+      grib:
+        discipline: 0
+        genVertHeightCoords: 1
+        nlev: ${atm_levels}
+        numberOfVGridUsed: ${atm_vgrid_type}
+        NV: 6
+        parameterCategory: 2
+        parameterNumber: 8
+        scaledValueOfFirstFixedSurface:
+          add: 1
+          use: collection_index
+        scaledValueOfSecondFixedSurface:
+          add: 2
+          use: collection_index
+        typeOfFirstFixedSurface: 150
+        uuidOfVGrid: ${atm_vgrid_uuid}
+    pr:
+      fdb_key:
+        level: 0
+        levtype: 1
+        variable: total_precipitation_rate
+      grib:
+        discipline: 0
+        parameterCategory: 1
+        parameterNumber: 52
+        typeOfFirstFixedSurface: 1
+    pres_msl:
+      fdb_key:
+        levtype: 101
+        variable: mean_sea_level_pressure
+      grib:
+        discipline: 0
+        parameterCategory: 3
+        parameterNumber: 1
+        typeOfFirstFixedSurface: 101
+    pres_sfc:
+      fdb_key:
+        level: 0
+        levtype: 1
+        variable: surface_pressure
+      grib:
+        discipline: 0
+        parameterCategory: 3
+        parameterNumber: 0
+        typeOfFirstFixedSurface: 1
+    ta:
+      fdb_key:
+        level:
+          use: collection_index
+        levtype: 150
+        variable: temperature
+      grib:
+        discipline: 0
+        genVertHeightCoords: 1
+        nlev: ${atm_levels}
+        numberOfVGridUsed: ${atm_vgrid_type}
+        NV: 6
+        parameterCategory: 0
+        parameterNumber: 0
+        scaledValueOfFirstFixedSurface:
+          add: 1
+          use: collection_index
+        scaledValueOfSecondFixedSurface:
+          add: 2
+          use: collection_index
+        typeOfFirstFixedSurface: 150
+        uuidOfVGrid: ${atm_vgrid_uuid}
+    tas:
+      fdb_key:
+        level: 0
+        levtype: 1
+        variable: 2m_temperature
+      grib:
+        discipline: 0
+        parameterCategory: 0
+        parameterNumber: 0
+        scaleFactorOfFirstFixedSurface: 0
+        scaledValueOfFirstFixedSurface: 2
+        typeOfFirstFixedSurface: 103
+    to:
+      fdb_key:
+        variable: sea_water_potential_temperature
+      grib:
+        discipline: 10
+        parameterCategory: 4
+        parameterNumber: 18
+        scaledValueOfFirstFixedSurface:
+          add: 1
+          use: collection_index
+    ts_rad:
+      fdb_key:
+        level: 0
+        levtype: 1
+        variable: radiative_surface_temperature
+      grib:
+        discipline: 0
+        parameterCategory: 0
+        parameterNumber: 17
+        typeOfFirstFixedSurface: 1
+    ua:
+      fdb_key:
+        level:
+          use: collection_index
+        levtype: 150
+        variable: u_component_of_wind
+      grib:
+        discipline: 0
+        genVertHeightCoords: 1
+        nlev: ${atm_levels}
+        numberOfVGridUsed: ${atm_vgrid_type}
+        NV: 6
+        parameterCategory: 2
+        parameterNumber: 2
+        scaledValueOfFirstFixedSurface:
+          add: 1
+          use: collection_index
+        scaledValueOfSecondFixedSurface:
+          add: 2
+          use: collection_index
+        typeOfFirstFixedSurface: 150
+        uuidOfVGrid: ${atm_vgrid_uuid}
+    uas:
+      fdb_key:
+        level: 10
+        levtype: 103
+        variable: 10_metre_u_wind_component
       grib:
         discipline: 0
         parameterCategory: 2
         parameterNumber: 2
-        scaledValueOfSecondFixedSurface:
+        scaleFactorOfFirstFixedSurface: 0
+        scaledValueOfFirstFixedSurface: 10
+        typeOfFirstFixedSurface: 103
+    va:
+      fdb_key:
+        level:
           use: collection_index
+        levtype: 150
+        variable: v_component_of_wind
+      grib:
+        discipline: 0
+        genVertHeightCoords: 1
+        nlev: ${atm_levels}
+        numberOfVGridUsed: ${atm_vgrid_type}
+        NV: 6
+        parameterCategory: 2
+        parameterNumber: 3
+        scaledValueOfFirstFixedSurface:
           add: 1
+          use: collection_index
+        scaledValueOfSecondFixedSurface:
+          add: 2
+          use: collection_index
+        typeOfFirstFixedSurface: 150
+        uuidOfVGrid: ${atm_vgrid_uuid}
+    vas:
+      fdb_key:
+        level: 10
+        levtype: 103
+        variable: 10_metre_v_wind_component
+      grib:
+        discipline: 0
+        parameterCategory: 2
+        parameterNumber: 3
+        scaleFactorOfFirstFixedSurface: 0
+        scaledValueOfFirstFixedSurface: 10
+        typeOfFirstFixedSurface: 103
+  fdb_config: fdb.yml
+  fdb_key:
+    class: de
+    datetime:
+      datetime: '%Y%m%D %H%M%S'
+      use: datetime
+    expid: de1
+    grid:
+      use: grid
+    level: 0
+    levtype: 1
+    source: icon
+    version: 1
+  grib:
+    centre: 0
+    gridType: unstructured_grid
+    localTablesVersion: 0
+    significanceOfReferenceTime: 2
+    subCentre: 0
+    tablesVersion: 23
+    typeOfGeneratingProcess: 2
+    typeOfProcessedData: 1
+grid:
+  name: healpix_2
+  nside: 9
+  order: nested
+  type: healpix
+output: fdb
+yac_input:
+  ranks:
+    $(( tot_tasks + 0 )):
+      calendar: gregorian
+      collections:
+      - name: ua
+        size: ${atm_levels}
+      - name: va
+        size: ${atm_levels}
+      end_date: ${end_date}
+      name: yaco0
+      start_date: ${start_date}
+      time_lag: ${yaco_lag}
+      time_step: ${yacoTimeStep}
+      yac_xml: coupling.xml
+      yac_xsd: coupling.xsd
+    $(( tot_tasks + 1 )):
+      calendar: gregorian
+      collections:
+      - name: hus
+        size: ${atm_levels}
+      - name: hur
+        size: ${atm_levels}
+      end_date: ${end_date}
+      name: yaco1
+      start_date: ${start_date}
+      time_lag: ${yaco_lag}
+      time_step: ${yacoTimeStep}
+      yac_xml: coupling.xml
+      yac_xsd: coupling.xsd
+    $(( tot_tasks + 2 )):
+      calendar: gregorian
+      collections:
+      - name: ta
+        size: ${atm_levels}
+      - name: gpsm
+        size: ${atm_levels}
+      end_date: ${end_date}
+      name: yaco2
+      start_date: ${start_date}
+      time_lag: ${yaco_lag}
+      time_step: ${yacoTimeStep}
+      yac_xml: coupling.xml
+      yac_xsd: coupling.xsd
+    $(( tot_tasks + 3 )):
+      calendar: gregorian
+      collections:
+      - name: omega_phy
+        size: ${atm_levels}
+      end_date: ${end_date}
+      name: yaco3
+      start_date: ${start_date}
+      time_lag: ${yaco_lag}
+      time_step: ${yacoTimeStep}
+      yac_xml: coupling.xml
+      yac_xsd: coupling.xsd
+    $(( tot_tasks + 4 )):
+      calendar: gregorian
+      collections:
+      - name: pr
+        size: 1
+      - name: tas
+        size: 1
+      - name: clt
+        size: 1
+      - name: uas
+        size: 1
+      - name: vas
+        size: 1
+      - name: dew2
+        size: 1
+      end_date: ${end_date}
+      name: yaco4
+      start_date: ${start_date}
+      time_lag: ${yaco_lag}
+      time_step: ${yacoTimeStep}
+      yac_xml: coupling.xml
+      yac_xsd: coupling.xsd
+    $(( tot_tasks + 5 )):
+      calendar: gregorian
+      collections:
+      - name: hfss
+        size: 1
+      - name: hfls
+        size: 1
+      - name: clivi
+        size: 1
+      - name: cllvi
+        size: 1
+      - name: pres_sfc
+        size: 1
+      - name: pres_msl
+        size: 1
+      - name: ts_rad
+        size: 1
+      end_date: ${end_date}
+      name: yaco5
+      start_date: ${start_date}
+      time_lag: ${yaco_lag}
+      time_step: ${yacoTimeStep}
+      yac_xml: coupling.xml
+      yac_xsd: coupling.xsd
+    $(( tot_tasks + 6 )):
+      calendar: gregorian
+      collections:
+      - name: conc
+        size: 1
+      - name: hi
+        size: 1
+      - name: ice_u
+        size: 1
+      - name: ice_v
+        size: 1
+      - name: mlotst
+        size: 1
+      end_date: ${end_date}
+      name: yaco6
+      start_date: ${start_date}
+      time_lag: ${yaco_lag}
+      time_step: ${yacoTimeStep}
+      yac_xml: coupling.xml
+      yac_xsd: coupling.xsd
+    $(( tot_tasks + 7 )):
+      calendar: gregorian
+      collections:
+      - name: to
+        size: ${oce_levels}
+      end_date: ${end_date}
+      name: yaco7
+      start_date: ${start_date}
+      time_lag: ${yaco_lag}
+      time_step: ${yacoTimeStep}
+      yac_xml: coupling.xml
+      yac_xsd: coupling.xsd
 EOF
-
 #-------
 
+if [ ! -f fdb.yml ] ; then
 cat > fdb.yml << EOF
 type: local
 engine: toc
-schema: ${FDB_SCHEMA}
+schema: ./schema
 spaces:
 - handler: Default
   roots:
-  - path: ${FDB_PATH}
+  - path: ${FDB_HOME}
 EOF
+fi
 
 #-------
 
+if [ ! -f schema ] ; then
 cat > schema << EOF
 [ class:Default, expid:Default, version:Integer
   [ source:Default, variable:Default, levtype:Integer, grid:Default
     [ level:Double, datetime:Default ]]]
 EOF
+fi
 
 #-----------------------------------------------------------------------------
 # II. ATMOSPHERE and LAND
@@ -1168,19 +1623,19 @@ cat > NAMELIST_atm << EOF
 /
 &parallel_nml
     nproma = 500
-    nproma_sub = 500
+   !nproma_sub = 500
     num_io_procs = 0
     nblocks_c = 1
     io_proc_chunk_size = 36
     io_process_stride = 8
-    num_restart_procs = 4
+    num_restart_procs = $((atm_tasks/8))
 /
 &grid_nml
     dynamics_grid_filename = 'icon_grid_G.nc'
 /
 &run_nml
     num_lev = 90 ! number of full levels
-    modeltimestep = 'PT75S'
+    modeltimestep = "${atmTimeStep}"
     ltestcase = .false. ! run testcase
     ldynamics = .true. ! dynamics
     ltransport = .true. ! transport
@@ -1244,15 +1699,15 @@ cat > NAMELIST_atm << EOF
 &aes_phy_nml
     ! domain 1
     ! atmospheric physics ("" = never)
-    aes_phy_config(1)%dt_rad = 'PT30M'
-    aes_phy_config(1)%dt_vdf = 'PT75S'
+    aes_phy_config(1)%dt_rad = "${radTimeStep}"
+    aes_phy_config(1)%dt_vdf = "${atmTimeStep}"
     ! surface (true or false)
     aes_phy_config(1)%ljsb = .true.
     aes_phy_config(1)%lamip = .false.
     aes_phy_config(1)%lice = .true.
     aes_phy_config(1)%lmlo = .false.
     aes_phy_config(1)%llake = .true.
-    aes_phy_config(1)%dt_mig = 'PT75S'
+    aes_phy_config(1)%dt_mig = "${atmTimeStep}"
     aes_phy_config(1)%iqneg_d2p = 2
     aes_phy_config(1)%iqneg_p2d = 2
 /
@@ -1410,6 +1865,7 @@ cat > NAMELIST_lnd << EOF
     diag_water_budget = .true.
     debug_hd = .false.
     enforce_water_budget = .false. ! stop in case of water conservation problem
+    use_bifurcated_rivers = .true.
     bc_filename = 'bc_land_hd.nc'
     ic_filename = 'ic_land_hd.nc'
     read_initial_reservoirs = ${read_initial_reservoirs}
@@ -1434,7 +1890,7 @@ cat > NAMELIST_oce << EOF
     num_io_procs = 0
     num_prefetch_proc = 0
     l_fast_sum = .false.
-    num_restart_procs = 4
+    num_restart_procs = $((oce_tasks/8))
     p_test_run = .false.
 /
 &grid_nml
@@ -1446,7 +1902,7 @@ cat > NAMELIST_oce << EOF
     iequations = -1 ! -1: hydrost. ocean model
 /
 &run_nml
-    modeltimestep = 'PT300S'
+    modeltimestep = "${oceTimeStep}"
     output = 'nml' ! namelist controlled output scheme
     activate_sync_timers = .true.
     profiling_output = 1 ! aggregated: 1; detailed: 2; in files: 3
@@ -1456,36 +1912,44 @@ cat > NAMELIST_oce << EOF
     restart_filename = '${EXPNAME}_restart_oce_${end_date}.mfr'
 /
 &dbg_index_nml
-    dbg_lat_in = 30.0
-    dbg_lon_in = -30.0
-    idbg_elev = 5
-    idbg_mxmn = 0
-    idbg_slev = 1
-    idbg_val = 0
-    str_mod_tst = 'all'
+  idbg_mxmn                  = 0                                ! initialize MIN/MAX  debug output
+  idbg_val                   = 0                                ! initialize one cell debug output
+  idbg_slev                  = 1                                ! initialize start level for debug output
+  idbg_elev                  = 5                                ! initialize end level for debug output
+  dbg_lat_in                 = 30.0                             ! latitude location of one cell debug output
+  dbg_lon_in                 = -30.0                            ! longitude location of one cell debug output
+  str_mod_tst                = 'all'                            ! define modules to print out in debug mode
 /
 &ocean_dynamics_nml
-    n_zlev = 40
-    dzlev_m = 12.0, 10.0, 10.0, 10.0, 10.0, 10.0, 13.0, 15.0, 20.0, 25.0, 30.0,
-              35.0, 40.0, 45.0, 50.0, 55.0, 60.0, 70.0, 80.0, 90.0, 100.0,
-              110.0, 120.0, 130.0, 140.0, 150.0, 170.0, 180.0, 190.0, 200.0,
-              220.0, 250.0, 270.0, 300.0, 350.0, 400.0, 450.0, 500.0, 500.0,
-              600.0
-    l_edge_based = .false. ! edge- or cell-based mimetic discretization
-    select_solver = 4 ! 1=gmres_oce_old; 2=ocean_restart_gmres, 3=mixed precisison restart, 4=CG (default) 5=CGJ 6=BiCG 7=GMRES restart (legacy) 8=MINRES
-    use_absolute_solver_tolerance = .true.
-    fast_performance_level = 200 ! performance level 12: for cell-based; 5: default
-    use_continuity_correction = .true. ! height adjustment according to vertical velocity in dynamics
-    cfl_check = .false.
-    cfl_write = .false.
-    i_bc_veloc_top = 1
-    i_bc_veloc_bot = 1 ! 0: (def) bottom friction off, 1: on
-    l_lhs_direct = .false.
-    l_partial_cells = .false.
-    select_lhs = 1
+
+ vert_cor_type     = 1
+ minVerticalLevels = 10
+ n_zlev            = 72
+
+ dzlev_m =   2.0,   2.2,   2.5,   2.8,   3.1,   3.5,   3.9,   4.4,   4.9,   5.4, 
+             5.9,   6.4,   7.1,   7.7,   8.4,   9.2,  10.1,  11.0,  12.0,  13.2,
+            14.4,  15.7,  17.1,  18.7,  20.4,  22.3,  24.3,  26.5,  28.9,  31.5,
+            34.3,  37.3,  40.6,  43.1,  45.3,  46.8,  48.4,  50.0,  51.7,  53.4,
+            55.2,  57.0,  58.9,  60.8,  62.9,  66.6,  72.6,  80.6,  90.6, 100.2,
+           110.0, 120.3, 128.7, 137.4, 146.4, 155.7, 165.2, 174.8, 184.4, 194.1,
+           203.6, 212.9, 221.9, 230.5, 238.5, 245.9, 252.4, 258.1, 262.8, 266.4,
+           268.9, 270.1
+
+    l_edge_based                  = .FALSE. ! edge- or cell-based mimetic discretization
+    select_solver                 = 4       ! 1=gmres_oce_old; 2=ocean_restart_gmres, 3=mixed precisison restart, 
+                                            ! 4=CG (default) 5=CGJ 6=BiCG 7=GMRES restart (legacy) 8=MINRES
+    use_absolute_solver_tolerance = .TRUE.
+    fast_performance_level        = 200     ! performance level 12: for cell-based; 5: default
+    use_continuity_correction     = .TRUE.  ! height adjustment according to vertical velocity in dynamics
+    cfl_check                     = .FALSE.
+    cfl_write                     = .FALSE.
+    i_bc_veloc_top                = 1
+    i_bc_veloc_bot                = 1       ! 0: (def) bottom friction off, 1: on
+    l_lhs_direct                  = .FALSE.
+    l_partial_cells               = .FALSE.
+    select_lhs                    = 1
     solver_max_restart_iterations = 100
     solver_tolerance = 1.0E-10
-    minverticallevels = 10
     solver_max_iter_per_restart = 14
     vert_cor_type = 1
 /
@@ -1661,7 +2125,7 @@ fi
 
 # If second chunk read/write from mfr (multirestartfile)
 if [ "${lrestart}" == ".true." ]; then
-      ln -snvf $restart_dir/"${EXPNAME}"_restart_atm_${end_date}.mfr \
+      ln -snvf $restart_dir/"${EXPNAME}"_restart_atm_${start_date}.mfr \
       multifile_restart_atm.mfr
 fi
 # [files.atmosphere.model]
@@ -1715,7 +2179,7 @@ restart_dir="${experiments_dir}"/"${EXPNAME}"/restarts
 # If running first chunk then itialize ocean from excisting restart data
 
 if [ "${initialize_fromrestart}" == ".false." ]; then
-   ln -snvf $restart_dir/"${EXPNAME}"_restart_oce_${end_date}.mfr \
+   ln -snvf $restart_dir/"${EXPNAME}"_restart_oce_${start_date}.mfr \
       multifile_restart_ocean.mfr
 else
    restart_dir=$grids_dir"/ocean/restart"
@@ -1746,6 +2210,9 @@ ldd ${MODEL_G}
 #
 
 rm -f finish.status
+#
+date
+set -x
 
 # Environment for ICON gpu 
 cat > icon.gpu << 'EOF'
@@ -1787,7 +2254,7 @@ cat > yaco.cpu << 'EOF'
 source $BASH_ENV
 module load rocm
 
-export LD_LIBRARY_PATH=/scratch/project_465000454/redler2/yaco_16.0.1.1_rocm-5.4.1/lib:/scratch/project_465000454/redler2/yaco_16.0.1.1_rocm-5.4.1/lib64:${LD_LIBRARY_PATH}
+export LD_LIBRARY_PATH=/scratch/project_465000454/redler2/yaco/lib:/scratch/project_465000454/redler2/yaco/lib64:${LD_LIBRARY_PATH}
 
 export FI_MP_CACHE_MONITOR="memhooks"
 export FI_CXI_OPTIMIZED_MRS=FALSE
@@ -1809,13 +2276,10 @@ export MODELg="${MODEL_DIR}/scripts/lumi_scripts/run4lumi.sh ./icon.gpu"
 export MODELc="${MODEL_DIR}/scripts/lumi_scripts/run4lumi.sh ./icon.cpu"
 export OUTPUTc="${MODEL_DIR}/scripts/lumi_scripts/run4lumi.sh ./yaco.cpu"
 
-# Check that the FDB exists, if not create path
-
-test -d ${FDB_PATH} || mkdir ${FDB_PATH}
-
 set | grep SLURM
 
 date
+export LD_PRELOAD="/scratch/project_465000454/lunttila/libpreload-me.so"
 srun --export=ALL -l -n $atm_tasks ${MODELg} : -n $oce_tasks --cpus-per-task 7 ${MODELc} : -n $yaco_tasks --cpus-per-task 7 ${OUTPUTc} || exit 1
 date
 

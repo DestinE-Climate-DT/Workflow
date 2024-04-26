@@ -1,0 +1,13 @@
+JOBS:
+  TRANSFER:
+    FILE: templates/transfer.sh
+    PLATFORM: '%DEFAULT.HPCARCH%'
+    PARTITION: "%CURRENT_APP_PARTITION%"
+    DEPENDENCIES: SIM
+    RUNNING: chunk
+    WALLCLOCK: '00:30'
+    NODES: 1
+    PROCESSORS: 1
+    TASKS: 1
+    THREADS: 1
+
