@@ -1,0 +1,30 @@
+RUN:
+  WORKFLOW: model
+  ENVIRONMENT: intel
+  TYPE: test
+  PROCESSOR_UNIT: "cpu"
+MODEL:
+  SIMULATION: test-nemo
+  NAME: nemo
+  GRID_OCE: eORCA1_Z75
+  DVC_INPUTS_BRANCH: "experiment/ocean-spinup-nemo-2020-eorca1-5y"
+JOBS:
+  SIM:
+    QUEUE: gp_debug
+    DEPENDENCIES: INI SIM-1
+    WALLCLOCK: "00:30"
+    NODES: 4
+    TASKS: 8
+    THREADS: 7
+    EXCLUSIVE: "True"
+    CUSTOM_DIRECTIVES: "['#SBATCH --hint=nomultithread']"
+  REMOTE_SETUP:
+    QUEUE: gp_debug
+  INI:
+    QUEUE: gp_debug
+EXPERIMENT:
+  DATELIST: 20150101
+  CHUNKSIZEUNIT: day
+  CHUNKSIZE: 1
+  NUMCHUNKS: 2
+  CALENDAR: standard

@@ -1,0 +1,19 @@
+experiment:
+  DATELIST: 19900101
+  MEMBERS: fc0
+  CHUNKSIZEUNIT: month
+  CHUNKSIZE: 2
+  NUMCHUNKS: 60
+  CALENDAR: standard
+CONFIGURATION:
+  DATA_PORTFOLIO: production
+  DQC_PROFILE: develop
+  RAPS_EXPERIMENT: "hist"
+  RAPS_USER_FLAGS: "--cbmf_reduced --no-ozone --drhook --hugepages --runoff-mapper --sicoupl=thermodynamical"
+  IFS:
+    EXPVER: awi6
+REQUEST:
+  ACTIVITY: baseline
+  EXPERIMENT: hist
+  GENERATION: 2
+  REALIZATION: 1

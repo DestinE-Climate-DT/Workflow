@@ -1,5 +1,7 @@
 #!/bin/bash
 
+# HEADER
+
 EXPID=${1:-%DEFAULT.EXPID%}
 USER=${2:-%CURRENT_USER%}
 HPCROOTDIR=${3:-%HPCROOTDIR%}
@@ -9,6 +11,8 @@ WRAPPER=${6:-%WRAPPERS.WRAPPER.JOBS_IN_WRAPPER%}
 SDATE=${7:-%SDATE%}
 MEMBER=${8:-%MEMBER%}
 CHUNK=${9:-%CHUNK%}
+
+# END_HEADER
 
 # Run squeue and filter the output for the given job nam
 SIM_NAME="${EXPID}_${SDATE}_${MEMBER}_${CHUNK}_SIM"
@@ -30,20 +34,10 @@ else
     echo "Job not found: $EXPID"
 fi
 
-sentence="$(squeue -j $jobid)" # read job's slurm status
-stringarray=("$sentence")
-jobstatus=(${stringarsray[12]})
-
 cd "${HPCROOTDIR}"
 mkdir -p "check_mem/${CHUNK}"
 cd "check_mem"/$CHUNK
 
-until [ "$jobstatus" = "R" ]; do
-    sleep 5s
-    sentence="$(squeue -j $jobid)" # read job's slurm status
-    stringarray=("$sentence")
-    jobstatus=(${stringarray[12]})
-done
 NODES=$(sacct --noheader -X -P -oNodeList --jobs="$jobid")
 NODES=$(echo "$NODES" | cut -d "[" -f2 | cut -d "]" -f1)
 NODES=$(echo "$NODES" | perl -pe 's/(\d+)-(\d+)/join(",",$1..$2)/eg')

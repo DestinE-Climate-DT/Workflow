@@ -1,0 +1,1463 @@
+#! /bin/bash
+
+# ICON R2B9-9 hybrid 1990 historical
+
+set -xuve
+# Set slurm related
+set | grep SLURM
+
+# Utilities
+PATH="${MODEL_DIR}":$PATH
+
+#=============================================================================
+#
+# Support log style output
+#
+pipe=icon_esm_run_$$.pipe
+mkfifo $pipe
+trap "cd $PWD && rm -f $pipe" EXIT
+awk '{print strftime("%FT%T:"), $0; fflush()}' $pipe &
+exec > $pipe 2>&1
+
+#=============================================================================
+
+ulimit -s 4194304
+ulimit -c 0
+
+# ----------------------------------------------------------------------------
+# ICON historical 1990 5 km setup for DestinE Phase II development
+# ----------------------------------------------------------------------------
+
+# (0) Basic model configuration
+# -----------------------------
+
+# Mark current run as started in log
+echo $(date -u +'%Y-%m-%dT%H:%M:%SZ') ${start_date%:*} ${end_date%:*} ${SLURM_JOBID} start
+
+# Show current start date in job configuration
+sh -c 'scontrol update JobId=$SLURM_JOB_ID Comment="$*"' scomment $start_date
+
+#------------------------------------------------------------------------------
+
+# I.1 Split the number of total procs and assign to each component
+# ----------------------------------------------------------------
+
+atm_o_tasks=0
+oce_o_tasks=0
+
+atm_compute_tasks_per_node=${SLURM_GPUS_ON_NODE}
+
+yaco_non_monthly_procs_high=12
+yaco_non_monthly_procs_low=5
+yaco_non_monthly_procs=$((yaco_non_monthly_procs_high + yaco_non_monthly_procs_low))
+
+yaco_monthly_procs_high=3
+yaco_monthly_procs_low=2
+yaco_monthly_procs=$((yaco_monthly_procs_high + yaco_monthly_procs_low))
+
+yaco_tasks=$(( yaco_non_monthly_procs + yaco_monthly_procs ))
+
+max_oce_tasks_per_node=24
+
+atm_compute_tasks=$(( SLURM_JOB_NUM_NODES * atm_compute_tasks_per_node ))
+oce_tasks=$(( SLURM_JOB_NUM_NODES * max_oce_tasks_per_node - yaco_tasks))
+tot_tasks=$(( atm_compute_tasks + oce_tasks + yaco_tasks))
+tasks_per_node=$((tot_tasks / SLURM_JOB_NUM_NODES))
+
+echo "atm_compute_tasks: ${atm_compute_tasks}"
+echo "oce_tasks: ${oce_tasks}"
+echo "yaco_tasks: ${yaco_tasks}"
+echo "tot_tasks: ${tot_tasks}"
+echo "tasks_per_node: ${tasks_per_node}"
+
+#--------------------------------------
+
+export NCPU_RANKS_PER_NODE=$max_oce_tasks_per_node
+
+atm_min_rank=0
+atm_max_rank=$(( atm_compute_tasks - 1 + atm_o_tasks ))
+atm_inc_rank=1
+
+oce_min_rank=$(( atm_max_rank + 1 ))
+oce_max_rank=$(( atm_max_rank + oce_tasks ))
+oce_inc_rank=1
+
+yaco_min_rank=$(( oce_max_rank + 1 ))
+
+#
+# create ICON master, coupling and model namelists
+# ------------------------------------------------
+# For a complete list see Namelist_overview and Namelist_overview.pdf
+#
+
+cat > icon_master.namelist << EOF
+&master_nml
+    lrestart = ${lrestart}
+    read_restart_namelists = .false.
+/
+&master_time_control_nml
+    calendar = 'proleptic gregorian'
+    checkpointtimeintval = "${checkpoint_interval}"
+    restarttimeintval = "${restart_interval}"
+    experimentstartdate = "${start_date}"
+    experimentstopdate = "${end_date}"
+/
+&master_model_nml ! 'atmo'
+    model_name = 'atmo'
+    model_namelist_filename = 'NAMELIST_atm'
+    model_type = 1
+    model_min_rank = $atm_min_rank
+    model_max_rank = $atm_max_rank
+    model_inc_rank = $atm_inc_rank
+/
+&master_model_nml ! 'ocean'
+    model_name = 'ocean'
+    model_namelist_filename = 'NAMELIST_oce'
+    model_type = 2
+    model_min_rank = $oce_min_rank
+    model_max_rank = $oce_max_rank
+    model_inc_rank = $oce_inc_rank
+/
+&jsb_control_nml
+    is_standalone = .false.
+    debug_level = 0
+    restart_jsbach = ${restart_jsbach}
+    timer_level = 0
+/
+&jsb_model_nml
+    model_id = 1
+    model_name = 'JSBACH'
+    model_shortname = 'jsb'
+    model_description = 'JSBACH land surface model'
+    model_namelist_filename = 'NAMELIST_lnd'
+/
+&time_nml
+    is_relative_time = .true.
+/
+EOF
+
+# I.2 YACO fdb output configuration
+#-----------------------------------------------------------------------------
+#
+fdb_config_file="${FDB_HOME}"/etc/fdb/config.yaml
+
+yaco_first_nside=10
+yaco_second_nside=7
+
+#
+# PRESSURE level list, needed for yaco_second_nside
+# ------------------------------------
+#
+# pressure_levels and pressure_levels_fdb as defined in the yaco config need to be consistent!
+#
+export pressure_levels="100.0,500.0,1000.0,2000.0,3000.0,5000.0,7000.0,10000.0,15000.0,20000.0,25000.0,30000.0,40000.0,50000.0,60000.0,70000.0,85000.0,92500.0,100000.0"
+
+gsv_gen_script=${YACO_DIR}/scripts/configure/destine_phase_2/autosubmit_production/configure_yaco.sh
+  
+echo "${gsv_gen_script} ${yaco_min_rank} $((yaco_min_rank + yaco_non_monthly_procs_high)) $((yaco_min_rank + yaco_non_monthly_procs)) $((yaco_min_rank + yaco_non_monthly_procs + yaco_monthly_procs_high)) \
+${yaco_first_nside} ${yaco_second_nside} ${start_date} ${end_date} ${fdb_config_file}"
+  
+${gsv_gen_script} ${yaco_min_rank} \
+                  $((yaco_min_rank + yaco_non_monthly_procs_high)) \
+                  $((yaco_min_rank + yaco_non_monthly_procs)) \
+                  $((yaco_min_rank + yaco_non_monthly_procs + yaco_monthly_procs_high)) \
+                  ${yaco_first_nside} \
+                  ${yaco_second_nside} \
+                  ${start_date} \
+                  ${end_date} \
+                  ${fdb_config_file} \
+                  ${activity} \
+                  ${experiment} \
+                  ${generation} \
+                  ${realization} \
+                  ${EXPVER}
+
+# I.3 YAC coupling library configuration
+#-----------------------------------------------------------------------------
+
+# co2_flux and co2_mixing_ratio are listed as transients
+# below but are not configured for coupling in the couples
+# section. There fields are therefore not considered for
+# the search not for the data exchange even if yac_fget and
+# yac_fput are called for these fields.
+#
+# component names in coupling.yaml must (!) match with modelname_list[*]
+#
+cat > coupling.yaml << EOF
+definitions:
+  atm2oce: &atm2oce
+    src_component: atmo
+    src_grid: icon_atmos_grid
+    tgt_component: ocean
+    tgt_grid: icon_ocean_grid
+    coupling_period: ${couplingTimeStep}
+    time_reduction: average
+    src_lag: ${atm_lag}
+    tgt_lag: ${oce_lag}
+  oce2atm: &oce2atm
+    src_component: ocean
+    src_grid: icon_ocean_grid
+    tgt_component: atmo
+    tgt_grid: icon_atmos_grid
+    coupling_period: ${couplingTimeStep}
+    time_reduction: average
+    src_lag: ${oce_lag}
+    tgt_lag: ${atm_lag}
+
+  # ------- 
+  # fine res writers
+  atm2yaco_rank_$(( yaco_min_rank )): &atm2yaco_rank_$(( yaco_min_rank ))
+    src_component: atmo_output
+    src_grid: icon_atmos_grid
+    tgt_component: yaco_${yaco_first_nside}_rank_$(( yaco_min_rank ))
+    tgt_grid: healpix_${yaco_first_nside}
+    src_lag: ${atm_lag}
+    tgt_lag: ${yaco_lag}
+  atm2yaco_rank_$(( yaco_min_rank + 1 )): &atm2yaco_rank_$(( yaco_min_rank + 1 ))
+    src_component: atmo_output
+    src_grid: icon_atmos_grid
+    tgt_component: yaco_${yaco_first_nside}_rank_$(( yaco_min_rank + 1 ))
+    tgt_grid: healpix_${yaco_first_nside}
+    src_lag: ${atm_lag}
+    tgt_lag: ${yaco_lag}
+  atm2yaco_rank_$(( yaco_min_rank + 2 )): &atm2yaco_rank_$(( yaco_min_rank + 2 ))
+    src_component: atmo_output
+    src_grid: icon_atmos_grid
+    tgt_component: yaco_${yaco_first_nside}_rank_$(( yaco_min_rank + 2 ))
+    tgt_grid: healpix_${yaco_first_nside}
+    src_lag: ${atm_lag}
+    tgt_lag: ${yaco_lag}
+
+  atm2yaco_rank_$(( yaco_min_rank + 3 )): &atm2yaco_rank_$(( yaco_min_rank + 3 ))
+    src_component: atmo_output
+    src_grid: icon_atmos_grid
+    tgt_component: yaco_${yaco_first_nside}_rank_$(( yaco_min_rank + 3 ))
+    tgt_grid: healpix_${yaco_first_nside}
+    src_lag: ${atm_lag}
+    tgt_lag: ${yaco_lag}
+  atm2yaco_rank_$(( yaco_min_rank + 4 )): &atm2yaco_rank_$(( yaco_min_rank + 4 ))
+    src_component: atmo_output
+    src_grid: icon_atmos_grid
+    tgt_component: yaco_${yaco_first_nside}_rank_$(( yaco_min_rank + 4 ))
+    tgt_grid: healpix_${yaco_first_nside}
+    src_lag: ${atm_lag}
+    tgt_lag: ${yaco_lag}
+  atm2yaco_rank_$(( yaco_min_rank + 5 )): &atm2yaco_rank_$(( yaco_min_rank + 5 ))
+    src_component: atmo_output
+    src_grid: icon_atmos_grid
+    tgt_component: yaco_${yaco_first_nside}_rank_$(( yaco_min_rank + 5 ))
+    tgt_grid: healpix_${yaco_first_nside}
+    src_lag: ${atm_lag}
+    tgt_lag: ${yaco_lag}
+
+  atm2yaco_rank_$(( yaco_min_rank + 6 )): &atm2yaco_rank_$(( yaco_min_rank + 6 ))
+    src_component: atmo_output
+    src_grid: icon_atmos_grid
+    tgt_component: yaco_${yaco_first_nside}_rank_$(( yaco_min_rank + 6 ))
+    tgt_grid: healpix_${yaco_first_nside}
+    src_lag: ${atm_lag}
+    tgt_lag: ${yaco_lag}
+
+  oce2yaco_rank_$(( yaco_min_rank + 7 )): &oce2yaco_rank_$(( yaco_min_rank + 7 ))
+    src_component: ocean_output
+    src_grid: icon_ocean_grid
+    tgt_component: yaco_${yaco_first_nside}_rank_$(( yaco_min_rank + 7 ))
+    tgt_grid: healpix_${yaco_first_nside}
+    src_lag: ${oce_lag}
+    tgt_lag: ${yaco_lag}
+  oce2yaco_rank_$(( yaco_min_rank + 8 )): &oce2yaco_rank_$(( yaco_min_rank + 8 ))
+    src_component: ocean_output
+    src_grid: icon_ocean_grid
+    tgt_component: yaco_${yaco_first_nside}_rank_$(( yaco_min_rank + 8 ))
+    tgt_grid: healpix_${yaco_first_nside}
+    src_lag: ${oce_lag}
+    tgt_lag: ${yaco_lag}
+  oce2yaco_rank_$(( yaco_min_rank + 9 )): &oce2yaco_rank_$(( yaco_min_rank + 9 ))
+    src_component: ocean_output
+    src_grid: icon_ocean_grid
+    tgt_component: yaco_${yaco_first_nside}_rank_$(( yaco_min_rank + 9 ))
+    tgt_grid: healpix_${yaco_first_nside}
+    src_lag: ${oce_lag}
+    tgt_lag: ${yaco_lag}
+  oce2yaco_rank_$(( yaco_min_rank + 10 )): &oce2yaco_rank_$(( yaco_min_rank + 10 ))
+    src_component: ocean_output
+    src_grid: icon_ocean_grid
+    tgt_component: yaco_${yaco_first_nside}_rank_$(( yaco_min_rank + 10 ))
+    tgt_grid: healpix_${yaco_first_nside}
+    src_lag: ${oce_lag}
+    tgt_lag: ${yaco_lag}
+  oce2yaco_rank_$(( yaco_min_rank + 11 )): &oce2yaco_rank_$(( yaco_min_rank + 11 ))
+    src_component: ocean_output
+    src_grid: icon_ocean_grid
+    tgt_component: yaco_${yaco_first_nside}_rank_$(( yaco_min_rank + 11 ))
+    tgt_grid: healpix_${yaco_first_nside}
+    src_lag: ${oce_lag}
+    tgt_lag: ${yaco_lag}
+
+  # ------- 
+  # coarse res writers
+  atm2yaco_rank_$(( yaco_min_rank + 12 )): &atm2yaco_rank_$(( yaco_min_rank + 12 ))
+    src_component: atmo_output
+    src_grid: icon_atmos_grid
+    tgt_component: yaco_${yaco_second_nside}_rank_$(( yaco_min_rank + 12 ))
+    tgt_grid: healpix_${yaco_second_nside}
+    src_lag: ${atm_lag}
+    tgt_lag: ${yaco_lag}
+  atm2yaco_rank_$(( yaco_min_rank + 13 )): &atm2yaco_rank_$(( yaco_min_rank + 13 ))
+    src_component: atmo_output
+    src_grid: icon_atmos_grid
+    tgt_component: yaco_${yaco_second_nside}_rank_$(( yaco_min_rank + 13 ))
+    tgt_grid: healpix_${yaco_second_nside}
+    src_lag: ${atm_lag}
+    tgt_lag: ${yaco_lag}
+
+  oce2yaco_rank_$(( yaco_min_rank + 14 )): &oce2yaco_rank_$(( yaco_min_rank + 14 ))
+    src_component: ocean_output
+    src_grid: icon_ocean_grid
+    tgt_component: yaco_${yaco_second_nside}_rank_$(( yaco_min_rank + 14 ))
+    tgt_grid: healpix_${yaco_second_nside}
+    src_lag: ${oce_lag}
+    tgt_lag: ${yaco_lag}
+  oce2yaco_rank_$(( yaco_min_rank + 15 )): &oce2yaco_rank_$(( yaco_min_rank + 15 ))
+    src_component: ocean_output
+    src_grid: icon_ocean_grid
+    tgt_component: yaco_${yaco_second_nside}_rank_$(( yaco_min_rank + 15 ))
+    tgt_grid: healpix_${yaco_second_nside}
+    src_lag: ${oce_lag}
+    tgt_lag: ${yaco_lag}
+  oce2yaco_rank_$(( yaco_min_rank + 16 )): &oce2yaco_rank_$(( yaco_min_rank + 16 ))
+    src_component: ocean_output
+    src_grid: icon_ocean_grid
+    tgt_component: yaco_${yaco_second_nside}_rank_$(( yaco_min_rank + 16 ))
+    tgt_grid: healpix_${yaco_second_nside}
+    src_lag: ${oce_lag}
+    tgt_lag: ${yaco_lag}
+
+  # ---- 
+  # Monthly variables 
+  # First healpix NSide
+  atm2yaco_rank_$(( yaco_min_rank + 17 ))_monthly: &atm2yaco_rank_$(( yaco_min_rank + 17 ))_monthly
+    src_component: atmo_output
+    src_grid: icon_atmos_grid
+    tgt_component: yaco_${yaco_first_nside}_rank_$(( yaco_min_rank + 17 ))_monthly
+    tgt_grid: healpix_${yaco_first_nside}
+    src_lag: ${atm_lag}
+    tgt_lag: ${yaco_lag}
+  atm2yaco_rank_$(( yaco_min_rank + 18 ))_monthly: &atm2yaco_rank_$(( yaco_min_rank + 18 ))_monthly
+    src_component: atmo_output
+    src_grid: icon_atmos_grid
+    tgt_component: yaco_${yaco_first_nside}_rank_$(( yaco_min_rank + 18 ))_monthly
+    tgt_grid: healpix_${yaco_first_nside}
+    src_lag: ${atm_lag}
+    tgt_lag: ${yaco_lag}
+  oce2yaco_rank_$(( yaco_min_rank + 19 ))_monthly: &oce2yaco_rank_$(( yaco_min_rank + 19 ))_monthly
+    src_component: ocean_output
+    src_grid: icon_ocean_grid
+    tgt_component: yaco_${yaco_first_nside}_rank_$(( yaco_min_rank + 19 ))_monthly
+    tgt_grid: healpix_${yaco_first_nside}
+    src_lag: ${oce_lag}
+    tgt_lag: ${yaco_lag}
+
+
+  # ---- 
+  # Monthly variables 
+  # Coarser healpix NSide
+  atm2yaco_rank_$(( yaco_min_rank + 20 ))_monthly: &atm2yaco_rank_$(( yaco_min_rank + 20 ))_monthly
+    src_component: atmo_output
+    src_grid: icon_atmos_grid
+    tgt_component: yaco_${yaco_second_nside}_rank_$(( yaco_min_rank + 20 ))_monthly
+    tgt_grid: healpix_${yaco_second_nside}
+    src_lag: ${atm_lag}
+    tgt_lag: ${yaco_lag}
+  oce2yaco_rank_$(( yaco_min_rank + 21 ))_monthly: &oce2yaco_rank_$(( yaco_min_rank + 21 ))_monthly
+    src_component: ocean_output
+    src_grid: icon_ocean_grid
+    tgt_component: yaco_${yaco_second_nside}_rank_$(( yaco_min_rank + 21 ))_monthly
+    tgt_grid: healpix_${yaco_second_nside}
+    src_lag: ${oce_lag}
+    tgt_lag: ${yaco_lag}
+
+
+  time_config: &time_config
+    coupling_period: ${couplingTimeStep}
+    time_reduction: average
+
+  time_config_1h_inst: &time_config_1h_inst
+    coupling_period: PT1H
+    time_reduction: none
+
+  time_config_1h_acc: &time_config_1h_acc
+    coupling_period: PT1H
+    time_reduction: accumulate
+
+  time_config_1h_avg: &time_config_1h_avg
+    coupling_period: PT1H
+    time_reduction: average
+
+  time_config_24h_inst: &time_config_24h_inst
+    coupling_period: P1D
+    time_reduction: none
+
+  time_config_24h_avg: &time_config_24h_avg
+    coupling_period: P1D
+    time_reduction: average
+
+  time_config_monthly_avg: &time_config_monthly_avg
+    coupling_period: P1M
+    time_reduction: average
+
+  interp_stacks:
+    nnn_interp_stack: &nnn_interp_stack
+      interpolation:
+        - nnn:
+            n: 1
+            weighted: arithmetic_average
+        - fixed:
+            user_value: -999.9
+    spmap_interp_stack: &spmap_interp_stack
+      interpolation:
+        - source_to_target_map:
+            weighted: arithmetic_average
+            spread_distance: 0.3
+        - fixed:
+            user_value: 0.0
+
+
+timestep_unit: ISO_format
+calendar: proleptic-gregorian
+
+coupling:
+  - <<: [ *atm2oce, *nnn_interp_stack, *time_config ]
+    field: [surface_downward_eastward_stress,
+            surface_downward_northward_stress,
+            10m_wind_speed]
+  - <<: [ *atm2oce, *nnn_interp_stack, *time_config ]
+    field: [surface_fresh_water_flux,
+            total_heat_flux,
+            atmosphere_sea_ice_bundle]
+  - <<: [ *oce2atm, *nnn_interp_stack, *time_config ]
+    field: [sea_surface_temperature,
+            eastward_sea_water_velocity,
+            northward_sea_water_velocity,
+            ocean_sea_ice_bundle]
+  - <<: [ *atm2oce, *spmap_interp_stack, *time_config ]
+    field: river_runoff
+
+  # -------------------
+  # yaco fine writers: hourly and daily
+
+  - <<: [ *atm2yaco_rank_$(( yaco_min_rank + 0 )), *nnn_interp_stack, *time_config_1h_inst ]
+    field: [ pressure_levels_temp, pressure_levels_v ]
+  - <<: [ *atm2yaco_rank_$(( yaco_min_rank + 1 )), *nnn_interp_stack, *time_config_1h_inst ]
+    field: [ pressure_levels_u, uas, vas, dew2, tcw, sfcwind,  cllvi, pres_sfc, ts_rad, tas, clt ]
+  - <<: [ *atm2yaco_rank_$(( yaco_min_rank + 2 )), *nnn_interp_stack, *time_config_1h_inst ]
+    field: [ pressure_levels_hus, pressure_levels_pv]
+
+  - <<: [ *atm2yaco_rank_$(( yaco_min_rank + 3 )), *nnn_interp_stack, *time_config_1h_inst ]
+    field: [ pressure_levels_hur, prw, clivi, pres_msl ]
+  - <<: [ *atm2yaco_rank_$(( yaco_min_rank + 3 )), *nnn_interp_stack, *time_config_1h_inst ]
+    field: [ hydro_weq_snow_box ]
+    scale_factor: 1000.0 # change of units to kg m**-2, originally in m
+  - <<: [ *atm2yaco_rank_$(( yaco_min_rank + 3 )), *nnn_interp_stack, *time_config_1h_acc ]
+    field: [ tauu, tauv ]
+
+  - <<: [ *atm2yaco_rank_$(( yaco_min_rank + 4 )), *nnn_interp_stack, *time_config_1h_inst ]
+    field: [ pressure_levels_clw, pressure_levels_geop]
+
+  - <<: [ *atm2yaco_rank_$(( yaco_min_rank + 5 )), *nnn_interp_stack, *time_config_1h_inst ]
+    field: [ pressure_levels_omega, hydro_vol_weq_soil_sl_box ]
+
+  - <<: [ *atm2yaco_rank_$(( yaco_min_rank + 6 )), *nnn_interp_stack, *time_config_24h_inst ]
+    field: [ orog, fract_box ]
+  - <<: [ *atm2yaco_rank_$(( yaco_min_rank + 6 )), *nnn_interp_stack, *time_config_1h_avg ]
+    field: [ prls, evspsbl, hydro_runoff_box, hydro_drainage_box ]
+  - <<: [ *atm2yaco_rank_$(( yaco_min_rank + 6 )), *nnn_interp_stack, *time_config_1h_avg ]
+    field: [ pr, hfss, hfls ]
+  - <<: [ *atm2yaco_rank_$(( yaco_min_rank + 6 )), *nnn_interp_stack, *time_config_1h_avg ]
+    field: [ rsds, rlds, rsdt, rsns, rsnt, rlns, rlnt ]
+  - <<: [ *atm2yaco_rank_$(( yaco_min_rank + 6 )), *nnn_interp_stack, *time_config_1h_avg ]
+    field: [ rsnscs, rsntcs, rlnscs, rlntcs ]
+
+
+  - <<: [ *oce2yaco_rank_$(( yaco_min_rank + 7 )), *nnn_interp_stack, *time_config_24h_avg ]
+    field: [ u ]
+  - <<: [ *oce2yaco_rank_$(( yaco_min_rank + 7 )), *nnn_interp_stack, *time_config_24h_avg ]
+    field: [ conc, hi, ice_u, ice_v ]
+
+  - <<: [ *oce2yaco_rank_$(( yaco_min_rank + 8 )), *nnn_interp_stack, *time_config_24h_avg ]
+    field: [ v ]
+  - <<: [ *oce2yaco_rank_$(( yaco_min_rank + 8 )), *nnn_interp_stack, *time_config_24h_avg ]
+    field: [ heat_content_300m, heat_content_700m, heat_content_total, ssh ]
+
+  - <<: [ *oce2yaco_rank_$(( yaco_min_rank + 9 )), *nnn_interp_stack, *time_config_24h_avg ]
+    field: [ w ]
+
+  - <<: [ *oce2yaco_rank_$(( yaco_min_rank + 10 )), *nnn_interp_stack, *time_config_24h_avg ]
+    field: to
+    scale_summand: 273.15
+  - <<: [ *oce2yaco_rank_$(( yaco_min_rank + 10 )), *nnn_interp_stack, *time_config_24h_avg ]
+    field: [ tos, sivol ]
+
+  - <<: [ *oce2yaco_rank_$(( yaco_min_rank + 11 )), *nnn_interp_stack, *time_config_24h_avg ]
+    field: [ so ]
+  - <<: [ *oce2yaco_rank_$(( yaco_min_rank + 11 )), *nnn_interp_stack, *time_config_24h_avg ]
+    field: [ sos, snvol ]
+
+
+  # -------------------
+  # yaco coarse writers: hourly and daily
+
+  - <<: [ *atm2yaco_rank_$(( yaco_min_rank + 12 )), *nnn_interp_stack, *time_config_1h_inst ]
+    field: [ pressure_levels_temp, pressure_levels_u, pressure_levels_v, pressure_levels_hus, pressure_levels_hur, pressure_levels_clw, pressure_levels_omega, pressure_levels_geop, pressure_levels_pv]
+  - <<: [ *atm2yaco_rank_$(( yaco_min_rank + 12 )), *nnn_interp_stack, *time_config_1h_inst ]
+    field: [ ts_rad, tas, clt, uas, vas, dew2, tcw, sfcwind ]
+  - <<: [ *atm2yaco_rank_$(( yaco_min_rank + 12 )), *nnn_interp_stack, *time_config_1h_inst ]
+    field: [ clivi, cllvi, pres_sfc, pres_msl, prw ]
+  - <<: [ *atm2yaco_rank_$(( yaco_min_rank + 12 )), *nnn_interp_stack, *time_config_1h_acc ]
+    field: [ tauu, tauv ]
+  - <<: [ *atm2yaco_rank_$(( yaco_min_rank + 12 )), *nnn_interp_stack, *time_config_1h_inst ]
+    field: [ hydro_weq_snow_box ]
+    scale_factor: 1000.0 # change of units to kg m**-2, originally in m
+  - <<: [ *atm2yaco_rank_$(( yaco_min_rank + 13 )), *nnn_interp_stack, *time_config_24h_inst ]
+    field: [ orog, fract_box ]
+  - <<: [ *atm2yaco_rank_$(( yaco_min_rank + 13 )), *nnn_interp_stack, *time_config_1h_inst ]
+    field: [ hydro_vol_weq_soil_sl_box ]
+  - <<: [ *atm2yaco_rank_$(( yaco_min_rank + 13 )), *nnn_interp_stack, *time_config_1h_avg ]
+    field: [ prls, evspsbl, hydro_runoff_box, hydro_drainage_box ]
+  - <<: [ *atm2yaco_rank_$(( yaco_min_rank + 13 )), *nnn_interp_stack, *time_config_1h_avg ]
+    field: [ pr, hfss, hfls ]
+  - <<: [ *atm2yaco_rank_$(( yaco_min_rank + 13 )), *nnn_interp_stack, *time_config_1h_avg ]
+    field: [ rsds, rlds, rsdt, rsns, rsnt, rlns, rlnt ]
+  - <<: [ *atm2yaco_rank_$(( yaco_min_rank + 13 )), *nnn_interp_stack, *time_config_1h_avg ]
+    field: [ rsnscs, rsntcs, rlnscs, rlntcs ]
+
+  - <<: [ *oce2yaco_rank_$(( yaco_min_rank + 14 )), *nnn_interp_stack, *time_config_24h_avg ]
+    field: [ u, w, heat_content_300m, heat_content_700m, heat_content_total ]
+
+  - <<: [ *oce2yaco_rank_$(( yaco_min_rank + 15 )), *nnn_interp_stack, *time_config_24h_avg ]
+    field: [ conc, hi, ice_u, ice_v, ssh, tos, sos, sivol, snvol ]
+
+  - <<: [ *oce2yaco_rank_$(( yaco_min_rank + 16 )), *nnn_interp_stack, *time_config_24h_avg ]
+    field: to
+    scale_summand: 273.15
+  - <<: [ *oce2yaco_rank_$(( yaco_min_rank + 16 )), *nnn_interp_stack, *time_config_24h_avg ]
+    field: [ so ]
+
+
+
+  # ---- 
+  # couplings for icon-to-yaco higher resolution outputs with monthly means
+  - <<: [ *atm2yaco_rank_$(( yaco_min_rank + 17 ))_monthly, *nnn_interp_stack, *time_config_monthly_avg ]
+    field: [ ts_rad, tas, clt, uas, vas, dew2, tcw, sfcwind, clivi, cllvi, pres_sfc, pres_msl, prw ]
+  - <<: [ *atm2yaco_rank_$(( yaco_min_rank + 17 ))_monthly, *nnn_interp_stack, *time_config_monthly_avg ]
+    field: [ pr, hfss, hfls, tauu, tauv ]
+
+  - <<: [ *atm2yaco_rank_$(( yaco_min_rank + 18 ))_monthly, *nnn_interp_stack, *time_config_monthly_avg ]
+    field: [ rsds, rlds, rsdt, rsns, rsnt, rlns, rlnt ]
+  - <<: [ *atm2yaco_rank_$(( yaco_min_rank + 18 ))_monthly, *nnn_interp_stack, *time_config_monthly_avg ]
+    field: [ rsnscs, rsntcs, rlnscs, rlntcs ]
+  - <<: [ *atm2yaco_rank_$(( yaco_min_rank + 18 ))_monthly, *nnn_interp_stack, *time_config_monthly_avg ]
+    field: [ hydro_weq_snow_box ]
+    scale_factor: 1000.0 # change of units to kg m**-2, originally in m
+  - <<: [ *atm2yaco_rank_$(( yaco_min_rank + 18 ))_monthly, *nnn_interp_stack, *time_config_monthly_avg ]
+    field: [ hydro_vol_weq_soil_sl_box, prls, evspsbl, hydro_runoff_box, hydro_drainage_box ]
+
+  - <<: [ *oce2yaco_rank_$(( yaco_min_rank + 19 ))_monthly, *nnn_interp_stack, *time_config_monthly_avg ]
+    field: [ conc, hi, ice_u, ice_v, ssh, tos, sos, sivol, snvol, heat_content_300m, heat_content_700m, heat_content_total, v]
+
+  # ---- 
+  # couplings for icon-to-yaco courser resolution outputs with monthly means
+  - <<: [ *atm2yaco_rank_$(( yaco_min_rank + 20 ))_monthly, *nnn_interp_stack, *time_config_monthly_avg ]
+    field: [ pressure_levels_temp, pressure_levels_u, pressure_levels_v, pressure_levels_hus, pressure_levels_hur, pressure_levels_clw, pressure_levels_omega, pressure_levels_geop, pressure_levels_pv ]
+  - <<: [ *atm2yaco_rank_$(( yaco_min_rank + 20 ))_monthly, *nnn_interp_stack, *time_config_monthly_avg ]
+    field: [ ts_rad, tas, clt, uas, vas, dew2, tcw, sfcwind, clivi, cllvi, pres_sfc, pres_msl, prw, pr, hfss, hfls, tauu, tauv, rsds, rlds, rsdt, rsns, rsnt, rlns, rlnt, rsnscs, rsntcs, rlnscs, rlntcs ]
+  - <<: [ *atm2yaco_rank_$(( yaco_min_rank + 20 ))_monthly, *nnn_interp_stack, *time_config_monthly_avg ]
+    field: [ hydro_vol_weq_soil_sl_box, prls, evspsbl, hydro_runoff_box, hydro_drainage_box ]
+  - <<: [ *atm2yaco_rank_$(( yaco_min_rank + 20 ))_monthly, *nnn_interp_stack, *time_config_monthly_avg ]
+    field: [ hydro_weq_snow_box ]
+    scale_factor: 1000.0 # change of units to kg m**-2, originally in m
+
+  - <<: [ *oce2yaco_rank_$(( yaco_min_rank + 21 ))_monthly, *nnn_interp_stack, *time_config_monthly_avg ]
+    field: [ conc, hi, ice_u, ice_v, ssh, tos, sos, sivol, snvol, so, heat_content_300m, heat_content_700m, heat_content_total, u, v, w  ]
+  - <<: [ *oce2yaco_rank_$(( yaco_min_rank + 21 ))_monthly, *nnn_interp_stack, *time_config_monthly_avg ]
+    field: to
+    scale_summand: 273.15
+EOF
+
+#-----------------------------------------------------------------------------
+# II. ATMOSPHERE and LAND
+#-----------------------------------------------------------------------------
+#
+# atmosphere namelist
+# -------------------
+
+cat > NAMELIST_atm << EOF
+
+&coupling_mode_nml
+    coupled_to_ocean = .true.
+    coupled_to_output= .true.
+/
+&output_nml ! ATM-YACO
+ output_filename  = "${EXPNAME}_atm_yaco"
+ filename_format  = "<output_filename>_<levtype_l>_<datetime2>"
+ filetype         = 999
+ operation        = 'none'
+ output_grid      = .FALSE.
+ output_start     = "${start_date}"               ! output_start = output_end
+ output_end       = "${start_date}"               ! --> write once only irrespective of
+ output_interval  = "P1Y"         !     the output interval and
+ file_interval    = "P1Y"         !     the file interval
+ include_last     = .FALSE.
+ ml_varlist       = 'cllvi' , 'clivi', 'prw', 'rlns', 'rsns', 'rsnt', 'rlnt',
+                    'tcw', 'hydro_weq_snow_box', 'hydro_vol_weq_soil_sl_box', 'sfcwind',
+                    'rlnscs', 'rsnscs', 'rsntcs', 'rlntcs'
+/
+&output_nml ! ATM-YACO comms for pressure levels
+    output_filename  = "pressure_levels"
+    filetype         = 999
+    !operation        = 'mean'
+    output_grid      = .FALSE.
+    output_start     = "${start_date}"
+    output_end       = "${end_date}"
+    output_interval  = "${atmTimeStep}"
+    steps_per_file   = 0
+    pl_varlist       = 'clw', 'geop', 'hur', 'hus', 'omega', 'pv', 'ta', 'ua', 'va'
+    p_levels         = ${pressure_levels}
+    remap            = 0
+/
+&parallel_nml
+   !nproma = 21706
+    nproma_sub = 5344
+    nblocks_c = 1
+    num_io_procs = ${atm_o_tasks}
+    io_proc_chunk_size = 4
+    io_process_stride = 8
+    ! num_restart_procs = $((atm_compute_tasks/8))
+    pio_type          = 1
+    iorder_sendrecv   = 3
+/
+&grid_nml
+    dynamics_grid_filename = 'icon_grid_G.nc'
+/
+&run_nml
+    num_lev = ${atm_levels} ! number of full levels
+    modeltimestep = "${atmTimeStep}"
+    ltestcase = .false. ! run testcase
+    ldynamics = .true. ! dynamics
+    ltransport = .true. ! transport
+    iforcing = 2 ! 0: none, 1: HS, 2: ECHAM, 3: NWP
+    output = 'nml'
+    msg_level = 10 ! level of details report during integration
+    restart_filename = "${EXPNAME}_restart_atm_<rsttime>.mfr"
+    activate_sync_timers = .true.
+    timers_level = 10
+/
+&extpar_nml
+    itopo = 1 ! 1: read topography from the grid file
+/
+&initicon_nml
+    init_mode = 2 ! 2: initialize from IFS analysis
+    ifs2icon_filename = 'ifs2icon.nc'
+/
+&nonhydrostatic_nml
+ ndyn_substeps    = 5 ! dtime/dt_dyn
+ damp_height      = 40000. ! [m]
+ rayleigh_coeff   = 1.0
+ vwind_offctr     = 0.2
+ divdamp_fac      = 0.004
+ divdamp_order    = 24
+ divdamp_trans_end = 17500
+ divdamp_trans_start = 12500
+ divdamp_type     = 32
+ exner_expol      = 0.333
+ hbot_qvsubstep   = 16000.
+ htop_moist_proc  = 22500.
+ iadv_rhotheta    = 2
+ igradp_method    = 3
+ itime_scheme     = 4
+ ivctype          = 2
+ l_zdiffu_t       = .true.
+ thhgtd_zdiffu    = 125.
+ thslp_zdiffu     = 0.02
+/
+&sleve_nml
+ min_lay_thckn    = 25.    ! [m]
+ top_height       = 75000. ! [m]
+ stretch_fac      = 0.9
+ decay_scale_1    = 4000.  ! [m]
+ decay_scale_2    = 2500.  ! [m]
+ decay_exp        = 1.2
+ flat_height      = 22500. ! [m]
+ htop_thcknlimit  = 14000.
+ max_lay_thckn    = 400.
+/
+&diffusion_nml
+/
+&transport_nml
+    ihadv_tracer = 20, 20, 20, 20, 20, 20
+    itype_hlimit = 3, 4, 4, 4, 4, 4
+    ivadv_tracer = 3, 3, 3, 3, 3, 3
+    tracer_names = 'hus', 'clw', 'cli', 'qr', 'qs', 'qg'
+/
+&aes_phy_nml
+!
+! domain 1
+! --------
+!
+! atmospheric physics (""=never)
+ aes_phy_config(1)%dt_rad = "${radTimeStep}"
+ aes_phy_config(1)%dt_vdf = "${atmTimeStep}"
+ aes_phy_config(1)%dt_mig = "${atmTimeStep}"
+!
+! surface (.TRUE. or .FALSE.)
+ aes_phy_config(1)%ljsb   = .TRUE.
+ aes_phy_config(1)%lamip  = .FALSE.
+ aes_phy_config(1)%lice   = .TRUE.
+ aes_phy_config(1)%lmlo   = .FALSE.
+ aes_phy_config(1)%llake  = .FALSE.
+ aes_phy_config(1)%use_shflx_adjustment = .FALSE.
+ aes_phy_config(1)%iqneg_d2p = 2
+ aes_phy_config(1)%iqneg_p2d = 2
+/
+&aes_rad_nml
+  ! domain 1
+ aes_rad_config(1)%isolrad = 1
+ aes_rad_config(1)%irad_h2o = 1
+ aes_rad_config(1)%irad_co2 = 3
+ aes_rad_config(1)%irad_ch4 = 13
+ aes_rad_config(1)%irad_n2o = 13
+ aes_rad_config(1)%irad_o3 = 5 ! yearly ozone files
+ aes_rad_config(1)%irad_o2 = 2
+ aes_rad_config(1)%irad_cfc11 = 3
+ aes_rad_config(1)%irad_cfc12 = 3
+ aes_rad_config(1)%irad_aero = 13
+ aes_rad_config(1)%inhom_lts = .true.
+ aes_rad_config(1)%inhom_lts_max = 0.725
+/
+&aes_vdf_nml
+ aes_vdf_config(1)%pr0        =  0.7
+ aes_vdf_config(1)%turb       =  2        ! TTE (2 for Smagorinsky)
+ aes_vdf_config(1)%use_tmx    = .TRUE.
+ aes_vdf_config(1)%energy_type = 2 ! Only used for tmx
+ aes_vdf_config(1)%dissipation_factor = 1.3 ! Only used for tmx
+!aes_vdf_config(1)%louis_constant_b = 4.2
+ aes_vdf_config(1)%min_sfc_wind = 4.
+/
+&aes_cov_nml
+    aes_cov_config(1)%cqx = 1.e-6
+/
+&aes_cop_nml
+    aes_cop_config(1)%cinhomi = 0.6
+    aes_cop_config(1)%cinhoms = 0.6
+    aes_cop_config(1)%cinhoml = 0.5
+    aes_cop_config(1)%cn1lnd = 50.0
+    aes_cop_config(1)%cn1sea = 50.0
+    aes_cop_config(1)%cn2lnd = 220.0
+    aes_cop_config(1)%cn2sea = 100.0
+/
+! Parameters for all output files
+! -------------------------------
+&io_nml
+    output_nml_dict = 'dict.txt'
+    netcdf_dict = 'dict.txt'
+    itype_pres_msl = 4
+    itype_rh = 1
+    restart_file_type = 5
+    restart_write_mode = 'joint procs multifile'
+/
+&sea_ice_nml
+    albedow_sim  = 0.10
+    albi         = 0.70
+    albim        = 0.68
+    albs         = 0.81
+    albsm        = 0.77
+    i_ice_dyn    = 1
+    i_ice_therm  = 1
+    leadclose_1  = 0.25
+    leadclose_2n = 0.0
+    delta_min = 2.0e-09
+    cd_io = 5.5e-3
+    luse_replacement_pressure = .true.
+/
+EOF
+
+cat > NAMELIST_oce << EOF
+!
+&coupling_mode_nml
+  coupled_to_atmo            = .TRUE.
+  coupled_to_output          = .TRUE.
+/
+&parallel_nml
+ nproma                      = 32
+ num_io_procs                = ${oce_o_tasks}
+ ! num_restart_procs           = $((oce_tasks/8))
+ p_test_run                  = .FALSE.
+ l_fast_sum                  = .FALSE.
+ num_prefetch_proc           = 0
+ io_proc_chunk_size          = 16
+ pio_type                    = 1
+ iorder_sendrecv             = 3
+/
+&grid_nml
+ dynamics_grid_filename      = 'icon_grid_O.nc'
+ use_dummy_cell_closure      = .TRUE.
+ use_duplicated_connectivity = .FALSE.
+/
+&run_nml
+ modelTimeStep               = "${oceTimeStep}"
+ output                      = 'nml'                            ! namelist controlled output scheme
+ activate_sync_timers        = .TRUE.
+ profiling_output            = 1                                ! aggregated: 1; detailed: 2; in files: 3
+ msg_timestamp               = .FALSE.
+ msg_level                   = 10                               ! level of details report during integration
+ timers_level                = 10
+ debug_check_level           = 1
+ restart_filename            = "${EXPNAME}_restart_oce_<rsttime>.mfr"
+/
+&output_nml ! 'oce_mon'
+    output_filename  = '${EXPNAME}_oce_mon'
+    filename_format  = '<output_filename>_<datetime2>'
+    filetype         = 5
+    mode             = 1
+    output_start     = "${start_date}"
+    output_end       = "${end_date}"
+    output_interval  = 'PT6H'
+    file_interval    = 'P1M'
+    include_last     = .false.
+    output_grid      = .true.
+    operation        = 'mean'
+    ml_varlist       = 'group:ocean_monitor'
+/
+&output_nml ! 'oce_moc'
+    output_filename  = '${EXPNAME}_oce_moc'
+    filename_format  = '<output_filename>_<datetime2>'
+    filetype         = 5
+    mode             = 1
+    output_start     = "${start_date}"
+    output_end       = "${end_date}"
+    output_interval  = 'P1M'
+    file_interval    = 'P1M'
+    include_last     = .false.
+    operation        = 'mean'
+    ml_varlist       = 'group:ocean_moc'
+/
+&output_nml ! OCE - YACO
+ output_filename  = "${EXPNAME}_oce_yaco"
+ filename_format  = "<output_filename>_<levtype_l>_<datetime2>"
+ filetype         = 999
+ operation        = 'none'
+ output_grid      = .FALSE.
+ output_start     = "${start_date}"               ! output_start = output_end
+ output_end       = "${start_date}"               ! --> write once only irrespective of
+ output_interval  = "P1Y"         !     the output interval and
+ file_interval    = "P1Y"         !     the file interval
+ ml_varlist       = 'mlotst' , 'hs' , 'hi' , 'conc', 'ssh', 'tos',
+                    'sos', 'snvol', 'sivol', 'heat_content_300m',
+                    'heat_content_700m', 'heat_content_total'
+/
+&dbg_index_nml
+  idbg_mxmn                  = 0                                ! initialize MIN/MAX  debug output
+  idbg_val                   = 0                                ! initialize one cell debug output
+  idbg_slev                  = 1                                ! initialize start level for debug output
+  idbg_elev                  = 5                                ! initialize end level for debug output
+  dbg_lat_in                 = 30.0                             ! latitude location of one cell debug output
+  dbg_lon_in                 = -30.0                            ! longitude location of one cell debug output
+  str_mod_tst                = 'all'                            ! define modules to print out in debug mode
+/
+&ocean_dynamics_nml
+ vert_cor_type     = 1
+ minVerticalLevels = 10
+ n_zlev            = 72
+
+ dzlev_m =   2.0,   2.2,   2.5,   2.8,   3.1,   3.5,   3.9,   4.4,   4.9,   5.4,
+             5.9,   6.4,   7.1,   7.7,   8.4,   9.2,  10.1,  11.0,  12.0,  13.2,
+            14.4,  15.7,  17.1,  18.7,  20.4,  22.3,  24.3,  26.5,  28.9,  31.5,
+            34.3,  37.3,  40.6,  43.1,  45.3,  46.8,  48.4,  50.0,  51.7,  53.4,
+            55.2,  57.0,  58.9,  60.8,  62.9,  66.6,  72.6,  80.6,  90.6, 100.2,
+           110.0, 120.3, 128.7, 137.4, 146.4, 155.7, 165.2, 174.8, 184.4, 194.1,
+           203.6, 212.9, 221.9, 230.5, 238.5, 245.9, 252.4, 258.1, 262.8, 266.4,
+           268.9, 270.1
+
+    l_edge_based                  = .FALSE. ! edge- or cell-based mimetic discretization
+    select_solver                 = 4       ! 1=gmres_oce_old; 2=ocean_restart_gmres, 3=mixed precisison restart,
+                                            ! 4=CG (default) 5=CGJ 6=BiCG 7=GMRES restart (legacy) 8=MINRES
+    use_absolute_solver_tolerance = .TRUE.
+    fast_performance_level        = 200     ! performance level 12: for cell-based; 5: default
+    use_continuity_correction     = .TRUE.  ! height adjustment according to vertical velocity in dynamics
+    cfl_check                     = .FALSE.
+    cfl_write                     = .FALSE.
+    i_bc_veloc_top                = 1
+    i_bc_veloc_bot                = 1       ! 0: (def) bottom friction off, 1: on
+    l_lhs_direct                  = .FALSE.
+    l_partial_cells               = .FALSE.
+    select_lhs                    = 1
+    solver_max_restart_iterations = 100
+    solver_tolerance              = 1.0E-10
+    solver_max_iter_per_restart   = 14
+/
+&ocean_tracer_transport_nml
+  flux_calculation_horz                      = 5                ! 1=upwind, 2=central, 3=Lax-Friedrichs,
+                                                                ! 4=Miura, 5=FCT with Zalesak limiter (default)
+  flux_calculation_vert                      = 7                ! 6=adpo; 7=upwind biased ppm (default); 8=FCT with zalesak limiter
+  fct_low_order_flux                         = 1                ! horizontal low  order method: 1=upwind (def), no other implemented
+  fct_high_order_flux                        = 5                ! horizontal high order method: 1=upwind, 2=central, 3=lax_friedrichs, 4=miura_order1
+  fct_limiter_horz                           = 100              ! zalesak
+  threshold_min_T                            = -2.0             ! to avoid abort
+/
+&ocean_horizontal_diffusion_nml
+  laplacian_form                             = 1                ! 1=curlcurl-graddiv
+  VelocityDiffusion_order                    = 2                ! 21=biharmonic+laplacian (for the laplacian leith)
+  BiharmonicViscosity_scaling                = 4
+  BiharmonicViscosity_reference              = 2.7E-2           ! [m2/s] constant horizontal viscosity coefficient for velocity
+  BiharmonicViscosity_background             = 0.0              ! [m2/s] constant horizontal viscosity coefficient for velocity
+  HarmonicViscosity_scaling                  = 1
+  HarmonicViscosity_reference                = 2.0              ! [m2/s] constant horizontal viscosity coefficient for velocity
+  TracerHorizontalDiffusion_scaling          = 1
+  Temperature_HorizontalDiffusion_Background = 0.0
+  Temperature_HorizontalDiffusion_Reference  = 0
+  Salinity_HorizontalDiffusion_Background    = 0.0
+  Salinity_HorizontalDiffusion_Reference     = 0
+/
+&ocean_vertical_diffusion_nml
+  alpha_tke                                  = 30.0
+  c_eps                                      = 0.7
+  c_k                                        = 0.1
+  cd                                         = 3.75
+  kappam_max                                 = 100.0
+  kappam_min                                 = 0.0
+  mxl_min                                    = 1.D-8
+  only_tke                                   = .TRUE.
+  ppscheme_type                              = 0
+  tke_min                                    = 1.D-6
+  tke_mxl_choice                             = 2
+  tke_surf_min                              = 1.d-4
+  use_lbound_dirichlet                      = .FALSE.
+  use_ubound_dirichlet                      = .FALSE.
+  vert_mix_type                             = 2
+  clc                                       = 0.15
+  l_lc                                      = .TRUE.
+/
+&ocean_GentMcWilliamsRedi_nml
+  GMRedi_configuration                       = 0                ! 0=cartesian diffusion; 1=GM-Redi: bolus advection + isopycnal diffusion
+  tapering_scheme                            = 1
+  GMRedi_usesRelativeMaxSlopes               = .FALSE.
+  S_max                                      = 1.0E-3           ! 1.0
+  S_d                                        = 1.0E-4           ! 5e-3 to 5e-4
+  k_tracer_GM_kappa_parameter                = 0.0
+  k_tracer_isoneutral_parameter              = 0.0              ! value for cell-based cartesian diffusion - mpiom: 1000/400km = 400/160km
+  k_tracer_dianeutral_parameter              = 0.0              ! 1.0E-5
+  switch_off_diagonal_vert_expl              = .TRUE.
+  gmredi_combined_diagnostic                 = .FALSE.
+  revert_vertical_recon_and_transposed       = .TRUE.
+  slope_calc_via_temperture_salinity         = .TRUE.
+  include_slope_squared_implicit             = .TRUE.           ! think of l_with_vert_tracer_diffusion
+  switch_on_tapering_horizontal_diffusion    = .TRUE.
+/
+&ocean_physics_nml
+  i_sea_ice                                  = 1                ! 0 = no sea ice; 1 = sea ice model on; default=1
+/
+&sea_ice_nml
+  albedow_sim                                = 0.10
+  albi                                       = 0.70
+  albim                                      = 0.68
+  albs                                       = 0.81
+  albsm                                      = 0.77
+  i_ice_therm                                = 1                ! 1=zero-layer (default), 2=Winton, 0/2: not allowed
+  i_ice_dyn                                  = 1                ! 1/0=switch on/off AWI ice dynamics
+  leadclose_1                                = 0.25             ! default: 0.5 - value of MPIOM: 0.25
+  leadclose_2n                               = 0.0              ! default: 0.0 - value of MPIOM: 2/3
+  delta_min                                  = 2.0E-09
+  cd_io                                      = 5.5E-3
+  luse_replacement_pressure                  = .TRUE.
+/
+&ocean_forcing_nml
+  iforc_oce                                  = 14               ! ocean forcing: 14 from coupling via YAC
+  forcing_windstress_u_type                  = 2                ! 0: zero wind stress, 1: read from file, 2: none
+  forcing_windstress_v_type                  = 2                ! 0: zero wind stress, 1: read from file, 2: none
+  limit_seaice                               = .TRUE.           ! default: TRUE
+  seaice_limit                               = 6.0
+  lfix_salt_content                          = .FALSE.          ! fix global ocean+ice salt content to constant (false)
+  jerlov_atten                               = 0.08
+  jerlov_bluefrac                            = 0.36
+  lcheck_salt_content = .false.
+  limit_elevation                            = .FALSE.
+  limit_seaice_type                          = 1
+  lswr_jerlov                                = .TRUE.
+  tides_mod                                  = 1
+  use_tides                                  = .FALSE.
+  atm_pressure_included_in_icedyn            = .TRUE.
+  atm_pressure_included_in_ocedyn            = .TRUE.
+/
+&ocean_initialConditions_nml
+  initial_salinity_type     = 0                ! 0: none, 1: read S from initial_state.nc
+  initial_temperature_type  = 0                ! 0: none, 1: read T from initial_state.nc
+  initialize_fromRestart    = ${initialize_fromrestart}
+/
+&ocean_diagnostics_nml
+  diagnostics_level = 1
+  diagnose_for_horizontalVelocity = .FALSE.
+  diagnose_for_tendencies = .FALSE.
+  diagnose_for_heat_content = .TRUE.
+/
+&io_nml
+  restart_file_type = 5
+  write_last_restart = .TRUE.
+  restart_write_mode = "joint procs multifile"
+/
+EOF
+
+# jsbach namelist
+# ---------------
+
+cat > NAMELIST_lnd << EOF
+&jsb_model_nml
+  usecase              = 'jsbach_lite'
+  use_lakes            = .TRUE.
+  use_tmx              = .TRUE.
+  fract_filename       = 'bc_land_frac.nc'
+  init_from_ifs        = .TRUE.
+/
+&jsb_seb_nml
+  bc_filename          = 'bc_land_phys.nc'
+  ic_filename          = 'ic_land_soil.nc'
+/
+&jsb_rad_nml
+  use_alb_veg_simple = .TRUE.
+  bc_filename          = 'bc_land_phys.nc'
+  ic_filename          = 'ic_land_soil.nc'
+/
+&jsb_turb_nml
+  bc_filename          = 'bc_land_phys.nc'
+  ic_filename          = 'ic_land_soil.nc'
+  max_ini_rough_m      = 1.0
+/
+&jsb_sse_nml
+  l_heat_cap_map       = .FALSE.
+  l_heat_cond_map      = .FALSE.
+  l_heat_cap_dyn       = .FALSE.
+  l_heat_cond_dyn      = .FALSE.
+  l_snow               = .TRUE.
+  l_dynsnow            = .TRUE.
+  l_freeze             = .TRUE.
+  l_supercool          = .FALSE.
+  bc_filename          = 'bc_land_soil.nc'
+  ic_filename          = 'ic_land_soil.nc'
+  l_soil_texture       = .FALSE. ! needs to be set to .TRUE. for DestinE whth new land files
+/
+&jsb_hydro_nml
+  l_organic            = .FALSE.
+  l_socmap             = .FALSE.
+  bc_filename          = 'bc_land_soil.nc'
+  ic_filename          = 'ic_land_soil.nc'
+  bc_sso_filename      = 'bc_land_sso.nc'
+  l_soil_texture       = .FALSE. ! needs to be set to .TRUE. for DestinE with new land files
+  l_read_initial_moist = .TRUE.
+  snow_depth_max       = 10.0
+/
+&jsb_assimi_nml
+  active               = .FALSE.             ! Use FALSE for jsbach_lite, TRUE for jsbach_pfts
+/
+&jsb_pheno_nml
+  scheme               = 'climatology'       ! scheme = logrop / climatology; use climatology for jsbach_lite
+  bc_filename          = 'bc_land_phys.nc'
+  ic_filename          = 'ic_land_soil.nc'
+/
+&jsb_carbon_nml
+  active               = .FALSE.
+  bc_filename          = 'bc_land_carbon.nc'
+  ic_filename          = 'ic_land_carbon.nc'
+  read_cpools          = .FALSE.
+/
+&jsb_fuel_nml
+  active               = .FALSE.
+  fuel_algorithm       = 1
+/
+&jsb_disturb_nml
+  active               = .FALSE.
+  ic_filename          = 'ic_land_soil.nc'
+  bc_filename          = 'bc_land_phys.nc'
+  fire_algorithm       = 1
+  windbreak_algorithm  = 1
+  lburn_pasture        = .FALSE.
+/
+&jsb_hd_nml
+  active               = .TRUE.
+  routing_scheme       = 'full'
+  ic_filename          = 'ic_land_hd.nc'
+  bc_filename          = 'bc_land_hd.nc'
+  use_bifurcated_rivers = .TRUE.
+  read_initial_reservoirs = ${read_initial_reservoirs}
+  diag_water_budget    = .TRUE.
+  debug_hd             = .FALSE.
+  enforce_water_budget = 'ignore'         ! True: stop in case of water conservation problem
+/
+EOF
+
+#------------------------------------
+# Define start and end dates in rsttime
+#------------------------------------
+
+rsttStartDate=$(date -u -d "${start_date}" +"%Y%m%dT%H%M%SZ")
+rsttEndDate=$(date -u -d "${end_date}" +"%Y%m%dT%H%M%SZ")
+
+#--------------------------------------------------------------------------------------------------
+
+# Define the atmosphere and land input
+# ------------------------------------
+
+# [files]
+
+# [files.atmosphere]
+atmosphere_dir="${icon_data_rootFolder}"/grids/public/mpim
+
+# [files.atmosphere.mapped]
+mapped_dir=$atmosphere_dir/${atmos_gridID}
+ln -snvf $mapped_dir/icon_grid_${atmos_gridID}_${atmos_refinement}_G.nc icon_grid_G.nc
+
+# [files.atmosphere.mapped.initial]
+initial_dir=$mapped_dir/initial_conditions/r0100
+ln -snvf $initial_dir/ifs2icon_1990010100_${atmos_gridID}_${atmos_refinement}_G.nc ifs2icon.nc
+
+# [files.atmosphere.common]
+common_dir=$atmosphere_dir/common
+
+# [files.atmosphere.common.greenhouse]
+greenhouse_dir=$common_dir/greenhouse_gases
+ln -snvf $greenhouse_dir/greenhouse_ssp370.nc bc_greenhouse_gases.nc
+
+# [files.atmosphere.common.solar_radiation]
+solar_radiation_dir=$common_dir/solar_radiation
+ln -snvf $solar_radiation_dir/swflux_14band_cmip6_1850-2299-v3.2.nc bc_solar_irradiance_sw_b14.nc
+
+y0=${start_date::4}
+yN=${end_date::4}
+
+ozone_dir=$mapped_dir/ozone/r0100
+
+# [files.atmosphere.mapped.ozone]
+for((yr = y0 + -1; yr <= yN + 1; ++yr))
+do
+    if (( yr > 2014 )); then
+      ln -snvf $ozone_dir/bc_ozone_ssp370_${yr}.nc bc_ozone_${yr}.nc
+    else
+      ln -snvf $ozone_dir/bc_ozone_historical_${yr}.nc bc_ozone_${yr}.nc
+    fi
+done # offsets
+
+# [files.atmosphere.mapped.ocean_surface]
+ocean_surface_dir=$mapped_dir/sst_and_seaice/r0100
+ln -snvf $ocean_surface_dir/bc_sic_1989-1990.nc bc_sic.nc
+ln -snvf $ocean_surface_dir/bc_sst_1989-1990.nc bc_sst.nc
+
+# [files.atmosphere.mapped.aerosols]
+aerosols_dir=$mapped_dir/aerosol_kinne/r0100
+ln -snvf $aerosols_dir/bc_aeropt_kinne_lw_b16_coa.nc .
+ln -snvf $aerosols_dir/bc_aeropt_kinne_sw_b14_coa.nc .
+
+y0=${start_date::4}
+yN=${end_date::4}
+
+for((yr = y0 + -1; yr <= yN + 1; ++yr))
+do
+    ln -snvf $aerosols_dir/bc_aeropt_kinne_sw_b14_fin_${yr}.nc .
+done
+
+# [files.atmosphere.restart]
+restart_dir="${experiments_dir}"/restarts
+
+if [ ! -d "${restart_dir}" ]; then
+   mkdir ${restart_dir}
+fi
+
+# If second chunk read/write from mfr (multirestartfile)
+if [ "${lrestart}" == ".true." ]; then
+      ln -snvf $restart_dir/"${EXPNAME}"_restart_atm_${rsttStartDate}.mfr \
+      multifile_restart_atmo.mfr
+fi
+# [files.atmosphere.model]
+model_dir="${MODEL_DIR}"
+
+# [files.atmosphere.model.data]
+data_dir=$model_dir/data
+ln -snvf $data_dir/ECHAM6_CldOptProps_rrtmgp_lw.nc \
+    rrtmgp-cloud-optics-coeffs-lw.nc
+ln -snvf $data_dir/ECHAM6_CldOptProps_rrtmgp_sw.nc \
+    rrtmgp-cloud-optics-coeffs-sw.nc
+
+# [files.atmosphere.model.rrtmgp]
+rrtmgp_dir=$model_dir/data
+ln -snvf $rrtmgp_dir/rrtmgp-gas-lw-g128.nc coefficients_lw.nc
+ln -snvf $rrtmgp_dir/rrtmgp-gas-sw-g112.nc coefficients_sw.nc
+
+# [files.atmosphere.model.run]
+run_dir=$model_dir/run
+cp -fv $run_dir/dict.iconam.mpim dict.txt
+
+# [files.land]
+land_dir="${icon_data_rootFolder}"/grids/public/mpim
+
+# [files.land.mapped]
+mapped_dir=$land_dir/${atmos_gridID}-${ocean_gridID}/land/r0100
+ln -snvf $mapped_dir/ic_land_soil.nc ic_land_soil.nc
+ln -snvf $mapped_dir/bc_land_frac.nc bc_land_frac.nc
+ln -snvf $mapped_dir/bc_land_phys.nc bc_land_phys.nc
+ln -snvf $mapped_dir/bc_land_soil.nc bc_land_soil.nc
+ln -snvf $mapped_dir/bc_land_sso.nc  bc_land_sso.nc
+
+mapped_dir=$land_dir/${atmos_gridID}-${ocean_gridID}/hd/r0100
+ln -snvf $mapped_dir/hdpara_r2b9_${atmos_gridID}_${ocean_gridID}_mc_s_v1.nc         bc_land_hd.nc
+ln -snvf $mapped_dir/hdstart_r2b9_${atmos_gridID}_${ocean_gridID}_mc_s_40s_v1_1.nc  ic_land_hd.nc
+
+# [files.land.model]
+model_dir="${MODEL_DIR}"/externals/jsbach/data
+ln -snvf $model_dir/lctlib_nlct21.def lctlib_nlct21.def
+
+# [files.ocean]
+ocean_dir="${icon_data_rootFolder}"/grids/public/mpim
+
+# [files.ocean.grids]
+grids_dir=$ocean_dir/${ocean_gridID}
+ln -snvf $grids_dir/icon_grid_${ocean_gridID}_${ocean_refinement}_O.nc icon_grid_O.nc
+
+# [files.ocean.restart]
+restart_dir="${experiments_dir}"/restarts
+
+# If second chunk read/write from mfr (multirestartfile)
+# If running first chunk then itialize ocean from excisting restart data
+
+if [ "${initialize_fromrestart}" == ".false." ]; then
+   ln -snvf $restart_dir/"${EXPNAME}"_restart_oce_${rsttStartDate}.mfr \
+      multifile_restart_ocean.mfr
+else
+   restart_dir=$grids_dir"/ocean/restart"
+   ln -snvf $restart_dir/exp.ocean_era51h_zstar_r2b9_24327-ERA_restart_oce_19900101T000000Z.nc \
+      multifile_restart_ocean.mfr
+fi
+
+#-----------------------------------------------------------------------------
+# start experiment
+#-----------------------------------------------------------------------------
+
+rm -f finish.status
+#
+set -x
+
+############ to replace run_wrapper #####################
+
+rm -f run_atmo_gpu.sh
+
+cat > run_atmo_gpu.sh << EOF
+#! /usr/bin/bash
+
+export MPICH_GPU_SUPPORT_ENABLED=0
+
+export PMI_VERSION_DISPLAY=1
+
+export FI_MP_CACHE_MONITOR="memhooks"
+export FI_CXI_OPTIMIZED_MRS=FALSE
+
+device=\$((\$SLURM_LOCALID%8))
+
+export ROCR_VISIBLE_DEVICES=\$device
+
+numanode=(3 3 1 1 0 0 2 2)
+coresl=(49 57 17 25 1 9 33 41)
+coresu=(53 61 21 29 5 13 37 45)
+#
+#
+echo Atmo compute process \$SLURM_LOCALID on \$(hostname)
+#
+numactl --physcpu=\${coresl[\$device]}-\${coresu[\$device]} --membind=\${numanode[\$device]}  ${MODEL_G}
+
+EOF
+
+chmod 755 ./run_atmo_gpu.sh
+
+################# Oce wrapper #########################
+
+rm -f run_oce_cpu.sh
+
+cat > run_oce_cpu.sh << EOF
+#! /usr/bin/bash
+export FI_MP_CACHE_MONITOR="memhooks"
+export FI_CXI_OPTIMIZED_MRS=FALSE
+
+export PMI_VERSION_DISPLAY=1
+
+export OMP_STACKSIZE=256M
+export OMP_NUM_THREADS=1
+export ICON_THREADS=1
+
+# the first 4 ranks are gpus so they do not count here
+lrank=\$((SLURM_LOCALID - SLURM_GPUS_ON_NODE))
+
+echo Oce compute process \$SLURM_LOCALID on \$(hostname)
+
+gpucoreslbound=('0'  '8' '16' '24' '32' '40' '48' '56')
+gpucoresubound=('3' '11' '19' '27' '35' '43' '51' '59')
+
+cpucores=()
+numanode=()
+nics=()
+#We assume that a core is either used by a GPU/atm-rank or by a cpu-rank.
+for core in \$(seq 0 63); do
+     # For now we assume that the Ocean will never gain from OpenMP, Dr F said.
+     doSkip=false
+     for i in \$(seq 0 7); do
+        if [[ (\$core -ge \${gpucoreslbound[i]}) && (\$core -le \${gpucoresubound[i]}) ]]; then
+           doSkip=true
+        fi
+     done
+     if \$doSkip; then
+         continue
+     fi
+     cpucores+=(\`echo \$core\`)
+     numanode+=(\$((\$core/16)))
+done
+
+numactl --physcpubind=\${cpucores[\$lrank]} --membind=\${numanode[\$lrank]} ${MODEL_C}
+
+EOF
+
+chmod 755 ./run_oce_cpu.sh
+
+
+################## Hostfile ###############################
+
+export SLURM_HOSTFILE="hostfile.$SLURM_JOB_ID"
+
+/usr/bin/python3 -c "
+import os
+import re
+def expand(nodeset):
+    tmp = re.split('\[', nodeset)
+    base = tmp[0]
+    if tmp[1][-1] != ']':
+        print('Error, string not matching')
+    main = tmp[1][:-1]
+
+    expanded = ''
+    arr = []
+    for nrange in re.split(',', main):
+        res = re.split('-', nrange)
+        if len(res) == 1:
+            arr.append(expanded+base+res[0])
+            #expanded = expanded+base+res[0]+","
+        else:
+            digits = len(res[0])
+            for i in range(int(res[0]), int(res[1])+1):
+                arr.append(base+str(i).zfill(digits))
+                #expanded = expanded+base+str(i).zfill(digits)+","
+
+    return arr
+
+SLURM_NODELIST          = os.environ['SLURM_NODELIST']
+SLURM_GPUS_ON_NODE      = int(os.environ['SLURM_GPUS_ON_NODE'])
+NCPU_RANKS_PER_NODE     = int(os.environ['NCPU_RANKS_PER_NODE'])
+
+ns = expand(SLURM_NODELIST)
+
+# Atmo, 8 GPUs per Node, all nodes filled
+for host in ns:
+    for i in range(SLURM_GPUS_ON_NODE):
+        print(host)
+
+coresRemaining = {}
+nodeswithoutoutput = []
+for host in ns:
+    coresRemaining[host] = NCPU_RANKS_PER_NODE
+    nodeswithoutoutput.append(host)
+
+#ATM-O (one per node)
+nout = 0
+for host in ns:
+    if nout < ${atm_o_tasks}:
+        print(host)
+        coresRemaining[host] = coresRemaining[host] - 1
+        nout = nout + 1
+        nodeswithoutoutput.remove(host)
+    else:
+        break
+
+nodeswithoutoutput.reverse()
+nout = 0
+for host in nodeswithoutoutput:
+    if nout < $((oce_o_tasks + yaco_tasks)):
+        coresRemaining[host] = coresRemaining[host] - 1
+        nout = nout + 1
+    else:
+        break
+
+# OCE
+for host in ns:
+    for i in range(coresRemaining[host]):
+        print(host)
+
+# OCE-O (one per node, starting at the end, not on nodes with atm-o rank)
+nout = 0
+for host in nodeswithoutoutput:
+    if nout < $((oce_o_tasks + yaco_tasks)):
+        print(host)
+        nout = nout + 1
+    else:
+        break
+
+" > $SLURM_HOSTFILE
+
+##################### MPMD ################################
+
+cat > mpmd.conf << EOF
+0-$((atm_compute_tasks-1)) ./run_atmo_gpu.sh
+${atm_compute_tasks}-${oce_max_rank} ./run_oce_cpu.sh
+${yaco_min_rank}-$((yaco_min_rank + yaco_non_monthly_procs_high - 1)) ${YACO} gsv_fine_hourly_daily.yaml
+$((yaco_min_rank + yaco_non_monthly_procs_high))-$((yaco_min_rank + yaco_non_monthly_procs - 1)) ${YACO} gsv_coarse_hourly_daily.yaml
+$((yaco_min_rank + yaco_non_monthly_procs))-$(( yaco_min_rank + yaco_non_monthly_procs + yaco_monthly_procs_high - 1)) ${YACO} gsv_fine_monthly.yaml
+$((yaco_min_rank + yaco_non_monthly_procs + yaco_monthly_procs_high))-$((yaco_min_rank + yaco_non_monthly_procs + yaco_monthly_procs - 1)) ${YACO} gsv_coarse_monthly.yaml
+EOF
+
+#FIXME remove cpu-bind
+# Set cpus_per_task very large to make sure that overcommit works and gives us all available cores even though we only have 68 tasks
+date
+srun -l --mem=0  --export=ALL --distribution=arbitrary --nodes=${SLURM_JOB_NUM_NODES:-1} --ntasks=${tot_tasks} --ntasks-per-node=$((tasks_per_node)) --cpus-per-task=16 --cpu-bind=v,none --overcommit --multi-prog mpmd.conf
+date
+
+# Fast check if simulation was succesfull
+if [ ! -f finish.status ] || ! grep -q "OK" finish.status; then
+    echo "Run was not successful, check the LOGS"
+    exit 1
+fi
+
+# Handle restart hand-over
+
+cp -lrfv ${EXPNAME}_restart_atm_${rsttEndDate}.mfr "${experiments_dir}"/restarts
+cp -lrfv ${EXPNAME}_restart_oce_${rsttEndDate}.mfr "${experiments_dir}"/restarts
+
+# Clean up our restart
+
+rm -rfv ${EXPNAME}_restart_atm_${rsttEndDate}.mfr
+rm -rfv ${EXPNAME}_restart_oce_${rsttEndDate}.mfr
+#
+#-----------------------------------------------------------------------------
+#
+
+finish_status=`cat finish.status`
+echo $finish_status
+echo "============================"
+echo "Script run successfully: $finish_status"
+echo "============================"
+
+#-----------------------------------------------------------------------------
+
+# Mark current run as successful in log
+echo $(date -u +'%Y-%m-%dT%H:%M:%SZ') ${start_date%:*} ${end_date%:*} ${SLURM_JOBID} end
+
+cp finish.status ${run_dir}
+
+unset SLURM_HOSTFILE
+
+status=0
+exit $status
+
+#-----------------------------------------------------------------------------
+# vim:ft=sh
+#-----------------------------------------------------------------------------

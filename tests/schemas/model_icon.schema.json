@@ -1,0 +1,48 @@
+{
+  "$id": "schema:workflow/model_icon",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Model Icon",
+  "description": "Schema for the MODEL section of the workflow, if the model is ICON.",
+  "type": "object",
+  "properties": {
+    "NAME": {
+      "type": "string",
+      "enum": ["icon"],
+      "decription": "Name of the model to run the simulation."
+    },
+    "ROOT_PATH": {
+      "description": "Path to the root of the model directory where the different models and there different versions are stored by default.",
+      "type": "string"
+    },
+    "PATH": {
+      "description": "Path to the model directory, where the version of the model that you will use is/will be stored.",
+      "type": "string"
+    },
+    "INPUTS": {
+      "description": "Path to the directory where the input files are stored.",
+      "type": "string"
+    },
+    "COMPILE": {
+      "description": "If the model will be compiled before running it.",
+      "type": "string",
+      "enum": ["False", "True"]
+    },
+    "GRID_ATM": {
+      "description": "Grid for the atmosphere model.",
+      "type": "string",
+      "enum": ["r2b4"]
+    },
+    "GRID_OCE": {
+      "description": "Grid for the ocean model.",
+      "type": "string",
+      "enum": ["r2b4"]
+    },
+    "SIMULATION": {
+      "description": "Simulation to run.",
+      "type": "string",
+      "enum": ["test-icon"]
+    }
+
+  },
+  "required": ["NAME", "ROOT_PATH", "PATH", "INPUTS", "COMPILE", "GRID_ATM", "GRID_OCE", "SIMULATION"]
+}

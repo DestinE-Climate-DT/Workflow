@@ -1,0 +1,27 @@
+# this is a template file for the FDB catalog generator
+# please copy to a correspondent yaml file
+
+repos:
+  data-portfolio_path: "%HPCROOTDIR%/%PROJECT.PROJECT_DESTINATION%/data-portfolio"
+  Climate-DT-catalog_path: "%HPCROOTDIR%/%PROJECT.PROJECT_DESTINATION%/catalog"
+resolution: "%CONFIGURATION.DQC_PROFILE%" #Experiment resolution: production/develop/lowres (if production portfolio), intermediate (if reduced portfolio)
+catalog_dir: "%CURRENT_CATALOG_NAME%" #the folder in Climate-DT-catalog where the catalog entry will be stored
+# AQUA definitions
+model: "%REQUEST.MODEL%"
+exp: "%REQUEST.EXPVER%"
+fixer_name: "%AQUA.FIXER_NAME%"
+# Request/experiment definitions
+activity: "%REQUEST.ACTIVITY%"
+experiment: "%REQUEST.EXPERIMENT%"
+expver: "%REQUEST.EXPVER%"
+generation: "%REQUEST.GENERATION%"
+num_of_realizations: "%NUMMEMBERS%"
+data_start_date: "%AQUA.START_DATE%"
+data_end_date: ""
+bridge_end_date: ""
+ocean_grid: "%AQUA.GRID_OCE%"
+# FDB path definitions
+# description: '<IFS/NEMO/FESOM ICON> example run' # if commented out, it will be built by the script
+fdb_home: "%REQUEST.FDB_HOME%"
+fdb_home_bridge: "%CURRENT_DATABRIDGE_FDB_HOME%"
+fdb_info_file: "%REQUEST.INFO_FILE_NAME%"

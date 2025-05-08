@@ -1,6 +1,2 @@
-JOBS:
-  SIM:
-    FILE: templates/sim_icon.sh
-
-RUN:
-  TYPE: test
+REQUEST:
+  MODEL: ICON

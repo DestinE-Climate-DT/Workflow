@@ -1,0 +1,76 @@
+# Refs:
+# - https://peps.python.org/pep-0621/#example
+# - https://setuptools.pypa.io/en/latest/userguide/package_discovery.html
+
+[project]
+name='climate-dt-workflow'
+# TODO: sync it with branches?
+version = '1.0'
+description = 'Climate DT Workflow'
+readme = 'README.md'
+requires-python = '>=3.8'
+license = { 'text' = 'Confidential' }
+keywords = ['climate-dt', 'workflow', 'climate', 'digital twin']
+# TODO: For later; maybe add contact points for the workflow devs here?
+# authors = [
+#    {email = '', name= ''}
+# ]
+# maintainers = [
+#    {email = '', name = ''}
+# ]
+classifiers = []
+
+dependencies = [
+    # TODO: In theory Climate DT workflow depends on a version of Autosubmit,
+    #       but right now we only want to add Python tests, thus the comment.
+    #'autosubmit >= 4.0.105',
+    'pyyaml == 6.*'
+]
+
+[project.optional-dependencies]
+test = [
+    'pytest==8.*',
+    'pytest-cov',
+    'pytest-mock',
+    'ruff',
+    'pre-commit',
+    'ruamel.yaml',
+]
+
+docs = [
+    'sphinx==8.*',
+    'sphinx_rtd_theme',
+    'sphinx_mdinclude'
+]
+
+all = ['climate-dt-workflow[test,docs]']
+
+[project.urls]
+homepage = 'https://github.com/DestinE-Climate-DT/Workflow'
+documentation = 'https://earth.bsc.es/gitlab/digital-twins/de_340/workflow/-/tree/main/docs'
+repository = 'https://earth.bsc.es/gitlab/digital-twins/de_340/workflow'
+changelog = 'https://earth.bsc.es/gitlab/digital-twins/de_340/workflow/-/blob/main/CHANGELOG.md'
+
+# [project.scripts]
+
+[build-system]
+requires = [
+    'setuptools >= 40.9.0',
+    'wheel'
+]
+build-backend = 'setuptools.build_meta'
+
+[tool.setuptools.package-dir]
+'conf' = 'conf'
+'runscripts' = 'runscripts'
+'utils' = 'utils'
+
+[tools.pytest.ini_options]
+addopts = '--verbose -n=1'
+testpaths = [
+    'tests/bats_tests/'
+]
+markers = []
+
+[runners]
+  output_limit = 8388608  # Double the limit (8MB)

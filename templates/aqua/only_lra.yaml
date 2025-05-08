@@ -1,0 +1,34 @@
+#This include the option for the regridding
+target:
+  resolution: r100
+  frequency: monthly
+  catalog: "%CURRENT_CATALOG_NAME%"
+paths:
+  outdir: "%APP.OUTPATH%/LRA/%MEMBER%"
+  tmpdir: "%APP.OUTPATH%/tmp"
+  opadir: "%APP.OUTPATH%"
+  configdir: "%HPCROOTDIR%/.aqua"
+options:
+  loglevel: INFO
+# all the variable listed here will be processed by the LRA creator
+data:
+  "%REQUEST.MODEL%":
+    "%REQUEST.EXPVER%":
+      "%AQUA.SOURCE_SFC%":
+        workers: "%AQUA.WORKERS_SFC%"
+        vars: %AQUA.VARS_SFC%
+      "%AQUA.SOURCE_HL%":
+        workers: "%AQUA.WORKERS_HL%"
+        vars: %AQUA.VARS_HL%
+      "%AQUA.SOURCE_O2D%":
+        workers: "%AQUA.WORKERS_O2D%"
+        vars: %AQUA.VARS_O2D%
+      "%AQUA.SOURCE_O3D%":
+        workers: "%AQUA.WORKERS_O3D%"
+        vars: %AQUA.VARS_O3D%
+      "%AQUA.SOURCE_PL%":
+        workers: "%AQUA.WORKERS_PL%"
+        vars: %AQUA.VARS_PL%
+      "%AQUA.SOURCE_SOL%":
+        workers: "%AQUA.WORKERS_SOL%"
+        vars: %AQUA.VARS_SOL%

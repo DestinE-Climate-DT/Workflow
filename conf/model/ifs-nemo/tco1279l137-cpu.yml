@@ -1,24 +1,31 @@
 CONFIGURATION:
-  DQC_PROFILE: production
+  DQC_PROFILE: develop
+  DATA_PORTFOLIO: production
+  DQC_WALLCLOCK: "00:30"
   IFS:
     GTYPE: tco
     RESOL: 1279
     LEVELS: 137
     EXPVER: hz9o
     LABEL: LWDA
-
-    IO_NODES: 40
-
+    IO_NODES: 8
+  NEMO:
+    IO_NODES: 8
 PLATFORMS:
-  MARENOSTRUM4:
-    QUEUE: "class_a"
-    NODES: 200
-    TASKS: 8
-    THREADS: 6
-
   LUMI:
-    NODES: 240
+    NODES: 197
     TASKS: 16
     THREADS: 8
     PROCESSORS_PER_NODE: 128
-   
+  MARENOSTRUM5:
+    TYPE: slurm
+    QUEUE: "gp_debug"
+    MAX_WALLCLOCK: "2:00"
+    NODES: 268
+    TASKS: 8
+    THREADS: 14
+    PROCESSORS_PER_NODE: 112
+REQUEST:
+  RESOLUTION: high
+AQUA:
+  RESOLUTION_ATM: hpz7

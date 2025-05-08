@@ -1,0 +1,129 @@
+{
+  "$id": "schema:workflow/aqua",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "title": "AQUA",
+  "description": "Schema for the AQUA section of the workflow",
+  "properties": {
+    "REGENERATE_CATALOGS": {
+      "type": "string",
+      "enum": [
+        "False",
+        "True"
+      ],
+      "description": "Flag to determine if catalogs should be regenerated."
+    },
+    "CONTAINER_VERSION": {
+      "type": "string",
+      "description": "Specify the version of the container used in the workflow."
+    },
+    "SOURCE_HL": {
+      "type": "string",
+      "description": "Source for hourly-native-hl data."
+    },
+    "SOURCE_O2D": {
+      "type": "string",
+      "description": "Source for daily-hpz5-oce2d data."
+    },
+    "SOURCE_O3D": {
+      "type": "string",
+      "description": "Source for daily-hpz5-oce3d data."
+    },
+    "SOURCE_PL": {
+      "type": "string",
+      "description": "Source for hourly-hpz5-atm3d data."
+    },
+    "SOURCE_SFC": {
+      "type": "string",
+      "description": "Source for hourly-hpz5-atm2d data."
+    },
+    "SOURCE_SOL": {
+      "type": "string",
+      "description": "Source for hourly-native-sol data."
+    },
+    "VARS_HL": {
+      "type": "string",
+      "description": "Variables for hourly-native-hl data."
+    },
+    "VARS_O2D": {
+      "type": "string",
+      "description": "Variables for daily-hpz5-oce2d data."
+    },
+    "VARS_O3D": {
+      "type": "string",
+      "description": "Variables for daily-hpz5-oce3d data."
+    },
+    "VARS_PL": {
+      "type": "string",
+      "description": "Variables for hourly-hpz5-atm3d data."
+    },
+    "VARS_SFC": {
+      "type": "string",
+      "description": "Variables for hourly-hpz5-atm2d data."
+    },
+    "VARS_SOL": {
+      "type": "string",
+      "description": "Variables for hourly-native-sol data."
+    },
+    "WORKERS_HL": {
+      "type": "integer",
+      "description": "Number of workers for hourly-native-hl data."
+    },
+    "WORKERS_O2D": {
+      "type": "integer",
+      "description": "Number of workers for daily-hpz5-oce2d data."
+    },
+    "WORKERS_O3D": {
+      "type": "integer",
+      "description": "Number of workers for daily-hpz5-oce3d data."
+    },
+    "WORKERS_PL": {
+      "type": "integer",
+      "description": "Number of workers for hourly-hpz5-atm3d data."
+    },
+    "WORKERS_SFC": {
+      "type": "integer",
+      "description": "Number of workers for hourly-hpz5-atm2d data."
+    },
+    "WORKERS_SOL": {
+      "type": "integer",
+      "description": "Number of workers for hourly-native-sol data."
+    },
+    "RESOLUTION_OCE": {
+      "type": "string",
+      "description": "Resolution for ocean data."
+    },
+    "RESOLUTION_ATM": {
+      "type": "string",
+      "description": "Resolution for atmosphere data."
+    },
+    "BUCKET": {
+      "type": "string",
+      "description": "Bucket to push the data in AQUA-push."
+    }
+  },
+  "required": [
+    "CONTAINER_VERSION",
+    "SOURCE_HL",
+    "SOURCE_O2D",
+    "SOURCE_O3D",
+    "SOURCE_PL",
+    "SOURCE_SFC",
+    "SOURCE_SOL",
+    "VARS_HL",
+    "VARS_O2D",
+    "VARS_O3D",
+    "VARS_PL",
+    "VARS_SFC",
+    "VARS_SOL",
+    "WORKERS_HL",
+    "WORKERS_O2D",
+    "WORKERS_O3D",
+    "WORKERS_PL",
+    "WORKERS_SFC",
+    "WORKERS_SOL",
+    "RESOLUTION_OCE",
+    "RESOLUTION_ATM",
+    "REGENERATE_CATALOGS"
+  ]
+}

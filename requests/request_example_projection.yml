@@ -1,0 +1,8 @@
+## scenario
+REQUEST:
+  ACTIVITY: projections
+  RESOLUTION: high
+  GENERATION: 2
+  REALIZATION: 1
+  EXPERIMENT: ssp3-7.0
+  MODEL: ifs-nemo

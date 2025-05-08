@@ -1,0 +1,2105 @@
+AQUA:
+    1:
+      GSVREQUEST: #raw data
+        dataset: climate-dt
+        class: d1
+        type: fc
+        expver: "a0h3"
+        stream: clte
+        activity: projections
+        resolution: high
+        generation: 2
+        realization: 1
+        experiment: SSP3-7.0
+        model: IFS-NEMO
+        levtype: "sfc"
+        date: split_day
+        time: "0000/to/2300/by/0100"
+        param: "tp"
+        grid: "0.1/0.1"
+        method: nn
+      OPAREQUEST:
+        variable: "tp"
+        stat: "mean"
+        stat_freq: "monthly"
+        output_freq: "monthly"
+        time_step: 60 # in minutes, 60*timestep length in hours TODO: do that automatically
+        save: True
+        checkpoint: True
+        checkpoint_filepath: "/scratch/project_465000454/tmp/a19x/"
+        save_filepath: "/scratch/project_465000454/tmp/a19x/"
+
+    2:
+      GSVREQUEST: #raw data
+        dataset: climate-dt
+        class: d1
+        type: fc
+        expver: "a0h3"
+        stream: clte
+        activity: projections
+        resolution: high
+        generation: 2
+        realization: 1
+        experiment: SSP3-7.0
+        model: IFS-NEMO
+        levtype: "sfc"
+        date: split_day
+        time: "0000/to/2300/by/0100"
+        param: "2t"
+        grid: "0.1/0.1"
+        method: nn
+      OPAREQUEST:
+        variable: "2t"
+        stat: "mean"
+        stat_freq: "monthly"
+        output_freq: "monthly"
+        time_step: 60 # in minutes, 60*timestep length in hours TODO: do that automatically
+        save: True
+        checkpoint: True
+        checkpoint_filepath: "/scratch/project_465000454/tmp/a19x/"
+        save_filepath: "/scratch/project_465000454/tmp/a19x/"
+
+    3:
+      GSVREQUEST: #raw data
+        dataset: climate-dt
+        class: d1
+        type: fc
+        expver: "a0h3"
+        stream: clte
+        activity: projections
+        resolution: high
+        generation: 2
+        realization: 1
+        experiment: SSP3-7.0
+        model: IFS-NEMO
+        levtype: "sfc"
+        date: split_day
+        time: "0000/to/2300/by/0100"
+        param: "skt"
+        grid: "0.1/0.1"
+        method: nn
+      OPAREQUEST:
+        variable: "skt"
+        stat: "mean"
+        stat_freq: "monthly"
+        output_freq: "monthly"
+        time_step: 60 # in minutes, 60*timestep length in hours TODO: do that automatically
+        save: True
+        checkpoint: True
+        checkpoint_filepath: "/scratch/project_465000454/tmp/a19x/"
+        save_filepath: "/scratch/project_465000454/tmp/a19x/"
+
+    4:
+      GSVREQUEST: #raw data
+        dataset: climate-dt
+        class: d1
+        type: fc
+        expver: "a0h3"
+        stream: clte
+        activity: projections
+        resolution: high
+        generation: 2
+        realization: 1
+        experiment: SSP3-7.0
+        model: IFS-NEMO
+        levtype: "sfc"
+        date: split_day
+        time: "0000/to/2300/by/0100"
+        param: "tcc"
+        grid: "0.1/0.1"
+        method: nn
+      OPAREQUEST:
+        variable: "tcc"
+        stat: "mean"
+        stat_freq: "monthly"
+        output_freq: "monthly"
+        time_step: 60 # in minutes, 60*timestep length in hours TODO: do that automatically
+        save: True
+        checkpoint: True
+        checkpoint_filepath: "/scratch/project_465000454/tmp/a19x/"
+        save_filepath: "/scratch/project_465000454/tmp/a19x/"
+
+    5:
+      GSVREQUEST: #raw data
+        dataset: climate-dt
+        class: d1
+        type: fc
+        expver: "a0h3"
+        stream: clte
+        activity: projections
+        resolution: high
+        generation: 2
+        realization: 1
+        experiment: SSP3-7.0
+        model: IFS-NEMO
+        levtype: "sfc"
+        date: split_day
+        time: "0000/to/2300/by/0100"
+        param: "lcc"
+        grid: "0.1/0.1"
+        method: nn
+      OPAREQUEST:
+        variable: "lcc"
+        stat: "mean"
+        stat_freq: "monthly"
+        output_freq: "monthly"
+        time_step: 60 # in minutes, 60*timestep length in hours TODO: do that automatically
+        save: True
+        checkpoint: True
+        checkpoint_filepath: "/scratch/project_465000454/tmp/a19x/"
+        save_filepath: "/scratch/project_465000454/tmp/a19x/"
+
+    6:
+      GSVREQUEST: #raw data
+        dataset: climate-dt
+        class: d1
+        type: fc
+        expver: "a0h3"
+        stream: clte
+        activity: projections
+        resolution: high
+        generation: 2
+        realization: 1
+        experiment: SSP3-7.0
+        model: IFS-NEMO
+        levtype: "sfc"
+        date: split_day
+        time: "0000/to/2300/by/0100"
+        param: "mcc"
+        grid: "0.1/0.1"
+        method: nn
+      OPAREQUEST:
+        variable: "mcc"
+        stat: "mean"
+        stat_freq: "monthly"
+        output_freq: "monthly"
+        time_step: 60 # in minutes, 60*timestep length in hours TODO: do that automatically
+        save: True
+        checkpoint: True
+        checkpoint_filepath: "/scratch/project_465000454/tmp/a19x/"
+        save_filepath: "/scratch/project_465000454/tmp/a19x/"
+
+    7:
+      GSVREQUEST: #raw data
+        dataset: climate-dt
+        class: d1
+        type: fc
+        expver: "a0h3"
+        stream: clte
+        activity: projections
+        resolution: high
+        generation: 2
+        realization: 1
+        experiment: SSP3-7.0
+        model: IFS-NEMO
+        levtype: "sfc"
+        date: split_day
+        time: "0000/to/2300/by/0100"
+        param: "hcc"
+        grid: "0.1/0.1"
+        method: nn
+      OPAREQUEST:
+        variable: "hcc"
+        stat: "mean"
+        stat_freq: "monthly"
+        output_freq: "monthly"
+        time_step: 60 # in minutes, 60*timestep length in hours TODO: do that automatically
+        save: True
+        checkpoint: True
+        checkpoint_filepath: "/scratch/project_465000454/tmp/a19x/"
+        save_filepath: "/scratch/project_465000454/tmp/a19x/"
+
+    8:
+      GSVREQUEST: #raw data
+        dataset: climate-dt
+        class: d1
+        type: fc
+        expver: "a0h3"
+        stream: clte
+        activity: projections
+        resolution: high
+        generation: 2
+        realization: 1
+        experiment: SSP3-7.0
+        model: IFS-NEMO
+        levtype: "sfc"
+        date: split_day
+        time: "0000/to/2300/by/0100"
+        param: "sd"
+        grid: "0.1/0.1"
+        method: nn
+      OPAREQUEST:
+        variable: "sd"
+        stat: "mean"
+        stat_freq: "monthly"
+        output_freq: "monthly"
+        time_step: 60 # in minutes, 60*timestep length in hours TODO: do that automatically
+        save: True
+        checkpoint: True
+        checkpoint_filepath: "/scratch/project_465000454/tmp/a19x/"
+        save_filepath: "/scratch/project_465000454/tmp/a19x/"
+
+    9:
+      GSVREQUEST: #raw data
+        dataset: climate-dt
+        class: d1
+        type: fc
+        expver: "a0h3"
+        stream: clte
+        activity: projections
+        resolution: high
+        generation: 2
+        realization: 1
+        experiment: SSP3-7.0
+        model: IFS-NEMO
+        levtype: "sfc"
+        date: split_day
+        time: "0000/to/2300/by/0100"
+        param: "tciw"
+        grid: "0.1/0.1"
+        method: nn
+      OPAREQUEST:
+        variable: "tciw"
+        stat: "mean"
+        stat_freq: "monthly"
+        output_freq: "monthly"
+        time_step: 60 # in minutes, 60*timestep length in hours TODO: do that automatically
+        save: True
+        checkpoint: True
+        checkpoint_filepath: "/scratch/project_465000454/tmp/a19x/"
+        save_filepath: "/scratch/project_465000454/tmp/a19x/"
+
+    10:
+      GSVREQUEST: #raw data
+        dataset: climate-dt
+        class: d1
+        type: fc
+        expver: "a0h3"
+        stream: clte
+        activity: projections
+        resolution: high
+        generation: 2
+        realization: 1
+        experiment: SSP3-7.0
+        model: IFS-NEMO
+        levtype: "sfc"
+        date: split_day
+        time: "0000/to/2300/by/0100"
+        param: "tclw"
+        grid: "0.1/0.1"
+        method: nn
+      OPAREQUEST:
+        variable: "tclw"
+        stat: "mean"
+        stat_freq: "monthly"
+        output_freq: "monthly"
+        time_step: 60 # in minutes, 60*timestep length in hours TODO: do that automatically
+        save: True
+        checkpoint: True
+        checkpoint_filepath: "/scratch/project_465000454/tmp/a19x/"
+        save_filepath: "/scratch/project_465000454/tmp/a19x/"
+
+    11:
+      GSVREQUEST: #raw data
+        dataset: climate-dt
+        class: d1
+        type: fc
+        expver: "a0h3"
+        stream: clte
+        activity: projections
+        resolution: high
+        generation: 2
+        realization: 1
+        experiment: SSP3-7.0
+        model: IFS-NEMO
+        levtype: "sfc"
+        date: split_day
+        time: "0000/to/2300/by/0100"
+        param: "e"
+        grid: "0.1/0.1"
+        method: nn
+      OPAREQUEST:
+        variable: "e"
+        stat: "mean"
+        stat_freq: "monthly"
+        output_freq: "monthly"
+        time_step: 60 # in minutes, 60*timestep length in hours TODO: do that automatically
+        save: True
+        checkpoint: True
+        checkpoint_filepath: "/scratch/project_465000454/tmp/a19x/"
+        save_filepath: "/scratch/project_465000454/tmp/a19x/"
+
+    12:
+      GSVREQUEST: #raw data
+        dataset: climate-dt
+        class: d1
+        type: fc
+        expver: "a0h3"
+        stream: clte
+        activity: projections
+        resolution: high
+        generation: 2
+        realization: 1
+        experiment: SSP3-7.0
+        model: IFS-NEMO
+        levtype: "sfc"
+        date: split_day
+        time: "0000/to/2300/by/0100"
+        param: "sf"
+        grid: "0.1/0.1"
+        method: nn
+      OPAREQUEST:
+        variable: "sf"
+        stat: "mean"
+        stat_freq: "monthly"
+        output_freq: "monthly"
+        time_step: 60 # in minutes, 60*timestep length in hours TODO: do that automatically
+        save: True
+        checkpoint: True
+        checkpoint_filepath: "/scratch/project_465000454/tmp/a19x/"
+        save_filepath: "/scratch/project_465000454/tmp/a19x/"
+
+    13:
+      GSVREQUEST: #raw data
+        dataset: climate-dt
+        class: d1
+        type: fc
+        expver: "a0h3"
+        stream: clte
+        activity: projections
+        resolution: high
+        generation: 2
+        realization: 1
+        experiment: SSP3-7.0
+        model: IFS-NEMO
+        levtype: "sfc"
+        date: split_day
+        time: "0000/to/2300/by/0100"
+        param: "slhf"
+        grid: "0.1/0.1"
+        method: nn
+      OPAREQUEST:
+        variable: "slhf"
+        stat: "mean"
+        stat_freq: "monthly"
+        output_freq: "monthly"
+        time_step: 60 # in minutes, 60*timestep length in hours TODO: do that automatically
+        save: True
+        checkpoint: True
+        checkpoint_filepath: "/scratch/project_465000454/tmp/a19x/"
+        save_filepath: "/scratch/project_465000454/tmp/a19x/"
+
+    14:
+      GSVREQUEST: #raw data
+        dataset: climate-dt
+        class: d1
+        type: fc
+        expver: "a0h3"
+        stream: clte
+        activity: projections
+        resolution: high
+        generation: 2
+        realization: 1
+        experiment: SSP3-7.0
+        model: IFS-NEMO
+        levtype: "sfc"
+        date: split_day
+        time: "0000/to/2300/by/0100"
+        param: "sshf"
+        grid: "0.1/0.1"
+        method: nn
+      OPAREQUEST:
+        variable: "sshf"
+        stat: "mean"
+        stat_freq: "monthly"
+        output_freq: "monthly"
+        time_step: 60 # in minutes, 60*timestep length in hours TODO: do that automatically
+        save: True
+        checkpoint: True
+        checkpoint_filepath: "/scratch/project_465000454/tmp/a19x/"
+        save_filepath: "/scratch/project_465000454/tmp/a19x/"
+
+    15:
+      GSVREQUEST: #raw data
+        dataset: climate-dt
+        class: d1
+        type: fc
+        expver: "a0h3"
+        stream: clte
+        activity: projections
+        resolution: high
+        generation: 2
+        realization: 1
+        experiment: SSP3-7.0
+        model: IFS-NEMO
+        levtype: "sfc"
+        date: split_day
+        time: "0000/to/2300/by/0100"
+        param: "ssr"
+        grid: "0.1/0.1"
+        method: nn
+      OPAREQUEST:
+        variable: "ssr"
+        stat: "mean"
+        stat_freq: "monthly"
+        output_freq: "monthly"
+        time_step: 60 # in minutes, 60*timestep length in hours TODO: do that automatically
+        save: True
+        checkpoint: True
+        checkpoint_filepath: "/scratch/project_465000454/tmp/a19x/"
+        save_filepath: "/scratch/project_465000454/tmp/a19x/"
+
+    16:
+      GSVREQUEST: #raw data
+        dataset: climate-dt
+        class: d1
+        type: fc
+        expver: "a0h3"
+        stream: clte
+        activity: projections
+        resolution: high
+        generation: 2
+        realization: 1
+        experiment: SSP3-7.0
+        model: IFS-NEMO
+        levtype: sfc
+        date: split_day
+        time: "0000/to/2300/by/0100"
+        param: "str"
+        grid: "0.1/0.1"
+        method: nn
+      OPAREQUEST:
+        variable: "str"
+        stat: "mean"
+        stat_freq: "monthly"
+        output_freq: "monthly"
+        time_step: 60 # in minutes, 60*timestep length in hours TODO: do that automatically
+        save: True
+        checkpoint: True
+        checkpoint_filepath: "/scratch/project_465000454/tmp/a19x/"
+        save_filepath: "/scratch/project_465000454/tmp/a19x/"
+
+    17:
+      GSVREQUEST: #raw data
+        dataset: climate-dt
+        class: d1
+        type: fc
+        expver: "a0h3"
+        stream: clte
+        activity: projections
+        resolution: high
+        generation: 2
+        realization: 1
+        experiment: SSP3-7.0
+        model: IFS-NEMO
+        levtype: sfc
+        date: split_day
+        time: "0000/to/2300/by/0100"
+        param: "strd"
+        grid: "0.1/0.1"
+        method: nn
+      OPAREQUEST:
+        variable: "strd"
+        stat: "mean"
+        stat_freq: "monthly"
+        output_freq: "monthly"
+        time_step: 60 # in minutes, 60*timestep length in hours TODO: do that automatically
+        save: True
+        checkpoint: True
+        checkpoint_filepath: "/scratch/project_465000454/tmp/a19x/"
+        save_filepath: "/scratch/project_465000454/tmp/a19x/"
+
+    18:
+      GSVREQUEST: #raw data
+        dataset: climate-dt
+        class: d1
+        type: fc
+        expver: "a0h3"
+        stream: clte
+        activity: projections
+        resolution: high
+        generation: 2
+        realization: 1
+        experiment: SSP3-7.0
+        model: IFS-NEMO
+        levtype: sfc
+        date: split_day
+        time: "0000/to/2300/by/0100"
+        param: "ssrd"
+        grid: "0.1/0.1"
+        method: nn
+      OPAREQUEST:
+        variable: "ssrd"
+        stat: "mean"
+        stat_freq: "monthly"
+        output_freq: "monthly"
+        time_step: 60 # in minutes, 60*timestep length in hours TODO: do that automatically
+        save: True
+        checkpoint: True
+        checkpoint_filepath: "/scratch/project_465000454/tmp/a19x/"
+        save_filepath: "/scratch/project_465000454/tmp/a19x/"
+
+    19:
+      GSVREQUEST: #raw data
+        dataset: climate-dt
+        class: d1
+        type: fc
+        expver: "a0h3"
+        stream: clte
+        activity: projections
+        resolution: high
+        generation: 2
+        realization: 1
+        experiment: SSP3-7.0
+        model: IFS-NEMO
+        levtype: sfc
+        date: split_day
+        time: "0000/to/2300/by/0100"
+        param: "tsr"
+        grid: "0.1/0.1"
+        method: nn
+      OPAREQUEST:
+        variable: "tsr"
+        stat: "mean"
+        stat_freq: "monthly"
+        output_freq: "monthly"
+        time_step: 60 # in minutes, 60*timestep length in hours TODO: do that automatically
+        save: True
+        checkpoint: True
+        checkpoint_filepath: "/scratch/project_465000454/tmp/a19x/"
+        save_filepath: "/scratch/project_465000454/tmp/a19x/"
+
+    20:
+      GSVREQUEST: #raw data
+        dataset: climate-dt
+        class: d1
+        type: fc
+        expver: "a0h3"
+        stream: clte
+        activity: projections
+        resolution: high
+        generation: 2
+        realization: 1
+        experiment: SSP3-7.0
+        model: IFS-NEMO
+        levtype: sfc
+        date: split_day
+        time: "0000/to/2300/by/0100"
+        param: "ttr"
+        grid: "0.1/0.1"
+        method: nn
+      OPAREQUEST:
+        variable: "ttr"
+        stat: "mean"
+        stat_freq: "monthly"
+        output_freq: "monthly"
+        time_step: 60 # in minutes, 60*timestep length in hours TODO: do that automatically
+        save: True
+        checkpoint: True
+        checkpoint_filepath: "/scratch/project_465000454/tmp/a19x/"
+        save_filepath: "/scratch/project_465000454/tmp/a19x/"
+
+    21:
+      GSVREQUEST: #raw data
+        dataset: climate-dt
+        class: d1
+        type: fc
+        expver: "a0h3"
+        stream: clte
+        activity: projections
+        resolution: high
+        generation: 2
+        realization: 1
+        experiment: SSP3-7.0
+        model: IFS-NEMO
+        levtype: sfc
+        date: split_day
+        time: "0000/to/2300/by/0100"
+        param: "tisr"
+        grid: "0.1/0.1"
+        method: nn
+      OPAREQUEST:
+        variable: "tisr"
+        stat: "mean"
+        stat_freq: "monthly"
+        output_freq: "monthly"
+        time_step: 60 # in minutes, 60*timestep length in hours TODO: do that automatically
+        save: True
+        checkpoint: True
+        checkpoint_filepath: "/scratch/project_465000454/tmp/a19x/"
+        save_filepath: "/scratch/project_465000454/tmp/a19x/"
+
+    22:
+      GSVREQUEST: #raw data
+        dataset: climate-dt
+        class: d1
+        type: fc
+        expver: "a0h3"
+        stream: clte
+        activity: projections
+        resolution: high
+        generation: 2
+        realization: 1
+        experiment: SSP3-7.0
+        model: IFS-NEMO
+        levtype: "pl"
+        levelist: [1, 5, 10, 20, 30, 50, 70, 100, 150, 200, 250, 300, 400, 500, 600, 700, 850, 925, 1000]
+        date: split_day
+        time: "0000/to/2300/by/0100"
+        param: "q"
+        grid: "0.1/0.1"
+        method: nn
+      OPAREQUEST:
+        variable: "q"
+        stat: "mean"
+        stat_freq: "monthly"
+        output_freq: "monthly"
+        time_step: 60 # in minutes, 60*timestep length in hours TODO: do that automatically
+        save: True
+        checkpoint: True
+        checkpoint_filepath: "/scratch/project_465000454/tmp/a19x/"
+        save_filepath: "/scratch/project_465000454/tmp/a19x/"
+
+    23:
+      GSVREQUEST: #raw data
+        dataset: climate-dt
+        class: d1
+        type: fc
+        expver: "a0h3"
+        stream: clte
+        activity: projections
+        resolution: high
+        generation: 2
+        realization: 1
+        experiment: SSP3-7.0
+        model: IFS-NEMO
+        levtype: "pl"
+        levelist: [1, 5, 10, 20, 30, 50, 70, 100, 150, 200, 250, 300, 400, 500, 600, 700, 850, 925, 1000]
+        date: split_day
+        time: "0000/to/2300/by/0100"
+        param: "t"
+        grid: "0.1/0.1"
+        method: nn
+      OPAREQUEST:
+        variable: "t"
+        stat: "mean"
+        stat_freq: "monthly"
+        output_freq: "monthly"
+        time_step: 60 # in minutes, 60*timestep length in hours TODO: do that automatically
+        save: True
+        checkpoint: True
+        checkpoint_filepath: "/scratch/project_465000454/tmp/a19x/"
+        save_filepath: "/scratch/project_465000454/tmp/a19x/"
+
+    24:
+      GSVREQUEST: #raw data
+        dataset: climate-dt
+        class: d1
+        type: fc
+        expver: "a0h3"
+        stream: clte
+        activity: projections
+        resolution: high
+        generation: 2
+        realization: 1
+        experiment: SSP3-7.0
+        model: IFS-NEMO
+        levtype: "pl"
+        levelist: [1, 5, 10, 20, 30, 50, 70, 100, 150, 200, 250, 300, 400, 500, 600, 700, 850, 925, 1000]
+        date: split_day
+        time: "0000/to/2300/by/0100"
+        param: "u"
+        grid: "0.1/0.1"
+        method: nn
+      OPAREQUEST:
+        variable: "u"
+        stat: "mean"
+        stat_freq: "monthly"
+        output_freq: "monthly"
+        time_step: 60 # in minutes, 60*timestep length in hours TODO: do that automatically
+        save: True
+        checkpoint: True
+        checkpoint_filepath: "/scratch/project_465000454/tmp/a19x/"
+        save_filepath: "/scratch/project_465000454/tmp/a19x/"
+
+    25:
+      GSVREQUEST: #raw data
+        dataset: climate-dt
+        class: d1
+        type: fc
+        expver: "a0h3"
+        stream: clte
+        activity: projections
+        resolution: high
+        generation: 2
+        realization: 1
+        experiment: SSP3-7.0
+        model: IFS-NEMO
+        levtype: "pl"
+        levelist: [1, 5, 10, 20, 30, 50, 70, 100, 150, 200, 250, 300, 400, 500, 600, 700, 850, 925, 1000]
+        date: split_day
+        time: "0000/to/2300/by/0100"
+        param: "v"
+        grid: "0.1/0.1"
+        method: nn
+      OPAREQUEST:
+        variable: "v"
+        stat: "mean"
+        stat_freq: "monthly"
+        output_freq: "monthly"
+        time_step: 60 # in minutes, 60*timestep length in hours TODO: do that automatically
+        save: True
+        checkpoint: True
+        checkpoint_filepath: "/scratch/project_465000454/tmp/a19x/"
+        save_filepath: "/scratch/project_465000454/tmp/a19x/"
+
+    26:
+      GSVREQUEST: #raw data
+        dataset: climate-dt
+        class: d1
+        type: fc
+        expver: "a0h3"
+        stream: clte
+        activity: projections
+        resolution: high
+        generation: 2
+        realization: 1
+        experiment: SSP3-7.0
+        model: IFS-NEMO
+        levtype: "o2d"
+        date: split_day
+        time: "0000"
+        param: "avg_tos"
+        grid: "0.1/0.1"
+        method: nn
+      OPAREQUEST:
+        variable: "avg_tos"
+        stat: "mean"
+        stat_freq: "monthly"
+        output_freq: "monthly"
+        time_step: 1440 # in minutes, 60*timestep length in hours TODO: do that automatically
+        save: True
+        checkpoint: True
+        checkpoint_filepath: "/scratch/project_465000454/tmp/a19x/"
+        save_filepath: "/scratch/project_465000454/tmp/a19x/"
+
+    27:
+      GSVREQUEST: #raw data
+        dataset: climate-dt
+        class: d1
+        type: fc
+        expver: "a0h3"
+        stream: clte
+        activity: projections
+        resolution: high
+        generation: 2
+        realization: 1
+        experiment: SSP3-7.0
+        model: IFS-NEMO
+        levtype: "o2d"
+        date: split_day
+        time: "0000"
+        param: "avg_siconc"
+        grid: "0.1/0.1"
+        method: nn
+      OPAREQUEST:
+        variable: "avg_siconc"
+        stat: "mean"
+        stat_freq: "monthly"
+        output_freq: "monthly"
+        time_step: 1440 # in minutes, 60*timestep length in hours TODO: do that automatically
+        save: True
+        checkpoint: True
+        checkpoint_filepath: "/scratch/project_465000454/tmp/a19x/"
+        save_filepath: "/scratch/project_465000454/tmp/a19x/"
+
+    28:
+      GSVREQUEST: #raw data
+        dataset: climate-dt
+        class: d1
+        type: fc
+        expver: "a0h3"
+        stream: clte
+        activity: projections
+        resolution: high
+        generation: 2
+        realization: 1
+        experiment: SSP3-7.0
+        model: IFS-NEMO
+        levtype: "o2d"
+        date: split_day
+        time: "0000"
+        param: "avg_sos"
+        grid: "0.1/0.1"
+        method: nn
+      OPAREQUEST:
+        variable: "avg_sos"
+        stat: "mean"
+        stat_freq: "monthly"
+        output_freq: "monthly"
+        time_step: 1440 # in minutes, 60*timestep length in hours TODO: do that automatically
+        save: True
+        checkpoint: True
+        checkpoint_filepath: "/scratch/project_465000454/tmp/a19x/"
+        save_filepath: "/scratch/project_465000454/tmp/a19x/"
+
+    29:
+      GSVREQUEST: #raw data
+        dataset: climate-dt
+        class: d1
+        type: fc
+        expver: "a0h3"
+        stream: clte
+        activity: projections
+        resolution: high
+        generation: 2
+        realization: 1
+        experiment: SSP3-7.0
+        model: IFS-NEMO
+        levtype: "o3d"
+        levelist: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49, 50, 51, 52, 53, 54, 55, 56, 57, 58, 59, 60, 61, 62, 63, 64, 65, 66, 67, 68, 69, 70, 71, 72, 73, 74, 75]
+        date: split_day
+        time: "0000"
+        param: "avg_thetao"
+        grid: "0.1/0.1"
+        method: nn
+      OPAREQUEST:
+        variable: "avg_thetao"
+        stat: "mean"
+        stat_freq: "monthly"
+        output_freq: "monthly"
+        time_step: 1440 # in minutes, 60*timestep length in hours TODO: do that automatically
+        save: True
+        checkpoint: True
+        checkpoint_filepath: "/scratch/project_465000454/tmp/a19x/"
+        save_filepath: "/scratch/project_465000454/tmp/a19x/"
+
+    30:
+      GSVREQUEST: #raw data
+        dataset: climate-dt
+        class: d1
+        type: fc
+        expver: "a0h3"
+        stream: clte
+        activity: projections
+        resolution: high
+        generation: 2
+        realization: 1
+        experiment: SSP3-7.0
+        model: IFS-NEMO
+        levtype: "o3d"
+        levelist: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49, 50, 51, 52, 53, 54, 55, 56, 57, 58, 59, 60, 61, 62, 63, 64, 65, 66, 67, 68, 69, 70, 71, 72, 73, 74, 75]
+        date: split_day
+        time: "0000"
+        param: "avg_so"
+        grid: "0.1/0.1"
+        method: nn
+      OPAREQUEST:
+        variable: "avg_so"
+        stat: "mean"
+        stat_freq: "monthly"
+        output_freq: "monthly"
+        time_step: 1440 # in minutes, 60*timestep length in hours TODO: do that automatically
+        save: True
+        checkpoint: True
+        checkpoint_filepath: "/scratch/project_465000454/tmp/a19x/"
+        save_filepath: "/scratch/project_465000454/tmp/a19x/"
+
+HYDROLAND:
+    1:
+      GSVREQUEST: #raw data
+        dataset: climate-dt
+        class: d1
+        type: fc
+        expver: "a0h3"
+        stream: clte
+        activity: projections
+        resolution: high
+        generation: 2
+        realization: 1
+        experiment: SSP3-7.0
+        model: IFS-NEMO
+        levtype: "sfc"
+        date: split_day
+        time: "0000/to/2300/by/0100"
+        param: "2t"
+        grid: "1.0/1.0"
+        method: nn
+
+      OPAREQUEST:
+        variable: "2t"
+        stat: "mean"
+        stat_freq: "daily"
+        output_freq: "daily"
+        time_step: 60 # in minutes, 60*timestep length in hours TODO: do that automatically
+        save: True
+        checkpoint: True
+        checkpoint_filepath: "/scratch/project_465000454/tmp/a19x/"
+        save_filepath: "/scratch/project_465000454/tmp/a19x/"
+    2:
+      GSVREQUEST: #raw data
+        dataset: climate-dt
+        class: d1
+        type: fc
+        expver: "a0h3"
+        stream: clte
+        activity: projections
+        resolution: high
+        generation: 2
+        realization: 1
+        experiment: SSP3-7.0
+        model: IFS-NEMO
+        levtype: "sfc"
+        date: split_day
+        time: "0000/to/2300/by/0100"
+        param: "tp"
+        grid: "1.0/1.0"
+        method: nn
+
+      OPAREQUEST:
+        variable: "tp"
+        stat: "mean"
+        stat_freq: "daily"
+        output_freq: "daily"
+        time_step: 60 # in minutes, 60*timestep length in hours TODO: do that automatically
+        save: True
+        checkpoint: True
+        checkpoint_filepath: "/scratch/project_465000454/tmp/a19x/"
+        save_filepath: "/scratch/project_465000454/tmp/a19x/"
+WILDFIRES_FWI:
+    1:
+      GSVREQUEST: #raw data
+        dataset: climate-dt
+        class: d1
+        type: fc
+        expver: "a0h3"
+        stream: clte
+        activity: projections
+        resolution: high
+        generation: 2
+        realization: 1
+        experiment: SSP3-7.0
+        model: IFS-NEMO
+        levtype: "sfc"
+        date: split_day
+        time: "0000/to/2300/by/0100"
+        param: "10u"
+        grid: "1.0/1.0"
+        method: nn
+
+      OPAREQUEST:
+        variable: "10u"
+        stat: "raw"
+        stat_freq: "daily_noon"
+        output_freq: "daily"
+        time_step: 60 # in minutes, 60*timestep length in hours TODO: do that automatically
+        save: True
+        checkpoint: True
+        checkpoint_filepath: "/scratch/project_465000454/tmp/a19x/"
+        save_filepath: "/scratch/project_465000454/tmp/a19x/"
+    2:
+      GSVREQUEST: #raw data
+        dataset: climate-dt
+        class: d1
+        type: fc
+        expver: "a0h3"
+        stream: clte
+        activity: projections
+        resolution: high
+        generation: 2
+        realization: 1
+        experiment: SSP3-7.0
+        model: IFS-NEMO
+        levtype: "sfc"
+        date: split_day
+        time: "0000/to/2300/by/0100"
+        param: "10v"
+        grid: "1.0/1.0"
+        method: nn
+
+      OPAREQUEST:
+        variable: "10v"
+        stat: "raw"
+        stat_freq: "daily_noon"
+        output_freq: "daily"
+        time_step: 60 # in minutes, 60*timestep length in hours TODO: do that automatically
+        save: True
+        checkpoint: True
+        checkpoint_filepath: "/scratch/project_465000454/tmp/a19x/"
+        save_filepath: "/scratch/project_465000454/tmp/a19x/"
+    3:
+      GSVREQUEST: #raw data
+        dataset: climate-dt
+        class: d1
+        type: fc
+        expver: "a0h3"
+        stream: clte
+        activity: projections
+        resolution: high
+        generation: 2
+        realization: 1
+        experiment: SSP3-7.0
+        model: IFS-NEMO
+        levtype: "sfc"
+        date: split_day
+        time: "0000/to/2300/by/0100"
+        param: "2d"
+        grid: "1.0/1.0"
+        method: nn
+
+      OPAREQUEST:
+        variable: "2d"
+        stat: "raw"
+        stat_freq: "daily_noon"
+        output_freq: "daily"
+        time_step: 60 # in minutes, 60*timestep length in hours TODO: do that automatically
+        save: True
+        checkpoint: True
+        checkpoint_filepath: "/scratch/project_465000454/tmp/a19x/"
+        save_filepath: "/scratch/project_465000454/tmp/a19x/"
+    4:
+      GSVREQUEST: #raw data
+        dataset: climate-dt
+        class: d1
+        type: fc
+        expver: "a0h3"
+        stream: clte
+        activity: projections
+        resolution: high
+        generation: 2
+        realization: 1
+        experiment: SSP3-7.0
+        model: IFS-NEMO
+        levtype: "sfc"
+        date: split_day
+        time: "0000/to/2300/by/0100"
+        param: "tp"
+        grid: "1.0/1.0"
+        method: nn
+
+      OPAREQUEST:
+        variable: "tp"
+        stat: "sum"
+        stat_freq: "daily_noon"
+        output_freq: "daily_noon"
+        time_step: 60 # in minutes, 60*timestep length in hours TODO: do that automatically
+        save: True
+        checkpoint: True
+        checkpoint_filepath: "/scratch/project_465000454/tmp/a19x/"
+        save_filepath: "/scratch/project_465000454/tmp/a19x/"
+    5:
+      GSVREQUEST:
+        dataset: climate-dt
+        class: d1
+        type: fc
+        expver: "a0h3"
+        stream: clte
+        activity: projections
+        resolution: high
+        generation: 2
+        realization: 1
+        experiment: SSP3-7.0
+        model: IFS-NEMO
+        levtype: "sfc"
+        date: split_day
+        time: "0000/to/2300/by/0100"
+        param: "2t"
+        grid: "1.0/1.0"
+        method: nn
+
+      OPAREQUEST:
+        variable: "2t"
+        stat: "raw"
+        stat_freq: "daily_noon"
+        output_freq: "daily"
+        time_step: 60 # in minutes, 60*timestep length in hours TODO: do that automatically
+        save: True
+        checkpoint: True
+        checkpoint_filepath: "/scratch/project_465000454/tmp/a19x/"
+        save_filepath: "/scratch/project_465000454/tmp/a19x/"
+URBAN:
+    1:
+      GSVREQUEST: #raw data
+        dataset: climate-dt
+        class: d1
+        type: fc
+        expver: "" #low res: a063, high res: a06x, default: hz9n
+        stream: clte
+        activity: baseline
+        resolution: high #standard for low-res
+        generation: 2
+        realization: 1
+        experiment: hist
+        model: IFS-NEMO
+        levtype: "sfc"
+        date: "19900101/to/19900101"
+        time: "0000/to/2300/by/0100"
+        param:  "2t"
+        grid: "0.1/0.1"
+        method: nn
+        area: [72.1, -25.1, 26.9, 45.1] #Europe
+
+      OPAREQUEST:
+        variable: "2t"
+        stat: "min"
+        stat_freq: "daily"
+        output_freq: "monthly"
+        time_step: 60 # in minutes, 60*timestep length in hours TODO: do that automatically
+        save: True
+        checkpoint: True
+        checkpoint_filepath: "/scratch/project_465000454/tmp/a19x/"
+        save_filepath: "/scratch/project_465000454/tmp/a19x/"
+
+    2:
+      GSVREQUEST: #raw data
+        dataset: climate-dt
+        class: d1
+        type: fc
+        expver: "" #low res: a063, high res: a06x, default: hz9n
+        stream: clte
+        activity: baseline
+        resolution: high #standard for low-res
+        generation: 2
+        realization: 1
+        experiment: hist
+        model: IFS-NEMO
+        levtype: "sfc"
+        date: "19900101/to/19900101"
+        time: "0000/to/2300/by/0100"
+        param:  "2t"
+        grid: "0.1/0.1"
+        method: nn
+        area: [72.1, -25.1, 26.9, 45.1] #Europe
+
+      OPAREQUEST:
+        variable: "2t"
+        stat: "max"
+        stat_freq: "daily"
+        output_freq: "monthly"
+        time_step: 60 # in minutes, 60*timestep length in hours TODO: do that automatically
+        save: True
+        checkpoint: True
+        checkpoint_filepath: "/scratch/project_465000454/tmp/a19x/"
+        save_filepath: "/scratch/project_465000454/tmp/a19x/"
+
+    3:
+      GSVREQUEST: #raw data
+        dataset: climate-dt
+        class: d1
+        type: fc
+        expver: "" #low res: a063, high res: a06x, default: hz9n
+        stream: clte
+        activity: baseline
+        resolution: high #standard for low-res
+        generation: 2
+        realization: 1
+        experiment: hist
+        model: IFS-NEMO
+        levtype: "sfc"
+        date: "19900101/to/19900101"
+        time: "0000/to/2300/by/0100"
+        param:  "2t"
+        grid: "0.1/0.1"
+        method: nn
+        area: [72.1, -25.1, 26.9, 45.1] #Europe
+
+      OPAREQUEST:
+        variable: "2t"
+        stat: "mean"
+        stat_freq: "daily"
+        output_freq: "monthly"
+        time_step: 60 # in minutes, 60*timestep length in hours TODO: do that automatically
+        save: True
+        checkpoint: True
+        checkpoint_filepath: "/scratch/project_465000454/tmp/a19x/"
+        save_filepath: "/scratch/project_465000454/tmp/a19x/"
+
+    4:
+      GSVREQUEST: #raw data
+        dataset: climate-dt
+        class: d1
+        type: fc
+        expver: "" #low res: a063, high res: a06x, default: hz9n
+        stream: clte
+        activity: baseline
+        resolution: high #standard for low-res
+        generation: 2
+        realization: 1
+        experiment: hist
+        model: IFS-NEMO
+        levtype: "sfc"
+        date: "19900101/to/19900101"
+        time: "0000/to/2300/by/0100"
+        param:  "2t"
+        grid: "0.1/0.1"
+        method: nn
+        area: [72.1, -25.1, 26.9, 45.1] #Europe
+
+      OPAREQUEST:
+        variable: "2t"
+        stat: "raw"
+        stat_freq: "hourly"
+        output_freq: "weekly"
+        time_step: 60 # in minutes, 60*timestep length in hours TODO: do that automatically
+        save: True
+        checkpoint: True
+        checkpoint_filepath: "/scratch/project_465000454/tmp/a19x/"
+        save_filepath: "/scratch/project_465000454/tmp/a19x/"
+
+    5:
+      GSVREQUEST: #raw data
+        dataset: climate-dt
+        class: d1
+        type: fc
+        expver: "" #low res: a063, high res: a06x, default: hz9n
+        stream: clte
+        activity: baseline
+        resolution: high #standard for low-res
+        generation: 2
+        realization: 1
+        experiment: hist
+        model: IFS-NEMO
+        levtype: "sfc"
+        date: "19900101/to/19900101"
+        time: "0000/to/2300/by/0100"
+        param:  "10u"
+        grid: "0.1/0.1"
+        method: nn
+        area: [72.1, -25.1, 26.9, 45.1] #Europe
+
+      OPAREQUEST:
+        variable: "10u"
+        stat: "raw"
+        stat_freq: "hourly"
+        output_freq: "weekly"
+        time_step: 60 # in minutes, 60*timestep length in hours TODO: do that automatically
+        save: True
+        checkpoint: True
+        checkpoint_filepath: "/scratch/project_465000454/tmp/a19x/"
+        save_filepath: "/scratch/project_465000454/tmp/a19x/"
+
+    6:
+      GSVREQUEST: #raw data
+        dataset: climate-dt
+        class: d1
+        type: fc
+        expver: "" #low res: a063, high res: a06x, default: hz9n
+        stream: clte
+        activity: baseline
+        resolution: high #standard for low-res
+        generation: 2
+        realization: 1
+        experiment: hist
+        model: IFS-NEMO
+        levtype: "sfc"
+        date: "19900101/to/19900101"
+        time: "0000/to/2300/by/0100"
+        param:  "10v"
+        grid: "0.1/0.1"
+        method: nn
+        area: [72.1, -25.1, 26.9, 45.1] #Europe
+
+      OPAREQUEST:
+        variable: "10v"
+        stat: "raw"
+        stat_freq: "hourly"
+        output_freq: "weekly"
+        time_step: 60 # in minutes, 60*timestep length in hours TODO: do that automatically
+        save: True
+        checkpoint: True
+        checkpoint_filepath: "/scratch/project_465000454/tmp/a19x/"
+        save_filepath: "/scratch/project_465000454/tmp/a19x/"
+    7:
+      GSVREQUEST: #raw data
+        dataset: climate-dt
+        class: d1
+        type: fc
+        expver: "" #low res: a063, high res: a06x, default: hz9n
+        stream: clte
+        activity: baseline
+        resolution: high #standard for low-res
+        generation: 2
+        realization: 1
+        experiment: hist
+        model: IFS-NEMO
+        levtype: "sfc"
+        date: "19900101/to/19900101"
+        time: "0000/to/2300/by/0100"
+        param:  "2d"
+        grid: "0.1/0.1"
+        method: nn
+        area: [72.1, -25.1, 26.9, 45.1] #Europe
+
+      OPAREQUEST:
+        variable: "2d"
+        stat: "raw"
+        stat_freq: "hourly"
+        output_freq: "weekly"
+        time_step: 60 # in minutes, 60*timestep length in hours TODO: do that automatically
+        save: True
+        checkpoint: True
+        checkpoint_filepath: "/scratch/project_465000454/tmp/a19x/"
+        save_filepath: "/scratch/project_465000454/tmp/a19x/"
+
+ENERGY_ONSHORE:
+    1:
+      GSVREQUEST: #raw data
+        dataset: climate-dt
+        class: d1
+        type: fc
+        expver: "" #low res: a063, high res: a06x, default: hz9n
+        stream: clte
+        activity: baseline
+        resolution: high #standard for low-res
+        generation: 2
+        realization: 1
+        experiment: hist
+        model: IFS-NEMO
+        levtype: "hl"
+        levelist: 100
+        date: "19900101/to/19900101"
+        time: "0000/to/2300/by/0100"
+        param:  "100v"
+        grid: "0.1/0.1"
+        method: nn
+        area: [72.1, -25.1, 26.9, 45.1] #Europe
+
+      OPAREQUEST:
+        variable: "100v"
+        stat: "raw"
+        stat_freq: "hourly"
+        output_freq: "weekly"
+        time_step: 60 # in minutes, 60*timestep length in hours TODO: do that automatically
+        save: True
+        checkpoint: True
+        checkpoint_filepath: "/scratch/project_465000454/tmp/a19x/"
+        save_filepath: "/scratch/project_465000454/tmp/a19x/"
+    2:
+      GSVREQUEST: #raw data
+        dataset: climate-dt
+        class: d1
+        type: fc
+        expver: "" #low res: a063, high res: a06x, default: hz9n
+        stream: clte
+        activity: baseline
+        resolution: high #standard for low-res
+        generation: 2
+        realization: 1
+        experiment: hist
+        model: IFS-NEMO
+        levtype: "hl"
+        levelist: 100
+        date: "19900101/to/19900101"
+        time: "0000/to/2300/by/0100"
+        param:  "100u"
+        grid: "0.1/0.1"
+        method: nn
+        area: [72.1, -25.1, 26.9, 45.1] #Europe
+
+      OPAREQUEST:
+        variable: "100u"
+        stat: "raw"
+        stat_freq: "hourly"
+        output_freq: "weekly"
+        time_step: 60 # in minutes, 60*timestep length in hours TODO: do that automatically
+        save: True
+        checkpoint: True
+        checkpoint_filepath: "/scratch/project_465000454/tmp/a19x/"
+        save_filepath: "/scratch/project_465000454/tmp/a19x/"
+    3:
+      GSVREQUEST: #raw data
+        dataset: climate-dt
+        class: d1
+        type: fc
+        expver: "" #low res: a063, high res: a06x, default: hz9n
+        stream: clte
+        activity: baseline
+        resolution: high #standard for low-res
+        generation: 2
+        realization: 1
+        experiment: hist
+        model: IFS-NEMO
+        levtype: "hl"
+        levelist: 100
+        date: "19900101/to/19900101"
+        time: "0000/to/2300/by/0100"
+        param:  "100v"
+        grid: "0.1/0.1"
+        method: nn
+        area: [72.1, -25.1, 26.9, 45.1] #Europe
+
+      OPAREQUEST:
+        variable: "100v"
+        stat: "mean"
+        stat_freq: "daily"
+        output_freq: "monthly"
+        time_step: 60 # in minutes, 60*timestep length in hours TODO: do that automatically
+        save: True
+        checkpoint: True
+        checkpoint_filepath: "/scratch/project_465000454/tmp/a19x/"
+        save_filepath: "/scratch/project_465000454/tmp/a19x/"
+    4:
+      GSVREQUEST: #raw data
+        dataset: climate-dt
+        class: d1
+        type: fc
+        expver: "" #low res: a063, high res: a06x, default: hz9n
+        stream: clte
+        activity: baseline
+        resolution: high #standard for low-res
+        generation: 2
+        realization: 1
+        experiment: hist
+        model: IFS-NEMO
+        levtype: "hl"
+        levelist: 100
+        date: "19900101/to/19900101"
+        time: "0000/to/2300/by/0100"
+        param:  "100u"
+        grid: "0.1/0.1"
+        method: nn
+        area: [72.1, -25.1, 26.9, 45.1] #Europe
+
+      OPAREQUEST:
+        variable: "100u"
+        stat: "mean"
+        stat_freq: "daily"
+        output_freq: "monthly"
+        time_step: 60 # in minutes, 60*timestep length in hours TODO: do that automatically
+        save: True
+        checkpoint: True
+        checkpoint_filepath: "/scratch/project_465000454/tmp/a19x/"
+        save_filepath: "/scratch/project_465000454/tmp/a19x/"
+    5:
+      GSVREQUEST: #raw data
+        dataset: climate-dt
+        class: d1
+        type: fc
+        expver: "" #low res: a063, high res: a06x, default: hz9n
+        stream: clte
+        activity: baseline
+        resolution: high #standard for low-res
+        generation: 2
+        realization: 1
+        experiment: hist
+        model: IFS-NEMO
+        levtype: "sfc"
+        date: "19900101/to/19900101"
+        time: "0000/to/2300/by/0100"
+        param:  "2t"
+        grid: "0.1/0.1"
+        method: nn
+        area: [72.1, -25.1, 26.9, 45.1] #Europe
+
+      OPAREQUEST:
+        variable: "2t"
+        stat: "min"
+        stat_freq: "daily"
+        output_freq: "monthly"
+        time_step: 60 # in minutes, 60*timestep length in hours TODO: do that automatically
+        save: True
+        checkpoint: True
+        checkpoint_filepath: "/scratch/project_465000454/tmp/a19x/"
+        save_filepath: "/scratch/project_465000454/tmp/a19x/"
+    6:
+      GSVREQUEST: #raw data
+        dataset: climate-dt
+        class: d1
+        type: fc
+        expver: "" #low res: a063, high res: a06x, default: hz9n
+        stream: clte
+        activity: baseline
+        resolution: high #standard for low-res
+        generation: 2
+        realization: 1
+        experiment: hist
+        model: IFS-NEMO
+        levtype: "sfc"
+        date: "19900101/to/19900101"
+        time: "0000/to/2300/by/0100"
+        param:  "2t"
+        grid: "0.1/0.1"
+        method: nn
+        area: [72.1, -25.1, 26.9, 45.1] #Europe
+
+      OPAREQUEST:
+        variable: "2t"
+        stat: "max"
+        stat_freq: "daily"
+        output_freq: "monthly"
+        time_step: 60 # in minutes, 60*timestep length in hours TODO: do that automatically
+        save: True
+        checkpoint: True
+        checkpoint_filepath: "/scratch/project_465000454/tmp/a19x/"
+        save_filepath: "/scratch/project_465000454/tmp/a19x/"
+    7:
+      GSVREQUEST: #raw data
+        dataset: climate-dt
+        class: d1
+        type: fc
+        expver: "" #low res: a063, high res: a06x, default: hz9n
+        stream: clte
+        activity: baseline
+        resolution: high #standard for low-res
+        generation: 2
+        realization: 1
+        experiment: hist
+        model: IFS-NEMO
+        levtype: "sfc"
+        date: "19900101/to/19900101"
+        time: "0000/to/2300/by/0100"
+        param:  "2t"
+        grid: "0.1/0.1"
+        method: nn
+        area: [72.1, -25.1, 26.9, 45.1] #Europe
+
+      OPAREQUEST:
+        variable: "2t"
+        stat: "mean"
+        stat_freq: "daily"
+        output_freq: "monthly"
+        time_step: 60 # in minutes, 60*timestep length in hours TODO: do that automatically
+        save: True
+        checkpoint: True
+        checkpoint_filepath: "/scratch/project_465000454/tmp/a19x/"
+        save_filepath: "/scratch/project_465000454/tmp/a19x/"
+ENERGY_OFFSHORE:
+    1:
+      GSVREQUEST: #raw data
+        dataset: climate-dt
+        class: d1
+        type: fc
+        expver: "" #low res: a063, high res: a06x, default: hz9n
+        stream: clte
+        activity: baseline
+        resolution: high #standard for low-res
+        generation: 2
+        realization: 1
+        experiment: hist
+        model: IFS-NEMO
+        levtype: "sfc"
+        date: "19900101/to/19900101"
+        time: "0000/to/2300/by/0100"
+        param:  "10u"
+        grid: "0.1/0.1"
+        area: "70/-12/48/31"
+        method: nn
+
+      OPAREQUEST:
+        variable: "10u"
+        stat: "raw"
+        stat_freq: "hourly"
+        output_freq: "weekly"
+        time_step: 60 # in minutes, 60*timestep length in hours TODO: do that automatically
+        save: True
+        checkpoint: True
+        checkpoint_filepath: "/scratch/project_465000454/tmp/a19x/"
+        save_filepath: "/scratch/project_465000454/tmp/a19x/"
+
+    2:
+      GSVREQUEST: #raw data
+        dataset: climate-dt
+        class: d1
+        type: fc
+        expver: "" #low res: a063, high res: a06x, default: hz9n
+        stream: clte
+        activity: baseline
+        resolution: high #standard for low-res
+        generation: 2
+        realization: 1
+        experiment: hist
+        model: IFS-NEMO
+        levtype: "sfc"
+        date: "19900101/to/19900101"
+        time: "0000/to/2300/by/0100"
+        param:  "10v"
+        grid: "0.1/0.1"
+        area: "70/-12/48/31"
+        method: nn
+
+      OPAREQUEST:
+        variable: "10v"
+        stat: "raw"
+        stat_freq: "hourly"
+        time_step: 60 # in minutes, 60*timestep length in hours TODO: do that automatically
+        save: True
+        checkpoint: True
+        checkpoint_filepath: "/scratch/project_465000454/tmp/a19x/"
+        save_filepath: "/scratch/project_465000454/tmp/a19x/"
+
+    3:
+      GSVREQUEST: #raw data
+        dataset: climate-dt
+        class: d1
+        type: fc
+        expver: "" #low res: a063, high res: a06x, default: hz9n
+        stream: clte
+        activity: baseline
+        resolution: high #standard for low-res
+        generation: 2
+        realization: 1
+        experiment: hist
+        model: IFS-NEMO
+        levtype: "sfc"
+        date: "19900101/to/19900101"
+        time: "0000/to/2300/by/0100"
+        param:  "2t"
+        grid: "0.1/0.1"
+        area: "70/-12/48/31"
+        method: nn
+
+      OPAREQUEST:
+        variable: "2t"
+        stat: "raw"
+        stat_freq: "hourly"
+        time_step: 60 # in minutes, 60*timestep length in hours TODO: do that automatically
+        save: True
+        checkpoint: True
+        checkpoint_filepath: "/scratch/project_465000454/tmp/a19x/"
+        save_filepath: "/scratch/project_465000454/tmp/a19x/"
+
+    4:
+      GSVREQUEST: #raw data
+        dataset: climate-dt
+        class: d1
+        type: fc
+        expver: "" #low res: a063, high res: a06x, default: hz9n
+        stream: clte
+        activity: baseline
+        resolution: high #standard for low-res
+        generation: 2
+        realization: 1
+        experiment: hist
+        model: IFS-NEMO
+        levtype: "sfc"
+        date: "19900101/to/19900101"
+        time: "0000/to/2300/by/0100"
+        param:  "2d"
+        grid: "0.1/0.1"
+        area: "70/-12/48/31"
+        method: nn
+
+      OPAREQUEST:
+        variable: "2d"
+        stat: "raw"
+        stat_freq: "hourly"
+        time_step: 60 # in minutes, 60*timestep length in hours TODO: do that automatically
+        save: True
+        checkpoint: True
+        checkpoint_filepath: "/scratch/project_465000454/tmp/a19x/"
+        save_filepath: "/scratch/project_465000454/tmp/a19x/"
+
+    5:
+      GSVREQUEST: #raw data
+        dataset: climate-dt
+        class: d1
+        type: fc
+        expver: "" #low res: a063, high res: a06x, default: hz9n
+        stream: clte
+        activity: baseline
+        resolution: high #standard for low-res
+        generation: 2
+        realization: 1
+        experiment: hist
+        model: IFS-NEMO
+        levtype: "sfc"
+        date: "19900101/to/19900101"
+        time: "0000/to/2300/by/0100"
+        param:  "tprate"
+        grid: "0.1/0.1"
+        area: "70/-12/48/31"
+        method: nn
+
+      OPAREQUEST:
+        variable: "tprate"
+        stat: "raw"
+        stat_freq: "hourly"
+        time_step: 60 # in minutes, 60*timestep length in hours TODO: do that automatically
+        save: True
+        checkpoint: True
+        checkpoint_filepath: "/scratch/project_465000454/tmp/a19x/"
+        save_filepath: "/scratch/project_465000454/tmp/a19x/"
+
+HYDROMET:
+    1:
+      GSVREQUEST: #raw data
+        dataset: climate-dt
+        class: d1
+        type: fc
+        expver: "" #low res: a063, high res: a06x, default: hz9n
+        stream: clte
+        activity: baseline
+        resolution: high #standard for low-res
+        generation: 2
+        realization: 1
+        experiment: hist
+        model: IFS-NEMO
+        levtype: "sfc"
+        date: "19900101/to/19900101"
+        time: "0000/to/2300/by/0100"
+        param:  "tp"
+        grid: "0.1/0.1"
+        area: "60.0/5.0/45.0/20.0"
+        method: nn
+
+      OPAREQUEST:
+        variable: "tp"
+        stat: "iams"
+        stat_freq: "annually"
+        output_freq: "annually"
+        time_step: 60 # in minutes, 60*timestep length in hours TODO: do that automatically
+        save: True
+        checkpoint: True
+        checkpoint_filepath: "/scratch/project_465000454/tmp/a19x/" # "/scratch/project_465000454/francerou/a19x/tmp/full_test/iams_trash/" # Achtung the standard is "/scratch/project_465000454/tmp/a19x/"
+        save_filepath: "/scratch/project_465000454/tmp/a19x/" #"/scratch/project_465000454/francerou/a19x/tmp/full_test/iams_trash/" # idem
+
+    2:
+      GSVREQUEST: #raw data
+        dataset: climate-dt
+        class: d1
+        type: fc
+        expver: "" #low res: a063, high res: a06x, default: hz9n
+        stream: clte
+        activity: baseline
+        resolution: high #standard for low-res
+        generation: 2
+        realization: 1
+        experiment: hist
+        model: IFS-NEMO
+        levtype: "sfc"
+        date: "19900101/to/19900101"
+        time: "0000/to/2300/by/0100"
+        param:  "tp"
+        grid: "0.1/0.1"
+        area: "60.0/5.0/45.0/20.0"
+        method: nn
+
+      OPAREQUEST:
+        variable: "tp"
+        stat: "raw"
+        stat_freq: "hourly"
+        output_freq: "monthly" # Achtung this does not apply for "raw" stat
+        time_step: 60 # in minutes, 60*timestep length in hours TODO: do that automatically
+        save: True
+        checkpoint: True
+        checkpoint_filepath: "/scratch/project_465000454/tmp/a19x/" #"/scratch/project_465000454/francerou/a19x/tmp/full_test/iams_trash/" # Achtung the standard is "/scratch/project_465000454/tmp/a19x/"
+        save_filepath: "/scratch/project_465000454/tmp/a19x/" #"/scratch/project_465000454/francerou/a19x/tmp/full_test/iams_trash/" # idem
+
+WILDFIRES_SPITFIRE:
+    1:
+      GSVREQUEST: #raw data
+        dataset: climate-dt
+        class: d1
+        type: fc
+        expver: "" #low res: a063, high res: a06x, default: hz9n
+        stream: clte
+        activity: baseline
+        resolution: high #standard for low-res
+        generation: 2
+        realization: 1
+        experiment: hist
+        model: IFS-NEMO
+        levtype: "sfc"
+        date: "19900101/to/19900101"
+        time: "0000/to/2300/by/0100"
+        param:  "2t"
+        grid: "0.1/0.1"
+        area: "70.7/19/59.7/31.9"
+        method: nn
+
+      OPAREQUEST:
+        variable: "2t"
+        stat: "mean"
+        stat_freq: "daily"
+        output_freq: "daily"
+        time_step: 60 # in minutes, 60*timestep length in hours TODO: do that automatically
+        save: True
+        checkpoint: True
+        checkpoint_filepath: "/scratch/project_465000454/tmp/a19x/"
+        save_filepath: "/scratch/project_465000454/tmp/a19x/"
+
+    2:
+      GSVREQUEST: #raw data
+        dataset: climate-dt
+        class: d1
+        type: fc
+        expver: "" #low res: a063, high res: a06x, default: hz9n
+        stream: clte
+        activity: baseline
+        resolution: high #standard for low-res
+        generation: 2
+        realization: 1
+        experiment: hist
+        model: IFS-NEMO
+        levtype: "sfc"
+        date: "19900101/to/19900101"
+        time: "0000/to/2300/by/0100"
+        param:  "10u"
+        grid: "0.1/0.1"
+        area: "70.7/19/59.7/31.9"
+        method: nn
+
+      OPAREQUEST:
+        variable: "10u"
+        stat: "mean"
+        stat_freq: "daily"
+        output_freq: "daily"
+        time_step: 60 # in minutes, 60*timestep length in hours TODO: do that automatically
+        save: True
+        checkpoint: True
+        checkpoint_filepath: "/scratch/project_465000454/tmp/a19x/"
+        save_filepath: "/scratch/project_465000454/tmp/a19x/"
+
+    3:
+      GSVREQUEST: #raw data
+        dataset: climate-dt
+        class: d1
+        type: fc
+        expver: "" #low res: a063, high res: a06x, default: hz9n
+        stream: clte
+        activity: baseline
+        resolution: high #standard for low-res
+        generation: 2
+        realization: 1
+        experiment: hist
+        model: IFS-NEMO
+        levtype: "sfc"
+        date: "19900101/to/19900101"
+        time: "0000/to/2300/by/0100"
+        param:  "10v"
+        grid: "0.1/0.1"
+        area: "70.7/19/59.7/31.9"
+        method: nn
+
+      OPAREQUEST:
+        variable: "10v"
+        stat: "mean"
+        stat_freq: "daily"
+        output_freq: "daily"
+        time_step: 60 # in minutes, 60*timestep length in hours TODO: do that automatically
+        save: True
+        checkpoint: True
+        checkpoint_filepath: "/scratch/project_465000454/tmp/a19x/"
+        save_filepath: "/scratch/project_465000454/tmp/a19x/"
+
+    4:
+      GSVREQUEST: #raw data
+        dataset: climate-dt
+        class: d1
+        type: fc
+        expver: "" #low res: a063, high res: a06x, default: hz9n
+        stream: clte
+        activity: baseline
+        resolution: high #standard for low-res
+        generation: 2
+        realization: 1
+        experiment: hist
+        model: IFS-NEMO
+        levtype: "sfc"
+        date: "19900101/to/19900101"
+        time: "0000/to/2300/by/0100"
+        param:  "2t"
+        grid: "0.1/0.1"
+        area: "70.7/19/59.7/31.9"
+        method: nn
+
+      OPAREQUEST:
+        variable: "2t"
+        stat: "max"
+        stat_freq: "daily"
+        output_freq: "daily"
+        time_step: 60 # in minutes, 60*timestep length in hours TODO: do that automatically
+        save: True
+        checkpoint: True
+        checkpoint_filepath: "/scratch/project_465000454/tmp/a19x/"
+        save_filepath: "/scratch/project_465000454/tmp/a19x/"
+
+    5:
+      GSVREQUEST: #raw data
+        dataset: climate-dt
+        class: d1
+        type: fc
+        expver: "" #low res: a063, high res: a06x, default: hz9n
+        stream: clte
+        activity: baseline
+        resolution: high #standard for low-res
+        generation: 2
+        realization: 1
+        experiment: hist
+        model: IFS-NEMO
+        levtype: "sfc"
+        date: "19900101/to/19900101"
+        time: "0000/to/2300/by/0100"
+        param:  "tp"
+        grid: "0.1/0.1"
+        area: "70.7/19/59.7/31.9"
+        method: nn
+
+      OPAREQUEST:
+        variable: "tp"
+        stat: "sum"
+        stat_freq: "daily"
+        output_freq: "daily"
+        time_step: 60 # in minutes, 60*timestep length in hours TODO: do that automatically
+        save: True
+        checkpoint: True
+        checkpoint_filepath: "/scratch/project_465000454/tmp/a19x/"
+        save_filepath: "/scratch/project_465000454/tmp/a19x/"
+
+WILDFIRES_WISE:
+    1:
+      GSVREQUEST: #raw data
+        dataset: climate-dt
+        class: d1
+        type: fc
+        expver: "" #low res: a063, high res: a06x, default: hz9n
+        stream: clte
+        activity: baseline
+        resolution: high #standard for low-res
+        generation: 2
+        realization: 1
+        experiment: hist
+        model: IFS-NEMO
+        levtype: "sfc"
+        date: "19900101/to/19900101"
+        time: "0000/to/2300/by/0100"
+        param:  "2t"
+        grid: "0.1/0.1"
+        area: "71/19/59.5/32"
+        method: nn
+
+      OPAREQUEST:
+        variable: "2t"
+        stat: "mean"
+        stat_freq: "hourly"
+        output_freq: "daily"
+        time_step: 60 # in minutes, 60*timestep length in hours TODO: do that automatically
+        save: True
+        checkpoint: True
+        checkpoint_filepath: "/scratch/project_465000454/tmp/a19x/"
+        save_filepath: "/scratch/project_465000454/tmp/a19x/"
+
+    2:
+      GSVREQUEST: #raw data
+        dataset: climate-dt
+        class: d1
+        type: fc
+        expver: "" #low res: a063, high res: a06x, default: hz9n
+        stream: clte
+        activity: baseline
+        resolution: high #standard for low-res
+        generation: 2
+        realization: 1
+        experiment: hist
+        model: IFS-NEMO
+        levtype: "sfc"
+        date: "19900101/to/19900101"
+        time: "0000/to/2300/by/0100"
+        param:  "2d"
+        grid: "0.1/0.1"
+        area: "71/19/59.5/32"
+        method: nn
+
+      OPAREQUEST:
+        variable: "2d"
+        stat: "mean"
+        stat_freq: "hourly"
+        output_freq: "daily"
+        time_step: 60 # in minutes, 60*timestep length in hours TODO: do that automatically
+        save: True
+        checkpoint: True
+        checkpoint_filepath: "/scratch/project_465000454/tmp/a19x/"
+        save_filepath: "/scratch/project_465000454/tmp/a19x/"
+    3:
+      GSVREQUEST: #raw data
+        dataset: climate-dt
+        class: d1
+        type: fc
+        expver: "" #low res: a063, high res: a06x, default: hz9n
+        stream: clte
+        activity: baseline
+        resolution: high #standard for low-res
+        generation: 2
+        realization: 1
+        experiment: hist
+        model: IFS-NEMO
+        levtype: "sfc"
+        date: "19900101/to/19900101"
+        time: "0000/to/2300/by/0100"
+        param:  "10v"
+        grid: "0.1/0.1"
+        area: "71/19/59.5/32"
+        method: nn
+
+      OPAREQUEST:
+        variable: "10v"
+        stat: "mean"
+        stat_freq: "hourly"
+        output_freq: "daily"
+        time_step: 60 # in minutes, 60*timestep length in hours TODO: do that automatically
+        save: True
+        checkpoint: True
+        checkpoint_filepath: "/scratch/project_465000454/tmp/a19x/"
+        save_filepath: "/scratch/project_465000454/tmp/a19x/"
+    4:
+      GSVREQUEST: #raw data
+        dataset: climate-dt
+        class: d1
+        type: fc
+        expver: "" #low res: a063, high res: a06x, default: hz9n
+        stream: clte
+        activity: baseline
+        resolution: high #standard for low-res
+        generation: 2
+        realization: 1
+        experiment: hist
+        model: IFS-NEMO
+        levtype: "sfc"
+        date: "19900101/to/19900101"
+        time: "0000/to/2300/by/0100"
+        param:  "10u"
+        grid: "0.1/0.1"
+        area: "71/19/59.5/32"
+        method: nn
+
+      OPAREQUEST:
+        variable: "10u"
+        stat: "mean"
+        stat_freq: "hourly"
+        output_freq: "daily"
+        time_step: 60 # in minutes, 60*timestep length in hours TODO: do that automatically
+        save: True
+        checkpoint: True
+        checkpoint_filepath: "/scratch/project_465000454/tmp/a19x/"
+        save_filepath: "/scratch/project_465000454/tmp/a19x/"
+    5:
+      GSVREQUEST: #raw data
+        dataset: climate-dt
+        class: d1
+        type: fc
+        expver: "" #low res: a063, high res: a06x, default: hz9n
+        stream: clte
+        activity: baseline
+        resolution: high #standard for low-res
+        generation: 2
+        realization: 1
+        experiment: hist
+        model: IFS-NEMO
+        levtype: "sfc"
+        date: "19900101/to/19900101"
+        time: "0000/to/2300/by/0100"
+        param:  "tp"
+        grid: "0.1/0.1"
+        area: "71/19/59.5/32"
+        method: nn
+
+      OPAREQUEST:
+        variable: "tp"
+        stat: "mean"
+        stat_freq: "hourly"
+        output_freq: "daily"
+        time_step: 60 # in minutes, 60*timestep length in hours TODO: do that automatically
+        save: True
+        checkpoint: True
+        checkpoint_filepath: "/scratch/project_465000454/tmp/a19x/"
+        save_filepath: "/scratch/project_465000454/tmp/a19x/"

@@ -1,0 +1,10 @@
+GSV:
+  VERSION: "2.9.7"
+  # GSV_WEIGHTS_PATH is needed, even if you do not really take advantage of this feature.
+  WEIGHTS_PATH: "%CONFIGURATION.HPC_PROJECT_DIR%/gsv_files/gsv_weights"
+  # GSV_TEST_FILES is only needed if you want to run the pytest suite for GSV.
+  # We could omit this in the workflow calls.
+  TEST_FILES: "%CONFIGURATION.HPC_PROJECT_DIR%/gsv_files/gsv_test_files"
+  # GRID_DEFINITION_PATH is needed for reading native grids like tco, eORCA...
+  # If we are only reading healpix in the workflow (or regular_ll in case of the reduced output) maybe it's not necessary.
+  DEFINITION_PATH: "%CONFIGURATION.HPC_PROJECT_DIR%/gsv_files/grid_definitions"

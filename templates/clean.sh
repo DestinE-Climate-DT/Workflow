@@ -2,59 +2,38 @@
 
 # This script is used to clean up data and log files for a specific job chunk in a workflow.
 
-# INTERFACE
-# The script accepts the following parameters:
-# - HPC_PROJ: The path to the current HPC project directory.
-# - EXPID: The experiment ID.
-# - HPCROOTDIR: The root directory of the HPC system.
-# - START_DATE: The start date of the job chunk.
-# - CURRENT_ARCH: The current architecture.
-# - PROJDEST: The destination directory for the project.
-# - FDB_PROD: The current FDB production directory.
-# - FDB_DIR: The current FDB directory.
-# - PRODUCTION: Flag indicating if the job is in production mode.
-# - HPC_FDB_HOME: The current FDB production directory.
-# - CLEAN_JOBNAME: The name of the clean job.
-# - CHUNK_END_IN_DAYS: The number of days until the end of the chunk.
-# - CHUNKSIZE: The size of each chunk.
-# - CHUNKSIZEUNIT: The unit of the chunk size (e.g., day, month, year).
-# - CHUNK: The current chunk number.
-# - MODEL_NAME: The name of the model being used.
-# - RAPS_EXPERIMENT: The RAPS experiment configuration.
-# - CHUNK_SECOND_TO_LAST_DATE: The second-to-last date of the chunk.
+# HEADER
 
-# The script performs the following steps:
-# 1. Sets up the necessary environment variables and directories.
-# 2. Loads FDB modules and FDB5 configuration file.
-# 3. Checks the model being used and loads DGOV keys.
-# 4. Converts the YAML profile to a flat request file.
-# 5. Purges data using the FDB purge command.
-# 6. Compresses and archives job log files for the current chunk.
-# 7. Compresses and archives old rundirs.
-
-# INTERFACE
-
-HPC_PROJ=${1:-%CURRENT_HPC_PROJECT_DIR%}
+HPC_PROJECT=${1:-%CONFIGURATION.HPC_PROJECT_DIR%}
 EXPID=${2:-%DEFAULT.EXPID%}
 HPCROOTDIR=${3:-%HPCROOTDIR%}
 START_DATE=${4:-%SDATE%}
 CURRENT_ARCH=${5:-%CURRENT_ARCH%}
-PROJDEST=${6:-%PROJECT.PROJECT_DESTINATION%}
-FDB_PROD=${7:-%CURRENT_FDB_PROD%}
-FDB_DIR=${8:-%CURRENT_FDB_DIR%}
-PRODUCTION=${7:-%RUN.PRODUCTION%}
-HPC_FDB_HOME=${8:-%CURRENT_FDB_PROD%}
-CLEAN_JOBNAME=${9:-%JOBNAME%}
-CHUNK_START_DATE=${10:-%CHUNK_START_DATE%}
-CHUNK_END_IN_DAYS=${11:-%CHUNK_END_IN_DAYS%}
-CHUNKSIZE=${12:-%EXPERIMENT.CHUNKSIZE%}
-CHUNKSIZEUNIT=${13:-%EXPERIMENT.CHUNKSIZEUNIT%}
-CHUNK=${14:-%CHUNK%}
-MODEL_NAME=${15:-%MODEL.NAME%}
-RAPS_EXPERIMENT=${16:-%CONFIGURATION.RAPS_EXPERIMENT%}
-CHUNK_SECOND_TO_LAST_DATE=${17:-%CHUNK_SECOND_TO_LAST_DATE%}
+FDB_HOME=${6:-%REQUEST.FDB_HOME%}
+CLEAN_JOBNAME=${7:-%JOBNAME%}
+CHUNK_START_DATE=${8:-%CHUNK_START_DATE%}
+CHUNK_END_IN_DAYS=${9:-%CHUNK_END_IN_DAYS%}
+CHUNKSIZE=${10:-%EXPERIMENT.CHUNKSIZE%}
+CHUNKSIZEUNIT=${11:-%EXPERIMENT.CHUNKSIZEUNIT%}
+CHUNK=${12:-%CHUNK%}
+MODEL_NAME=${13:-%MODEL.NAME%}
+CHUNK_SECOND_TO_LAST_DATE=${14:-%CHUNK_SECOND_TO_LAST_DATE%}
+EXPERIMENT=${15:-%REQUEST.EXPERIMENT%}
+ACTIVITY=${16:-%REQUEST.ACTIVITY%}
+EXPVER=${17:-%REQUEST.EXPVER%}
+GENERATION=${18:-%REQUEST.GENERATION%}
+SCRATCH_DIR=${19:-%CURRENT_SCRATCH_DIR%}
+HPC_CONTAINER_DIR=${20:-%CONFIGURATION.CONTAINER_DIR%}
+GSV_VERSION=${21:-%GSV.VERSION%}
+LIBDIR=${22:-%CONFIGURATION.LIBDIR%}
+SCRIPTDIR=${23:-%CONFIGURATION.SCRIPTDIR%}
+MEMBER=${24:-%MEMBER%}
+MEMBER_LIST=${25:-%EXPERIMENT.MEMBERS%}
 
-LIBDIR="${HPCROOTDIR}/${PROJDEST}"/lib
+# END_HEADER
+
+set -xuve
+
 HPC=$(echo ${CURRENT_ARCH} | cut -d- -f1)
 
 LOG_DIR="${HPCROOTDIR}/LOG_${EXPID}"
@@ -62,48 +41,56 @@ LOG_DIR="${HPCROOTDIR}/LOG_${EXPID}"
 # LOAD FDB MODULES & FDB5 CONFIG FILE
 . "${LIBDIR}/${HPC}"/config.sh
 source "${LIBDIR}"/common/util.sh
-load_environment_gsv ${FDB_DIR} ${EXPID}
-
-if [ ${PRODUCTION,,} = "true" ]; then
-    FDB_DIR_HEALPIX="${FDB_PROD}"
-    FDB_DIR_LATLON="${FDB_PROD}/latlon"
-    FDB_DIR_NATIVE="${FDB_PROD}/native"
-    EXPID_FDB="0001"
-    unset FDB5_CONFIG_FILE
-    export FDB_HOME=${HPC_FDB_HOME}
-else
-    FDB_DIR_NATIVE="${FDB_DIR}/${EXPID}/fdb/NATIVE_grids"
-    FDB_DIR_HEALPIX="${FDB_DIR}/${EXPID}/fdb/HEALPIX_grids"
-    FDB_DIR_LATLON="${FDB_DIR}/${EXPID}/fdb/REGULARLL_grids"
-    EXPID_FDB=${EXPID}
-    export FDB5_CONFIG_FILE="${FDB_DIR_HEALPIX}/etc/fdb/config.yaml"
-fi
 
 # Run FDB purge
-profile_file="${LIBDIR}/runscript/FDB/general_request.yaml"
+profile_file="${SCRIPTDIR}/FDB/general_request.yaml"
 FLAT_REQ_NAME="$(basename $profile_file | cut -d. -f1)_${CHUNK}_request.flat"
 
-# Check model being used and load DGOV keys
-if [ ${MODEL_NAME} == "icon" ]; then
-    # Get ICON workflow configuration
-    export EXPERIMENT="%SIMULATION.DATA_GOV.EXPERIMENT%"
-    export ACTIVITY="%SIMULATION.DATA_GOV.ACTIVITY%"
+CLEAN_DIR=${HPCROOTDIR}/clean_requests/
+mkdir -p ${CLEAN_DIR}
 
-elif [ ${MODEL_NAME%%-*} == "ifs" ]; then
-    # Get RAPS configuration
-    export_MULTIO_variables "${RAPS_EXPERIMENT}"
-    export EXPERIMENT="${MULTIO_EXPERIMENT}"
-    export ACTIVITY="${MULTIO_ACTIVITY}"
-else
-    echo "Error: Incorrect model name"
-    exit 1
-fi
+export FDB_HOME=${FDB_HOME}
+
+# lib/common/util.sh (get_member_number) (auto generated comment)
+MEMBER_NUMBER=$(get_member_number "${MEMBER_LIST}" ${MEMBER})
 
 # Convert YAML profile to flat request file
-python "${LIBDIR}/runscript/FDB/yaml_to_flat_request.py" --file="${profile_file}" --expver="${EXPID_FDB}" --startdate="${START_DATE}" --experiment="${EXPERIMENT}" --enddate="${CHUNK_SECOND_TO_LAST_DATE}" --chunk="${CHUNK}" --model="${MODEL_NAME^^}" --activity="${ACTIVITY}" --omit-keys="time,levelist,param,levtype,type"
-
-# Purge data using FDB purge command
-fdb purge --ignore-no-data --minimum-keys class,dataset,experiment,activity,expver,model,generation,realization,stream,date "$(<${FLAT_REQ_NAME})"
+# lib/LUMI/config.sh (load_singularity) (auto generated comment)
+# lib/MARENOSTRUM5/config.sh (load_singularity) (auto generated comment)
+load_singularity
+singularity exec --cleanenv --no-home \
+    --env "FDB_HOME=${FDB_HOME}" \
+    --env "SCRIPTDIR=${SCRIPTDIR}" \
+    --env "EXPVER=${EXPVER}" \
+    --env "CHUNK_START_DATE=${CHUNK_START_DATE}" \
+    --env "CHUNK_SECOND_TO_LAST_DATE=${CHUNK_SECOND_TO_LAST_DATE}" \
+    --env "EXPERIMENT=${EXPERIMENT}" \
+    --env "CHUNK=${CHUNK}" \
+    --env "MODEL_NAME=${MODEL_NAME}" \
+    --env "ACTIVITY=${ACTIVITY}" \
+    --env "GENERATION=${GENERATION}" \
+    --env "REALIZATION=${MEMBER_NUMBER}" \
+    --env "FLAT_REQ_NAME=${FLAT_REQ_NAME}" \
+    --env "profile_file=${profile_file}" \
+    --env "CLEAN_DIR=${CLEAN_DIR}" \
+    --bind "$(realpath ${HPCROOTDIR})" \
+    --bind "$(realpath ${FDB_HOME})" \
+    --bind "$(realpath ${SCRATCH_DIR})" \
+    --bind "$(realpath ${CLEAN_DIR})" \
+    "${HPC_CONTAINER_DIR}"/gsv/gsv_${GSV_VERSION}.sif \
+    bash -c \
+    '
+    set -xuve
+    cd ${CLEAN_DIR}
+    python3 "${SCRIPTDIR}/FDB/yaml_to_flat_request.py" \
+    --file="${profile_file}" --expver="${EXPVER}" --startdate="${CHUNK_START_DATE}" \
+    --experiment="${EXPERIMENT}" --generation="${GENERATION}" \
+    --realization="${REALIZATION}" --enddate="${CHUNK_SECOND_TO_LAST_DATE}" \
+    --chunk="${CHUNK}" --model="${MODEL_NAME^^}" --activity="${ACTIVITY}" \
+    --request_name="${FLAT_REQ_NAME}" --omit-keys="time,levelist,param,levtype,type"
+    # Purge data using FDB purge command
+    fdb purge --doit --ignore-no-data --minimum-keys class,dataset,experiment,activity,expver,model,generation,realization,stream,date "$(<${FLAT_REQ_NAME})"
+    '
 
 # Compress and archive job log files for the current chunk
 SIM_JOBNAME=${CLEAN_JOBNAME//CLEAN/SIM}

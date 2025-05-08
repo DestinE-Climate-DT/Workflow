@@ -1,0 +1,36 @@
+{
+  "$id": "schema:workflow/experiment",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Experiment",
+  "description": "Schema for the Experiment section of the workflow",
+  "type": "object",
+  "properties": {
+    "DATELIST": {
+      "type": "integer",
+      "description": "List of dates to run the simulation."
+    },
+    "MEMBERS": {
+      "type": "string",
+      "description": "Name of ensemble members. (Example: fc0 fc1 fc2)"
+    },
+    "CHUNKSIZEUNIT": {
+      "type": "string",
+      "enum": ["hour", "day", "month", "year"],
+      "description": "Unit of the chunk size."
+    },
+    "CHUNKSIZE": {
+      "type": "integer",
+      "description": "Size of the chunk, in CHUNKSIZEUNITs."
+    },
+    "NUMCHUNKS": {
+      "type": "integer",
+      "description": "Number of chunks to run."
+    },
+    "CALENDAR": {
+      "type": "string",
+      "enum": ["noleap", "standard"],
+      "description": "Calendar to use."
+    }
+  },
+  "required": ["DATELIST", "CHUNKSIZEUNIT", "CHUNKSIZE", "NUMCHUNKS", "CALENDAR"]
+}

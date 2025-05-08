@@ -1,0 +1,55 @@
+RUN:
+  CYCLE: "E-25.1"
+MODEL:
+  ROOT_PATH: "%CONFIGURATION.HPC_PROJECT_DIR%/%RUN.CYCLE%/models/%MODEL.NAME%"
+  PATH: "%MODEL.ROOT_PATH%/%MODEL.VERSION%/make/%CURRENT_HPCARCH_lowercase%-%RUN.ENVIRONMENT%"
+  INPUTS: "%MODEL.ROOT_PATH%/%MODEL.VERSION%/inidata"
+CONFIGURATION:
+  CONTAINER_DIR: "%CONFIGURATION.HPC_PROJECT_DIR%/%RUN.CYCLE%/containers"
+PLATFORMS:
+  MARENOSTRUM5:
+    PROJECT: ehpc123
+    HPCARCH_short: "MN5-e25.1"
+    CATALOG_NAME: "climatedt-e25.1"
+    DATA_DIR: "/gpfs/scratch/ehpc01/input_data/"
+  MARENOSTRUM5-login:
+    PROJECT: ehpc123
+    HPCARCH_short: "MN5-e25.1"
+    CATALOG_NAME: "climatedt-e25.1"
+  LUMI:
+    PROJECT: project_465001542
+    HPCARCH_short: "lumi-e25.1"
+    CATALOG_NAME: "climatedt-e25.1"
+    DATA_DIR: "/appl/local/climatedt/input_data/"
+  LUMI-login:
+    PROJECT: project_465001542
+    HPCARCH_short: "lumi-e25.1"
+    CATALOG_NAME: "climatedt-e25.1"
+AQUA:
+  FIXER_NAME: "climatedt-phase2-production"
+  BUCKET: "aqua-web-operational"
+  REPOSITORY: "DestinE-Climate-DT/aqua-web-operations"
+APP:
+  OUTPATH: "%HPCROOTDIR%/output"
+REQUEST:
+  EXPVER: "0001"
+  CLASS: "d1"
+  FDB_HOME: "%CURRENT_FDB_PROD%"
+  INFO_FILE_NAME: "%HPCROOTDIR%/%DEFAULT.EXPID%.yml"
+APP_AUX_IN_DATA_DIR: "%CURRENT_PROD_APP_AUX_IN_DATA_DIR%"
+HYDROLAND:
+  IN_DATA_VERSION: "1.0"
+HYDROMET:
+  IN_DATA_VERSION: "1.0"
+WILDFIRES_WISE:
+  IN_DATA_VERSION: "1.0"
+ENERGY_OFFSHORE:
+  IN_DATA_VERSION: "1.0"
+ENERGY_ONSHORE:
+  IN_DATA_VERSION: "1.0"
+WILDFIRES_FWI:
+  IN_DATA_VERSION: "1.0"
+OBSALL:
+  IN_DATA_VERSION: "1.0"
+DATA:
+  IN_DATA_VERSION: "dev"

@@ -3,11 +3,19 @@ JOBS:
     FILE: templates/wipe.sh
     PLATFORM: '%DEFAULT.HPCARCH%'
     PARTITION: "%CURRENT_APP_PARTITION%"
-    DEPENDENCIES: TRANSFER
+    DEPENDENCIES: TRANSFER WIPE-1
     RUNNING: chunk
     WALLCLOCK: '00:30'
     NODES: 1
     PROCESSORS: 1
     TASKS: 1
     THREADS: 1
-
+    CHECK: on_submission
+EXPERIMENT:
+  SPLITSIZEUNIT: day # default CHUNKSIZEUNIT-1 (month-1 == day)
+  # Split size. NUMERIC: 4, 6, 12
+  SPLITSIZE: 2
+  # Split policy. STRING: flexible, strict
+  SPLITPOLICY: flexible
+CONFIGURATION:
+  WIPE_DOIT: "False"

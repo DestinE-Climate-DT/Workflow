@@ -1,0 +1,14 @@
+EXP1:
+  CREATE:
+    DESCRIPTION: Testing ifs-nemo-projection-tco2559
+    HPC: marenostrum5
+    GIT_AS_CONF: conf/bootstrap/
+    GIT_REPO: https://earth.bsc.es/gitlab/digital-twins/de_340/workflow
+    GIT_BRANCH: mock
+EXP2:
+  CREATE:
+    DESCRIPTION: Testing ifs-nemo-projection-tco2559
+    HPC: lumi
+    GIT_AS_CONF: conf/bootstrap/
+    GIT_REPO: https://earth.bsc.es/gitlab/digital-twins/de_340/workflow
+    GIT_BRANCH: mock

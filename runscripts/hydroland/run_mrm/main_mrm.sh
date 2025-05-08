@@ -1,0 +1,34 @@
+#!/bin/bash
+
+set -xuve
+
+# passing needed arguments
+CURRENT_MHM_DIR=${1}
+CURRENT_MRM_DIR=${2}
+MRM_RESTART_DIR=${3}
+APP_OUTPATH=${4}
+INI_DATE=${5}
+END_DATE=${6}
+NEXT_DATE=${7}
+STAT_FREQ=${8}
+INIT_FILES=${9}
+FORCINGS_DIR=${10}
+MHM_FLUXES_DIR=${11}
+MRM_FLUXES_DIR=${12}
+HYDROLAND_DIR=${13}
+MHM_OUT_FILE=${14}
+MRM_OUT_FILE=${15}
+HYDROLAND_OPA=${16}
+PRE=${17}
+RESOLUTION=${18}
+
+cp -r parallel_mrm.py ${CURRENT_MRM_DIR}/parallel_mrm.py
+
+# running mRM
+bash -e run_mrm.sh ${CURRENT_MHM_DIR} ${CURRENT_MRM_DIR} ${MRM_RESTART_DIR} \
+    ${INI_DATE} ${END_DATE} ${NEXT_DATE} ${STAT_FREQ} ${INIT_FILES} \
+    ${FORCINGS_DIR} ${MHM_FLUXES_DIR} ${HYDROLAND_DIR} ${MHM_OUT_FILE} ${RESOLUTION}
+# postprocesing of data for mRM
+bash -e mRM_postprocessor.sh ${INI_DATE} ${END_DATE} ${NEXT_DATE} ${APP_OUTPATH} \
+    ${CURRENT_MRM_DIR} ${MRM_RESTART_DIR} ${MRM_FLUXES_DIR} ${MRM_OUT_FILE} \
+    ${HYDROLAND_DIR} ${HYDROLAND_OPA} ${PRE} ${STAT_FREQ}

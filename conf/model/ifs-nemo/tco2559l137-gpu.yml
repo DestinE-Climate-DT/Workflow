@@ -1,21 +1,29 @@
 CONFIGURATION:
   DQC_PROFILE: production
+  DATA_PORTFOLIO: production
+  DQC_WALLCLOCK: "00:40"
   IFS:
     GTYPE: tco
     RESOL: 2559
     LEVELS: 137
     EXPVER: hzfy
     LABEL: LWDA
-
     IO_NODES: 40
-
 PLATFORMS:
   LUMI:
     TYPE: slurm
     PARTITION: "standard-g"
+    MAX_WALLCLOCK: "48:00"
+    MEMORY: "480G"
     NODES: 256
     TASKS: 8
     THREADS: 7
     PROCESSORS_PER_NODE: 64
-    CUSTOM_DIRECTIVES: "['#SBATCH --gpus-per-node=8', '#SBATCH --hint=nomultithread', '#SBATCH --exclusive', '#SBATCH --mem=0']"
- 
+JOBS:
+  SIM:
+    EXCLUSIVE: "True"
+    CUSTOM_DIRECTIVES: "['#SBATCH --gpus-per-node=8', '#SBATCH --hint=nomultithread']"
+REQUEST:
+  RESOLUTION: high
+AQUA:
+  RESOLUTION_ATM: hpz7

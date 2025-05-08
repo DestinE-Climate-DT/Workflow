@@ -5,35 +5,44 @@
 
 set -xuve
 
-# Interface
+# HEADER
+
 HPCROOTDIR=${1:-%HPCROOTDIR%}
 PROJDEST=${2:-%PROJECT.PROJECT_DESTINATION%}
-MODEL=${3:-%MODEL.NAME%}
-MODEL_SOURCE=${4:-%MODEL.SOURCE%}
-MODEL_BRANCH=${5:-%MODEL.BRANCH%}
-CURRENT_ARCH=${6:-%CURRENT_ARCH%}
-PRECOMP_MODEL_PATH=${7:-%MODEL.PRECOMP_MODEL_PATH%}
-EXPID=${9:-%DEFAULT.EXPID%}
-DATELIST=${10:-%EXPERIMENT.DATELIST%}
-MEMBERS=${11:-%EXPERIMENT.MEMBERS%}
-CHUNK=${12:-%CHUNK%}
-CHUNK_START_DATE=${13:-%CHUNK_START_DATE%}
-CHUNK_END_DATE=${13:-%CHUNK_END_DATE%}
-SPLIT=${14:-%SPLIT%}
-READ_EXPID=${15:-%APP.READ_EXPID%}
-FDB_DIR=${16:-%CURRENT_FDB_DIR%}
-PRODUCTION=${17:-%RUN.PRODUCTION%}
-WORKFLOW=${18:-%RUN.WORKFLOW%}
-HPC_FDB_HOME=${15:-%CURRENT_FDB_PROD%}
-RAPS_EXPERIMENT=${16:-%CONFIGURATION.RAPS_EXPERIMENT%}
-OPA_NAMES=${21:-%RUN.OPA_NAMES%}
-APP_NAMES=${21:-%RUN.APP_NAMES%}
-OUTDIR=${15:-%APP.OUTPATH%}
-READ_FROM_DATABRIDGE=${16:-%APP.READ_FROM_DATABRIDGE%}
-DATABRIDGE_FDB_HOME=${17:-%CURRENT_DATABRIDGE_FDB_HOME%}
+CURRENT_ARCH=${3:-%CURRENT_ARCH%}
+EXPID=${4:-%DEFAULT.EXPID%}
+DATELIST=${5:-%EXPERIMENT.DATELIST%}
+MEMBER_LIST=${6:-%EXPERIMENT.MEMBERS%}
+CHUNK=${7:-%CHUNK%}
+CHUNK_START_DATE=${8:-%CHUNK_START_DATE%}
+CHUNK_END_DATE=${9:-%CHUNK_END_DATE%}
+SPLIT=${10:-%SPLIT%}
+EXPVER=${11:-%REQUEST.EXPVER%}
+RUN_TYPE=${12:-%RUN.TYPE%}
+WORKFLOW=${13:-%RUN.WORKFLOW%}
+OPA_NAMES=${14:-%RUN.OPA_NAMES%}
+APP_NAMES=${15:-%RUN.APP_NAMES%}
+OUTDIR=${16:-%APP.OUTPATH%}
+READ_FROM_DATABRIDGE=${17:-%APP.READ_FROM_DATABRIDGE%}
+DATABRIDGE_FDB_HOME=${18:-%CURRENT_DATABRIDGE_FDB_HOME%}
+SCRATCH=${19:-%CURRENT_SCRATCH_DIR%}
+PROJECT=${20:-%CURRENT_PROJECT%}
+HPC_PROJECT=${21:-%CONFIGURATION.HPC_PROJECT_DIR%}
+HPC_SCRATCH=${22:-%CONFIGURATION.PROJECT_SCRATCH%}
+HPC_CONTAINER_DIR=${23:-%CONFIGURATION.CONTAINER_DIR%}
+FDB_HOME=${24:-%REQUEST.FDB_HOME%}
+MEMBER=${25:-%MEMBER%}
+LIBDIR=${26:-%CONFIGURATION.LIBDIR%}
+SCRIPTDIR=${27:-%CONFIGURATION.SCRIPTDIR%}
+GSV_VERSION=${28:-%GSV.VERSION%}
+HPC_SCRATCH=${29:-%CONFIGURATION.PROJECT_SCRATCH%}
+OPERATIONAL_PROJECT_SCRATCH=${30:-%CONFIGURATION.OPERATIONAL_PROJECT_SCRATCH%}
+DEVELOPMENT_PROJECT_SCRATCH=${31:-%CONFIGURATION.DEVELOPMENT_PROJECT_SCRATCH%}
 
-LIBDIR="${HPCROOTDIR}"/"${PROJDEST}"/lib
-HPC=$(echo "${CURRENT_ARCH}" | cut -d- -f1)
+# END_HEADER
+
+HPC=$(echo "${CURRENT_ARCH}" | cut -d- -f1) # Value of the HPC variable based on the current architecture
+LOGDIR=${HPCROOTDIR}/LOG_${EXPID}
 
 #temporal solution
 #ensure correct format of the list:
@@ -41,54 +50,14 @@ HPC=$(echo "${CURRENT_ARCH}" | cut -d- -f1)
 list_length=$(echo "${OPA_NAMES}" | tr -cd ',' | wc -c)
 list_length=$((list_length + 1))
 
-if [ "${CHUNK}" != "1" ]; then
-    if [ "${SPLIT}" = "1" ]; then
-        # Assuming list is an array or a list of items
+# Check that there are no empty spaces between the app names:
+APP_NAMES="${APP_NAMES// /}"
 
-        while [ "$(find "${OUTDIR}" -type f -name "green_flag_*" | wc -l)" -ne $list_length ]; do
-            sleep 1
-        done
+source "${LIBDIR}"/common/util.sh
+# lib/common/util.sh (get_member_number) (auto generated comment)
+get_member_number "${MEMBER_LIST}" ${MEMBER}
 
-        # Your code here for when the condition is true
-        echo "Number of green flags is equal to the number of OPAs."
-        rm "${OUTDIR}"/green_flag_*
-
-    fi
-fi
-
-if [ "${PRODUCTION,,}" == "true" ]; then
-    READ_EXPID="0001"
-    echo "READ_EXPID is set to the production id, that is ${READ_EXPID}"
-elif [ "${WORKFLOW}" == "end-to-end" ]; then
-    READ_EXPID="$EXPID"
-    echo "READ_EXPID is set to end-to-end id, that is ${READ_EXPID}"
-fi
-
-#####################################################
-# Skip DN if date not real
-#
-#
-#
-#
-#####################################################
-check_date() {
-    # Given dates in the format YYYY-MM-DD
-    start_date="$1"
-    end_date="$2"
-    check_date="$3"
-
-    # Convert dates to timestamps
-    start_timestamp=$(date -d "$start_date" +%s)
-    end_timestamp=$(date -d "$end_date" +%s)
-    check_timestamp=$(date -d "$check_date" +%s)
-
-    # Check if the date is between the start and end dates
-    if [ "$check_timestamp" -ge "$start_timestamp" ] && [ "$check_timestamp" -le "$end_timestamp" ]; then
-        echo "The date is between $start_date and $end_date. Date OK."
-    else
-        echo "The date is outside the chunk range."
-    fi
-}
+REALIZATION=${MEMBER_NUMBER}
 
 #run dn
 #####################################################
@@ -99,98 +68,65 @@ check_date() {
 #   REQUESTFILE
 ######################################################
 function run_DN() {
-    #move parsed data request
-    cd "${LIBDIR}"/runscript/
-    if [ "${WORKFLOW}" == "end-to-end" ]; then
-        python run_dn.py -request "$1" -chunk "$2" -split_day "$3" -split "$4" -expid "$5" -app_names "$6" -model "$7" -activity "$8" -experiment "$9"
-    elif [ "${WORKFLOW}" == "apps" ] && [ "${READ_EXPID}" == "a0h3" ]; then #TODO: read fields from READ_EXPERIMENT config file. Possible better inside the python sctipt.
-        python run_dn.py -request "$1" -chunk "$2" -split_day "$3" -split "$4" -expid "$5" -app_names "$6" -model "IFS-NEMO" -activity "CMIP6" -experiment "hist"
+    # move parsed data request
+    cd "${SCRIPTDIR}/dn/" || exit
+    singularity exec \
+        --cleanenv \
+        --no-home \
+        --bind "${SCRIPTDIR}/dn/" \
+        --bind "${FDB_HOME}" \
+        --bind "${DEVELOPMENT_PROJECT_SCRATCH}" \
+        --bind "${OPERATIONAL_PROJECT_SCRATCH}" \
+        --bind "${LOGDIR}/" \
+        --env FDB_HOME=${FDB_HOME} \
+        --env request="$1" \
+        --env chunk="$2" \
+        --env split="$3" \
+        --env expid="$4" \
+        --env app_names="$5" \
+        --env run_type="$6" \
+        --env realization="$7" \
+        --env WORKFLOW="$8" \
+        --env datelist="$9" \
+        --env "PYTHONNOUSERSITE=1" \
+        --env LOGDIR="${LOGDIR}" \
+        $HPC_CONTAINER_DIR/gsv/gsv_${GSV_VERSION}.sif \
+        bash -c \
+        '
+    if [ "${WORKFLOW}" == "end-to-end" ] || [ "${WORKFLOW}" == "model" ]; then
+        python3 run_dn.py --request $request --chunk $chunk \
+        --split $split --expid $expid --app_names $app_names --run_type $run_type \
+        --realization $realization --logdir $LOGDIR --datelist $datelist
     else
-        python run_dn.py -request "$1" -chunk "$2" -split_day "$3" -split "$4" -expid "$5" -app_names "$6"
+        python3 run_dn.py --request $request --chunk $chunk \
+        --split $split --expid $expid --app_names $app_names --logdir $LOGDIR --datelist $datelist
     fi
-}
-
-#install gsv
-#####################################################
-# installs gsv interface
-# Globals:
-#       HPCROOTDIR
-#       PROJDEST
-# Arguments:
-######################################################
-function install_GSV_INTERFACE() {
-    # install opa from local clone into the project
-    cd "${HPCROOTDIR}"/"${PROJDEST}"/gsv_interface/
-    pip install .
-}
-
-# split day
-#####################################################
-# gets split day given an inidate and current split, taking 1Split=1Hour
-# Globals:
-#       HPCROOTDIR
-#       PROJDEST
-# Arguments: CHUNK_INI_DATE SPLITNUMBER
-######################################################
-function get_SPLIT_DATE() {
-    # Original string
-    date_string=$1
-
-    # Transform string to date format
-    formatted_date=$(date -d "$date_string" +%Y%m%d)
-
-    # Add $2 days to the chunk ini date
-    new_date=$(date -d "$formatted_date $(($2 - 1)) day" "+%Y%m%d")
-
-    SPLIT_DATE=${new_date}
-
-    export SPLIT_DATE
-
-    echo "Original date: $formatted_date"
-    echo "Date corresponding to split $2: $new_date"
+    '
 }
 
 # source libraries
 source "${LIBDIR}"/"${HPC}"/config.sh
 source "${LIBDIR}"/common/util.sh
 
-#load env # TODO : installation is happening twice (REMOTE SETUP also)
-load_dirs
-load_environment_gsv "${FDB_DIR}" "${READ_EXPID}"
-
-if [ "${PRODUCTION,,}" = "true" ]; then
-    unset FDB5_CONFIG_FILE
-    export FDB_HOME=${HPC_FDB_HOME}
-fi
-
 #declare filename for the gsv request
-REQUESTFILE=${HPCROOTDIR}/LOG_${EXPID}/mother_request_${DATELIST}_${MEMBERS}_${CHUNK}_${SPLIT}_DN
-
-# Get date of the current split
-get_SPLIT_DATE "${CHUNK_START_DATE}" "${SPLIT}"
-
-# check if date is valid
-check_date "${CHUNK_START_DATE}" "${CHUNK_END_DATE}" "${SPLIT_DATE}"
+REQUESTFILE=${LOGDIR}/mother_request_${DATELIST}_${MEMBER}_${CHUNK}_${SPLIT}_DN
 
 #run DN request
 
 if [ "${READ_FROM_DATABRIDGE,,}" == "true" ]; then
-    unset FDB5_CONFIG_FILE
-    # temporal
-    export PATH=/users/lrb_465000454_fdb/mars/versions/6.99.1.3/bin:$PATH
-    export LD_LIBRARY_PATH=/users/lrb_465000454_fdb/mars/versions/6.99.1.3/lib64:$LD_LIBRARY_PATH
     export FDB_HOME=${DATABRIDGE_FDB_HOME}
     sed -i 's/:\(.*\)/:\L\1/g' ${REQUESTFILE}
-fi
-
-if [ "${WORKFLOW}" != "apps" ]; then
-    export_MULTIO_variables "${RAPS_EXPERIMENT}"
 else
-    MULTIO_ACTIVITY=""
-    MULTIO_EXPERIMENT=""
+    export FDB_HOME=${FDB_HOME}
 fi
 
-echo "DEBUG :: "
-fdb-info --all
+# load singularity
+# lib/LUMI/config.sh (load_singularity) (auto generated comment)
+# lib/MARENOSTRUM5/config.sh (load_singularity) (auto generated comment)
+load_singularity
 
-run_DN "${REQUESTFILE}" "${CHUNK}" "${SPLIT_DATE}" "${SPLIT}" "${READ_EXPID}" "${APP_NAMES}" "${MODEL^^}" "${MULTIO_ACTIVITY}" "${MULTIO_EXPERIMENT}"
+# lib/common/util.sh (print_data_gov) (auto generated comment)
+print_data_gov
+
+run_DN "${REQUESTFILE}" "${CHUNK}" "${SPLIT}" "${EXPVER}" \
+    "${APP_NAMES}" "${RUN_TYPE,,}" "${REALIZATION}" "${WORKFLOW}" "${DATELIST}"

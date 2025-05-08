@@ -4,23 +4,26 @@ CONFIGURATION:
     RESOL: 79
     LEVELS: 137
     LABEL: LWDA
-    IO_TASKS: 4
+    IO_TASKS: "%CURRENT_IFS_IO_TASKS%"
   FESOM:
-    IO_TASKS: 4
-
-PLATFORMS: 
+    IO_TASKS: "%CURRENT_FESOM_IO_TASKS%"
+  DQC_WALLCLOCK: "00:40"
+PLATFORMS:
   LUMI:
     TYPE: slurm
-    PARTITION: "ju-strategic-g"
+    PARTITION: "standard-g"
     MAX_WALLCLOCK: "00:30"
     NODES: 2
     TASKS: 8
     THREADS: 7
     PROCESSORS_PER_NODE: 64
-    CUSTOM_DIRECTIVES: "['#SBATCH --gpus-per-node=8', '#SBATCH --hint=nomultithread', '#SBATCH --exclusive', '#SBATCH --mem=0']"
-
-JOBS:
-  DQC:
-    WALLCLOCK: "00:30"
-
-
+    EXCLUSIVE: "True"
+    CUSTOM_DIRECTIVES: "['#SBATCH --gpus-per-node=8', '#SBATCH --hint=nomultithread', '#SBATCH --mem=0']"
+    # I/O
+    IFS_IO_TASKS: 4
+    FESOM_IO_TASKS: 4
+REQUEST:
+  RESOLUTION: standard
+AQUA:
+  RESOLUTION_ATM: hpz5
+  RESOLUTION_OCE: hpz5

@@ -4,12 +4,15 @@
 
 set -xuve
 
-# Interface
+# HEADER
+
 HPCROOTDIR=${1:-%HPCROOTDIR%}
 ROOTDIR=${2:-%ROOTDIR%}
 HPCUSER=${3:-%HPCUSER%}
 HPCHOST=${4:-%HPCHOST%}
 PROJDEST=${5:-%PROJECT.PROJECT_DESTINATION%}
+
+# END_HEADER
 
 #####################################################
 # Synchronizes file or directory to remote

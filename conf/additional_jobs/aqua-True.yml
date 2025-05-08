@@ -1,0 +1,65 @@
+JOBS:
+  LRA_GENERATOR:
+    DEPENDENCIES: SIM DQC_BASIC
+    FILE: templates/aqua/lra_generator.sh,templates/aqua/only_lra.yaml
+    NODES: 1
+    PROCESSORS: '%CURRENT_PROCESSORS_PER_NODE%'
+    PARTITION: '%CURRENT_APP_PARTITION%'
+    TASKS: 0
+    THREADS: 1
+    PLATFORM: '%DEFAULT.HPCARCH%'
+    EXCLUSIVE: "True"
+    RUNNING: chunk
+    WALLCLOCK: 00:30
+    FREQUENCY: 1
+    CHECK: on_submission
+  AQUA_ANALYSIS:
+    DEPENDENCIES: LRA_GENERATOR
+    FILE: templates/aqua/aqua_analysis.sh
+    NODES: 1
+    PROCESSORS: '%CURRENT_PROCESSORS_PER_NODE%'
+    TASKS: 0
+    THREADS: 1
+    PARTITION: '%CURRENT_APP_PARTITION%'
+    PLATFORM: '%DEFAULT.HPCARCH%'
+    EXCLUSIVE: "True"
+    RUNNING: chunk
+    WALLCLOCK: 00:30
+    FREQUENCY: 1
+    CHECK: on_submission
+  AQUA_PUSH:
+    DEPENDENCIES: AQUA_ANALYSIS
+    FILE: templates/aqua/aqua_push.sh
+    PLATFORM: local
+    RUNNING: chunk
+    WALLCLOCK: 02:00
+    FREQUENCY: 1
+  REMOTE_SETUP:
+    FILE: templates/remote_setup.sh,templates/fdb/confignative.yaml,templates/fdb/configlatlon.yaml,templates/fdb/config.yaml,templates/aqua/config_catalog.yaml
+AQUA:
+  START_DATE: "%^EXPERIMENT.DATELIST%"
+  CONTAINER_VERSION: "0.13.5"
+  # Need help with the variables
+  VARS_SFC: "['tprate', '2t', 'skt', 'msl', 'tcc', 'sd', 'tciw', 'tclw', 'tsrwe', 'slhtf', 'ishf', 'snswrf', 'snlwrf', 'sdlwrf', 'sdswrf', 'tnswrf', 'tnlwrf', 'tdswrf', 'iews', 'inss', 'ie']"
+  SOURCE_SFC: "hourly-%AQUA.RESOLUTION_ATM%-atm2d"
+  WORKERS_SFC: 16
+  VARS_PL: "['q', 't', 'u', 'v']"
+  SOURCE_PL: "hourly-%AQUA.RESOLUTION_ATM%-atm3d"
+  WORKERS_PL: 6
+  VARS_HL: "[]"
+  SOURCE_HL: hourly-native-hl
+  WORKERS_HL: 0
+  VARS_O2D: "['sithick', 'siconc', 'tos', 'sos', 'hc700m']"
+  SOURCE_O2D: "daily-%AQUA.RESOLUTION_OCE%-oce2d"
+  WORKERS_O2D: 12
+  VARS_O3D: "['thetao', 'so']"
+  SOURCE_O3D: "daily-%AQUA.RESOLUTION_OCE%-oce3d"
+  WORKERS_O3D: 3
+  VARS_SOL: "[]"
+  SOURCE_SOL: hourly-native-sol
+  WORKERS_SOL: 0
+  FIXER_NAME: climatedt-phase2-production
+  BUCKET: aqua-web
+  REPOSITORY: "DestinE-Climate-DT/aqua-web"
+APP:
+  OUTPATH: "%HPCROOTDIR%/output"

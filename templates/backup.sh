@@ -3,19 +3,23 @@
 # This step backups restarts and rundir of the current running simulation
 set -xuve
 
-# Interface
+# HEADER
+
 HPCROOTDIR=${1:-%HPCROOTDIR%}
 EXPID=${2:-%DEFAULT_EXPID%}
-HPC_PROJECT=${3:-%CURRENT_HPC_PROJECT_DIR%}
+HPC_PROJECT=${3:-%CONFIGURATION.HPC_PROJECT_DIR%}
 CHUNK=${4:-%CHUNK%}
 PROJDEST=${5:-%PROJECT.PROJECT_DESTINATION%}
 CURRENT_ARCH=${6:-%CURRENT_ARCH%}
-BACKUP_PROCESSORS=${9:-%JOBS.BACKUP.PROCESSORS%}
+BACKUP_PROCESSORS=${7:-%JOBS.BACKUP.PROCESSORS%}
+LIBDIR=${8:-%CONFIGURATION.LIBDIR%}
 
-LIBDIR="${HPCROOTDIR}"/"${PROJDEST}"/lib
+# END_HEADER
+
 HPC=$(echo "${CURRENT_ARCH}" | cut -d- -f1)
 . "${LIBDIR}"/"${HPC}"/config.sh
 
+# lib/LUMI/config.sh (load_backup_env) (auto generated comment)
 load_backup_env
 
 OUTROOT=${HPCROOTDIR}/rundir

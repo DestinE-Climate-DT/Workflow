@@ -1,6 +1,43 @@
-JOBS:
-  SIM:
-    FILE: templates/sim_ifs-nemo.sh
-
-RUN:
-  TYPE: test
+MODEL:
+  VERSION: "DE_CY48R1.0_climateDT_20250317"
+  USE_FIXED_DVC_COMMIT: "true"
+REQUEST:
+  MODEL: IFS-NEMO
+PLATFORMS:
+  LUMI:
+    DVC_INPUTS_CACHE: "/pfs/lustrep3/scratch/project_465000454/pool/data/DVC_DATA_REPOSITORY/"
+    RAPS_HOST_CPU: lum-c
+    RAPS_HOST_GPU: lum-g
+    RAPS_BIN_HPC_NAME: lumi
+    RAPS_COMPILER: cce
+    # Exports this value as mpilib for RAPS. It doesn't really switch the MPI lib
+    # and it neither affects the name of the rundir (mpilib hard-coded in RAPS for lumi)
+    RAPS_MPILIB: cray-mpich
+  LUMI-LOGIN:
+    # Parameters for compilation of the IFS-based models
+    ARCH_GPU: "arch/eurohpc/lumi-g/default"
+    ADDITIONAL_COMPILATION_FLAGS_GPU: "--keep-going --retry -j32 --with-gpu --with-gpu-aware-mpi --download-atlas-orca-files"
+    ARCH_CPU: "arch/eurohpc/lumi-c/default"
+    ADDITIONAL_COMPILATION_FLAGS_CPU: "--keep-going --retry -j32 --download-atlas-orca-files"
+    IFS_BUNDLE_SKIP_FESOM: 1
+    DVC_INPUTS_CACHE: "%PLATFORMS.LUMI.DVC_INPUTS_CACHE%"
+  MARENOSTRUM5:
+    DVC_INPUTS_CACHE: "/gpfs/scratch/ehpc01/data/.dvc/cache"
+    # Parameters needed by RAPS in the SIM job
+    RAPS_HOST_CPU: mn5-gpp
+    RAPS_HOST_GPU: ""
+    RAPS_BIN_HPC_NAME: mn5
+    RAPS_COMPILER: intel
+    # Exports this value as mpilib for RAPS. It doesn't really switch the MPI lib
+    # but it affects the name of the rundir (e.g.
+    # `rundir/tco79l137/t02k/hres/intel.openmpi`)
+    RAPS_MPILIB: openmpi
+  MARENOSTRUM5-login:
+    DVC_INPUTS_CACHE: "%PLATFORMS.MARENOSTRUM5.DVC_INPUTS_CACHE%"
+    # Parameters for compilation of the IFS-based models
+    ADDITIONAL_COMPILATION_FLAGS_CPU: "--with-omp-parallel-any-thread"
+    ARCH_CPU: "arch/eurohpc/mn5-gpp/intel/2021.10.0/intelmpi/2021.10.0"
+    ADDITIONAL_COMPILATION_FLAGS_GPU: ""
+    ARCH_GPU: ""
+DVC:
+  VERSION: "3.50.1"

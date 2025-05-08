@@ -1,64 +1,94 @@
 Platforms:
-  marenostrum4:
+  marenostrum5:
     TYPE: slurm
-    HOST: mn4-cluster1
-        # This needs that a ~/.ssh/config exists with the following:
-        # the login node in mn0 allows internet acces
-        # Host mn4-cluster1
-        #     Hostname mn0.bsc.es
-        #     IdentifyFile ~/.ssh/<your_sshkey>
-        #     User <bsc user>
-    PROJECT: dese28
-    HPC_PROJECT_DIR: /gpfs/projects/dese28
+    HOST: mn5-cluster1
+    # This needs that a ~/.ssh/config exists with the following:
+    # the login node in mn0 allows internet acces
+    # Host mn4-cluster1
+    #     Hostname mn0.bsc.es
+    #     IdentifyFile ~/.ssh/<your_sshkey>
+    #     User <bsc user>
+    PROJECT: ehpc01
+    DEVELOPMENT_PROJECT: ehpc01
+    OPERATIONAL_PROJECT: ehpc123
+    HPC_PROJECT_ROOT: /gpfs/projects
     USER: <to-be-overloaded-in-user-conf>
-    QUEUE: debug
+    QUEUE: gp_ehpc
+    MAX_WALLCLOCK: '72:00'
     SCRATCH_DIR: /gpfs/scratch
-    FDB_DIR: /gpfs/projects/dese28/experiments
+    # All production data stored in fixed project directory
+    # To change the production data directory, change the FDB_PROD variable
+    # in main.yml
+    FDB_PROD: /gpfs/projects/ehpc01/dte/fdb
+    DATA_DIR: /gpfs/projects/ehpc01/
     ADD_PROJECT_TO_HOST: False
     TEMP_DIR: ''
-    PROCESSORS_PER_NODE: 48
-    CUSTOM_DIRECTIVES: "['#SBATCH --exclusive', '#SBATCH --export=ALL', '#SBATCH --hint=nomultithread']"
-  marenostrum4-login:
+    PROCESSORS_PER_NODE: 112
+    APP_PARTITION: gp_bsces
+    EXCLUSIVE: "True"
+    CUSTOM_DIRECTIVES: "['#SBATCH --export=ALL', '#SBATCH --hint=nomultithread']"
+    HPCARCH_short: "MN5"
+    HPCARCH_lowercase: "marenostrum5"
+    CATALOG_NAME: mn5-phase2
+    # Some HPCs might require to source a file to be able to use their module system.
+    # This parameddter allows you to provide the module profile path via the conf files.
+    MODULES_PROFILE_PATH:
+    TEST_APP_AUX_IN_DATA_DIR: "/gpfs/projects/ehpc01/applications/"
+    PROD_APP_AUX_IN_DATA_DIR: "/gpfs/scratch/ehpc01/input_data/applications/"
+  marenostrum5-login:
     TYPE: ps
-    HOST: mn4-cluster1
-        # This needs that a ~/.ssh/config exists with the following:
-        # the login node in mn0 allows internet acces
-        # Host mn4-cluster1
-        #     Hostname mn0.bsc.es
-        #     IdentifyFile ~/.ssh/<your_sshkey>
-        #     User <bsc user>
-    PROJECT: dese28
-    HPC_PROJECT_DIR: /gpfs/projects/dese28
-    FDB_DIR: /gpfs/projects/dese28/experiments
+    HOST: mn5-cluster1
+    # This needs that a ~/.ssh/config exists with the following:
+    # the login node in mn0 allows internet acces
+    # Host mn4-cluster1
+    #     Hostname mn0.bsc.es
+    #     IdentifyFile ~/.ssh/<your_sshkey>
+    #     User <bsc user>
+    PROJECT: "%PLATFORMS.MARENOSTRUM5.PROJECT%"
+    DEVELOPMENT_PROJECT: "%PLATFORMS.MARENOSTRUM5.DEVELOPMENT_PROJECT%"
+    OPERATIONAL_PROJECT: "%PLATFORMS.MARENOSTRUM5.OPERATIONAL_PROJECT%"
+    HPC_PROJECT_ROOT: /gpfs/projects
+    FDB_PROD: "%PLATFORMS.MARENOSTRUM5.FDB_PROD%"
     USER: <to-be-overloaded-in-user-conf>
     SCRATCH_DIR: /gpfs/scratch
     ADD_PROJECT_TO_HOST: False
-    PARTITION: interactive
+    QUEUE: gp_interactive
     PROCESSORS: 4
-    MAX_WALLCLOCK: '02:00'
+    MAX_WALLCLOCK: '48:00'
+    HPCARCH_short: "%PLATFORMS.MARENOSTRUM5.HPCARCH_short%"
+    HPCARCH_lowercase: "%PLATFORMS.MARENOSTRUM5.HPCARCH_lowercase%"
+    CATALOG_NAME: "%PLATFORMS.MARENOSTRUM5.CATALOG_NAME%"
+    # Some HPCs might require to source a file to be able to use their module system.
+    # This parameddter allows you to provide the module profile path via the conf files.
+    MODULES_PROFILE_PATH: "%PLATFORMS.MARENOSTRUM5.MODULES_PROFILE_PATH%"
   juwels-login:
     TYPE: ps
     HOST: juwels-cluster
-        # This needs that a ~/.ssh/config exists with the following:
-        # Host juwels-cluster
-        #     Hostname %.fz-juelich.de
-        #     IdentifyFile ~/.ssh/<your_sshkey>
-        #     User <juwels user>
-    PROJECT: hhb19
+    # This needs that a ~/.ssh/config exists with the following:
+    # Host juwels-cluster
+    #     Hostname %.fz-juelich.de
+    #     IdentifyFile ~/.ssh/<your_sshkey>
+    #     User <juwels user>
+    PROJECT: "%PLATFORMS.JUWELS.PROJECT%"
+    HPC_PROJECT_DIR: null
     USER: <to-be-overloaded-in-user-conf>
     SCRATCH_DIR: /p/scratch
     SCRATCH_PROJECT_DIR: chhb19
     ADD_PROJECT_TO_HOST: False
     TEMP_DIR: ''
+    # Some HPCs might require to source a file to be able to use their module system.
+    # This parameddter allows you to provide the module profile path via the conf files.
+    MODULES_PROFILE_PATH: "%PLATFORMS.JUWELS.MODULES_PROFILE_PATH%"
   juwels:
     TYPE: slurm
     HOST: juwels-cluster
-        # This needs that a ~/.ssh/config exists with the following:
-        # Host juwels-cluster
-        #     Hostname %.fz-juelich.de
-        #     IdentifyFile ~/.ssh/<your_sshkey>
-        #     User <juwels user>
+    # This needs that a ~/.ssh/config exists with the following:
+    # Host juwels-cluster
+    #     Hostname %.fz-juelich.de
+    #     IdentifyFile ~/.ssh/<your_sshkey>
+    #     User <juwels user>
     PROJECT: hhb19
+    HPC_PROJECT_DIR: null
     USER: <to-be-overloaded-in-user-conf>
     QUEUE: ""
     CUSTOM_DIRECTIVES: '#SBATCH -p standard -N 1 --ntasks-per-node=24 --cpus-per-task=2'
@@ -69,71 +99,133 @@ Platforms:
     MAX_WALLCLOCK: '48:00'
     TEMP_DIR: ''
     PROCESSORS_PER_NODE: 24
+    # Some HPCs might require to source a file to be able to use their module system.
+    # This parameddter allows you to provide the module profile path via the conf files.
+    MODULES_PROFILE_PATH:
+    TEST_APP_AUX_IN_DATA_DIR:
+    PROD_APP_AUX_IN_DATA_DIR:
   lumi-login:
     TYPE: ps
     HOST: lumi-cluster
-        # This needs that a ~/.ssh/config exists with the following:
-        # Host lumi-cluster
-        #     Hostname lumi.csc.fi
-        #     IdentifyFile ~/.ssh/<your_sshkey>
-        #     User <lumi user>
+    # This needs that a ~/.ssh/config exists with the following:
+    # Host lumi-cluster
+    #     Hostname lumi.csc.fi
+    #     IdentifyFile ~/.ssh/<your_sshkey>
+    #     User <lumi user>
+    PROJECT: "%PLATFORMS.LUMI.PROJECT%"
+    DEVELOPMENT_PROJECT: "%PLATFORMS.LUMI.DEVELOPMENT_PROJECT%"
+    OPERATIONAL_PROJECT: "%PLATFORMS.LUMI.OPERATIONAL_PROJECT%"
+    HPC_PROJECT_ROOT: "%PLATFORMS.LUMI.HPC_PROJECT_ROOT%"
+    FDB_PROD: "%PLATFORMS.LUMI.FDB_PROD%"
+    USER: <to-be-overloaded-in-user-conf>
+    SCRATCH_DIR: "%PLATFORMS.LUMI.SCRATCH_DIR%"
+    MAX_WALLCLOCK: "04:00"
+    ADD_PROJECT_TO_HOST: False
+    TEMP_DIR: ''
+    DATABRIDGE_FDB_HOME: "%PLATFORMS.LUMI.DATABRIDGE_FDB_HOME%"
+    TOTAL_JOBS: 1
+    MAX_WAITING_JOBS: 1
+    HPCARCH_short: "lumi"
+    HPCARCH_lowercase: "lumi"
+    CATALOG_NAME: "%PLATFORMS.LUMI.CATALOG_NAME%"
+    # Some HPCs might require to source a file to be able to use their module system.
+    # This parameddter allows you to provide the module profile path via the conf files.
+    MODULES_PROFILE_PATH: "%PLATFORMS.LUMI.MODULES_PROFILE_PATH%"
+  lumi:
+    TYPE: slurm
+    HOST: lumi-cluster #lumi.csc.fi
+    # This needs that a ~/.ssh/config exists with the following:
+    # Host lumi-cluster
+    #     Hostname lumi.csc.fi
+    #     IdentifyFile ~/.ssh/<your_sshkey>
+    #     User <lumi user>
     PROJECT: project_465000454
-    HPC_PROJECT_DIR: /projappl/project_465000454
-    FDB_DIR: /scratch/project_465000454/experiments
-    FDB_PROD: "/users/lrb_465000454_fdb"
+    DEVELOPMENT_PROJECT: project_465000454
+    OPERATIONAL_PROJECT: project_465001542
+    HPC_PROJECT_ROOT: /projappl
     USER: <to-be-overloaded-in-user-conf>
     SCRATCH_DIR: /scratch
     ADD_PROJECT_TO_HOST: False
     TEMP_DIR: ''
-    DATABRIDGE_FDB_HOME: "/users/lrb_465000454_fdb/databridge"
-    TOTAL_JOBS: 1
-    MAX_WAITING_JOBS: 1
-  lumi:
+    # Currently BUDGET is not suported by Autosubmit (Autosubmit #1365)
+    BUDGET: "%PLATFORMS.LUMI.PROJECT%"
+    EXECUTABLE: "/bin/bash --login"
+    DATABRIDGE_FDB_HOME: "/appl/local/destine/databridge"
+    EXCLUSIVE: "True"
+    MEMORY: "224G" # Default for LUMI-C
+    CUSTOM_DIRECTIVES: "['#SBATCH --export=ALL', '#SBATCH --hint=nomultithread']"
+    APP_PARTITION: standard
+    PARTITION: standard
+    FDB_PROD: "/appl/local/destine/fdb"
+    DATA_DIR: "/appl/local/climatedt/data"
+    MAX_PROCESSORS: 99999
+    MAX_WALLCLOCK: "48:00"
+    HPCARCH_short: "lumi"
+    HPCARCH_lowercase: "lumi"
+    CATALOG_NAME: "lumi-phase2"
+    # Some HPCs might require to source a file to be able to use their module system.
+    # This parameddter allows you to provide the module profile path via the conf files.
+    MODULES_PROFILE_PATH:
+    TEST_APP_AUX_IN_DATA_DIR: "/project/project_465000454/applications/"
+    PROD_APP_AUX_IN_DATA_DIR: "/appl/local/climatedt/input_data/applications/"
+  lumi-transfer:
     TYPE: slurm
     HOST: lumi-cluster #lumi.csc.fi
-        # This needs that a ~/.ssh/config exists with the following:
-        # Host lumi-cluster
-        #     Hostname lumi.csc.fi
-        #     IdentifyFile ~/.ssh/<your_sshkey>
-        #     User <lumi user>
-    PROJECT: project_465000454
-    HPC_PROJECT_DIR: /projappl/project_465000454
-    FDB_DIR: /scratch/project_465000454/experiments
+    # This needs that a ~/.ssh/config exists with the following:
+    # Host lumi-cluster
+    #     Hostname lumi.csc.fi
+    #     IdentifyFile ~/.ssh/<your_sshkey>
+    #     User <lumi user>
+    PROJECT: "%PLATFORMS.LUMI.PROJECT%"
+    DEVELOPMENT_PROJECT: "%PLATFORMS.LUMI.DEVELOPMENT_PROJECT%"
+    OPERATIONAL_PROJECT: "%PLATFORMS.LUMI.OPERATIONAL_PROJECT%"
+    HPC_PROJECT_ROOT: "%PLATFORMS.LUMI.HPC_PROJECT_ROOT%"
     USER: <to-be-overloaded-in-user-conf>
-    SCRATCH_DIR: /scratch
-    ADD_PROJECT_TO_HOST: False 
-    TEMP_DIR: '' 
-    BUDGET: "project_465000454"
+    SCRATCH_DIR: "%PLATFORMS.LUMI.SCRATCH_DIR%"
+    ADD_PROJECT_TO_HOST: False
+    TEMP_DIR: ''
+    BUDGET: "%PLATFORMS.LUMI.PROJECT%"
     EXECUTABLE: "/bin/bash --login"
-    DATABRIDGE_FDB_HOME: "/users/lrb_465000454_fdb/databridge"
-    CUSTOM_DIRECTIVES: "['#SBATCH --exclusive', '#SBATCH --export=ALL', '#SBATCH --hint=nomultithread', '#SBATCH --mem=0']"
-    APP_PARTITION: small
-    FDB_PROD: "/users/lrb_465000454_fdb"
-    MAX_PROCESSORS: 99999
-    MAX_WALLCLOCK: "00:30"
+    DATABRIDGE_FDB_HOME: "%PLATFORMS.LUMI.DATABRIDGE_FDB_HOME%"
+    EXCLUSIVE: "True"
+    CUSTOM_DIRECTIVES: "['#SBATCH --export=ALL']"
+    FDB_PROD: "%PLATFORMS.LUMI.FDB_PROD%"
+    MAX_WALLCLOCK: "05:00"
+    PARTITION: small
+    MAX_PROCESSORS: 1024
+    TOTALJOBS: 1
+    PROCESSORS_PER_NODE: 128
+    # Some HPCs might require to source a file to be able to use their module system.
+    # This parameddter allows you to provide the module profile path via the conf files.
+    MODULES_PROFILE_PATH: "%PLATFORMS.LUMI.MODULES_PROFILE_PATH%"
   levante-login:
     TYPE: ps
     HOST: levante
-        # This needs that a ~/.ssh/config exists with the following:
-        # Host levante-cluster
-        #     Hostname levante.dkrz.de
-        #     IdentifyFile ~/.ssh/<your_sshkey>
-        #     User <levante user>
+    # This needs that a ~/.ssh/config exists with the following:
+    # Host levante-cluster
+    #     Hostname levante.dkrz.de
+    #     IdentifyFile ~/.ssh/<your_sshkey>
+    #     User <levante user>
     PROJECT: <to-be-overloaded-by-user>
+    HPC_PROJECT_DIR: "/work/bb1153"
     USER: <to-be-overloaded-in-user-conf>
     SCRATCH_DIR: /work
     ADD_PROJECT_TO_HOST: False
     TEMP_DIR: ''
     EXECUTABLE: "/usr/bin/bash -l" # this is needed on levante to make it find the module command
+    # Some HPCs might require to source a file to be able to use their module system.
+    # This parameddter allows you to provide the module profile path via the conf files.
+    MODULES_PROFILE_PATH: "%PLATFORMS.LEVANTE.MODULES_PROFILE_PATH%"
   levante:
     TYPE: slurm
     HOST: levante
-        # This needs that a ~/.ssh/config exists with the following:
-        # Host levante-cluster
-        #     Hostname levante.dkrz.de
-        #     IdentifyFile ~/.ssh/<your_sshkey>
-        #     User <levante user>
+    # This needs that a ~/.ssh/config exists with the following:
+    # Host levante-cluster
+    #     Hostname levante.dkrz.de
+    #     IdentifyFile ~/.ssh/<your_sshkey>
+    #     User <levante user>
     PROJECT: <to-be-overloaded-by-user>
+    HPC_PROJECT_DIR: "/work/bb1153"
     PARTITION: 'compute'
     USER: <to-be-overloaded-in-user-conf>
     QUEUE: ""
@@ -144,4 +236,8 @@ Platforms:
     PROCESSORS_PER_NODE: 128
     BUDGET: <to-be-overloaded-by-user>
     EXECUTABLE: "/usr/bin/bash -l" # this is needed on levante to make it find the module command
-
+    # Some HPCs might require to source a file to be able to use their module system.
+    # This parameddter allows you to provide the module profile path via the conf files.
+    MODULES_PROFILE_PATH: /sw/etc/profile.levante
+    TEST_APP_AUX_IN_DATA_DIR:
+    PROD_APP_AUX_IN_DATA_DIR:

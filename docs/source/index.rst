@@ -13,11 +13,14 @@ Welcome to Climate DT Workflow's documentation!
    about
    getting_started
    create_run
+   auto_keys_main
    keys_main
+   keys_request
    autosubmit_cheatsheet
-   examples_main
+   technicalities
+   operators_guide
    FAQ
-
+   update_apps
 
 Indices and tables
 ==================

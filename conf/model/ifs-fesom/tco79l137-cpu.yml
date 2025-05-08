@@ -1,21 +1,58 @@
 CONFIGURATION:
+  ICMCL: "yearly"
   IFS:
     GTYPE: tco
     RESOL: 79
     LEVELS: 137
     LABEL: LWDA
-    IO_TASKS: 4
+    IO_TASKS: "%CURRENT_IFS_IO_TASKS%"
+    IO_NODES: "%CURRENT_IFS_IO_NODES%"
+    IO_PPN: "%CURRENT_IFS_IO_PPN%"
   FESOM:
-    IO_TASKS: 4
-
-PLATFORMS: 
+    IO_TASKS: "%CURRENT_FESOM_IO_TASKS%"
+    IO_NODES: "%CURRENT_FESOM_IO_NODES%"
+    IO_PPN: "%CURRENT_FESOM_IO_PPN%"
+  DQC_WALLCLOCK: '00:20'
+PLATFORMS:
+  MARENOSTRUM5:
+    TYPE: slurm
+    PARTITION: "ehpc01"
+    MAX_WALLCLOCK: "00:30"
+    NODES: 5
+    TASKS: 16
+    THREADS: 7
+    PROCESSORS_PER_NODE: 112
+    EXCLUSIVE: "True"
+    CUSTOM_DIRECTIVES: "['#SBATCH -q gp_ehpc']"
+    # I/O
+    IFS_IO_TASKS: 12
+    IFS_IO_NODES: 0
+    IFS_IO_PPN: 0
+    FESOM_IO_TASKS: 4
+    FESOM_IO_NODES: 0
+    FESOM_IO_PPN: 0
   LUMI:
     TYPE: slurm
-    PARTITION: "ju-strategic"
+    PARTITION: "standard"
     MAX_WALLCLOCK: "00:30"
     NODES: 2
     TASKS: 64
     THREADS: 2
     PROCESSORS_PER_NODE: 128
-    CUSTOM_DIRECTIVES: "['#SBATCH --hint=nomultithread', '#SBATCH --exclusive', '#SBATCH --mem=0']"
-
+    EXCLUSIVE: "True"
+    CUSTOM_DIRECTIVES: "['#SBATCH --hint=nomultithread', '#SBATCH --mem=0']"
+    # I/O
+    IFS_IO_TASKS: 32
+    IFS_IO_NODES: 0
+    IFS_IO_PPN: 0
+    FESOM_IO_TASKS: 32
+    FESOM_IO_NODES: 0
+    FESOM_IO_PPN: 0
+JOBS:
+  SIM:
+    WALLCLOCK: "00:30"
+REQUEST:
+  RESOLUTION: standard
+AQUA:
+  RESOLUTION_ATM: hpz5
+  RESOLUTION_OCE: hpz5

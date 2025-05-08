@@ -11,3 +11,4 @@ JOBS:
     RUNNING: chunk
     WALLCLOCK: 02:00
     FREQUENCY: 10
+    CHECK: on_submission

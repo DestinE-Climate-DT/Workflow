@@ -1,20 +1,27 @@
-## In this file we define the simulations that are being run as defined 
-## in M340.5.1.1) (?)
-
 experiment:
-    DATELIST: 20170101
-    MEMBERS: fc0
-    CHUNKSIZEUNIT: month
-    CHUNKSIZE: 1
-    NUMCHUNKS: 3
-    CALENDAR: standard
-
-JOBS:
-   SIM:
-       WALLCLOCK: "02:00"
-
+  DATELIST: 20170101
+  MEMBERS: fc0
+  CHUNKSIZEUNIT: month
+  CHUNKSIZE: 1
+  NUMCHUNKS: 84
+  CALENDAR: standard
 CONFIGURATION:
-    RAPS_EXPERIMENT: "control"
-    IFS:
-        EXPVER: awi4
-    RAPS_USER_FLAGS: "--destine-nudging-forcing=/projappl/project_465000454/ajohn/data/nudgefiles/TCO1279L137/sh/ --destine-nudging-nrlxsmax=60 --destine-nudging-xrlxdi=1.0 --fixyear=1950"
+  RAPS_EXPERIMENT: "control"
+  IFS:
+    EXPVER: awi4
+    IO_NODES: 15
+    IO_PPN: 16
+  FESOM:
+    IO_NODES: 10
+    IO_PPN: 8
+  RAPS_USER_FLAGS: "--destine-nudging-forcing=/projappl/project_465000454/ajohn/data/nudgefiles/TCO1279L137/sh/ --destine-nudging-nrlxsmax=60 --destine-nudging-xrlxdi=1.0 --fixyear=1950"
+WRAPPERS:
+  WRAPPER_V:
+    TYPE: "vertical"
+    JOBS_IN_WRAPPER: "SIM"
+    RETRIALS: 2
+REQUEST:
+  ACTIVITY: story-nudging
+  EXPERIMENT: cont
+  GENERATION: 2
+  REALIZATION: 1

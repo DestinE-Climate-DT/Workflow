@@ -1,100 +1,159 @@
 #!/bin/bash
+#
 
 # INTERFACE
 
-HPC_PROJ=${1:-%CURRENT_HPC_PROJECT_DIR%}
-EXPID=${2:-%DEFAULT.EXPID%}
-HPCROOTDIR=${3:-%HPCROOTDIR%}
-START_DATE=${4:-%SDATE%}
-CURRENT_ARCH=${5:-%CURRENT_ARCH%}
-PROJDEST=${6:-%PROJECT.PROJECT_DESTINATION%}
-FDB_PROD=${7:-%CURRENT_FDB_PROD%}
-FDB_DIR=${8:-%CURRENT_FDB_DIR%}
-CHUNK=${9:-%CHUNK%}
-START_DATE=${10:-%CHUNK_START_DATE%}
-CHUNK_SECOND_TO_LAST_DATE=${11:-%CHUNK_SECOND_TO_LAST_DATE%}
-RAPS_EXPERIMENT=${12:-%CONFIGURATION.RAPS_EXPERIMENT%}
-MODEL_NAME=${13:-%MODEL.NAME%}
-PRODUCTION=${14:-%RUN.PRODUCTION%}
-HPC_FDB_HOME=${15:-%CURRENT_FDB_PROD%}
-DATABRIDGE_FDB_HOME=${17:-%CURRENT_DATABRIDGE_FDB_HOME%}
-DQC_PROFILE=${18:-%CONFIGURATION.DQC_PROFILE%}
+# HEADER
 
-LIBDIR="${HPCROOTDIR}/${PROJDEST}"/lib
+HPCROOTDIR=${1:-%HPCROOTDIR%}
+CURRENT_ARCH=${2:-%CURRENT_ARCH%}
+CHUNK=${3:-%CHUNK%}
+START_DATE=${4:-%CHUNK_START_DATE%}
+SECOND_TO_LAST_DATE=${5:-%CHUNK_SECOND_TO_LAST_DATE%}
+MODEL_NAME=${6:-%MODEL.NAME%}
+DATABRIDGE_FDB_HOME=${7:-%CURRENT_DATABRIDGE_FDB_HOME%}
+EXPERIMENT=${8:-%REQUEST.EXPERIMENT%}
+ACTIVITY=${9:-%REQUEST.ACTIVITY%}
+GENERATION=${10:-%REQUEST.GENERATION%}
+DQC_PROFILE_PATH=${11:-%CONFIGURATION.DQC_PROFILE_PATH%}
+EXPVER=${12:-%REQUEST.EXPVER%}
+FDB_HOME=${13:-%REQUEST.FDB_HOME%}
+SCRATCH_DIR=${14:-%CURRENT_SCRATCH_DIR%}
+HPC_CONTAINER_DIR=${15:-%CONFIGURATION.CONTAINER_DIR%}
+GSV_VERSION=${16:-%GSV.VERSION%}
+LIBDIR=${17:-%CONFIGURATION.LIBDIR%}
+SCRIPTDIR=${18:-%CONFIGURATION.SCRIPTDIR%}
+WIPE_DOIT=${19:-%WIPE_DOIT%}
+MEMBER=${20:-%MEMBER%}
+MEMBER_LIST=${21:-%EXPERIMENT.MEMBERS%}
+FDB_INFO_FILE_PATH=${22:-%REQUEST.INFO_FILE_PATH%}
+FDB_INFO_FILE_NAME=${23:-%REQUEST.INFO_FILE_NAME%}
+BASE_VERSION=${24:-%BASE.VERSION%}
+SPLIT_END_DATE=${25:-%SPLIT_END_DATE%}
+
+# END_HEADER
+
+set -xuve
+
 HPC=$(echo ${CURRENT_ARCH} | cut -d- -f1)
 
 # LOAD FDB MODULES & FDB5 CONFIG FILE
 . "${LIBDIR}/${HPC}"/config.sh
 source "${LIBDIR}"/common/util.sh
 
-load_environment_gsv ${FDB_DIR} ${EXPID}
+# lib/LUMI/config.sh (load_singularity) (auto generated comment)
+# lib/MARENOSTRUM5/config.sh (load_singularity) (auto generated comment)
+load_singularity
 
-# Update FDB to latest stack
-export PATH=/users/lrb_465000454_fdb/mars/versions/6.99.1.0/bin:$PATH
-# export LD_LIBRARY_PATH=/users/lrb_465000454/mars/versions/current/lib64:$LD_LIBRARY_PATH
+WIPE_REQUESTS_PATH=${HPCROOTDIR}/wipe_requests
+mkdir -p ${WIPE_REQUESTS_PATH}
+cd ${WIPE_REQUESTS_PATH}
+
+# Call the function and assign the result to TRANSFER_MONTHLY
+# lib/common/util.sh (enable_process_monthly) (auto generated comment)
+WIPE_MONTHLY=$(enable_process_monthly "$START_DATE" "$SPLIT_END_DATE")
+
+# lib/common/util.sh (get_member_number) (auto generated comment)
+REALIZATION=$(get_member_number "${MEMBER_LIST}" ${MEMBER})
+
+# Check each profile has previously been correctly transferred to the brige
+for profile_file in "${DQC_PROFILE_PATH}"/*.yaml; do
+    # Only check monthly data once (for the chunk/split containing first day of month)
+    if [[ "$profile_file" == *monthly* ]] && [[ "$WIPE_MONTHLY" == false ]]; then
+        continue
+    else
+        EXPECTED_MESSAGES=-1
+        LISTED_MESSAGES=-2
+        singularity exec --cleanenv --no-home \
+            --env "FDB_HOME=${FDB_HOME}" \
+            --env "EXPVER=${EXPVER}" \
+            --env "START_DATE=${START_DATE}" \
+            --env "CHUNK=${CHUNK}" \
+            --env "SECOND_TO_LAST_DATE=${SECOND_TO_LAST_DATE}" \
+            --env "EXPERIMENT=${EXPERIMENT}" \
+            --env "MODEL_NAME=${MODEL_NAME}" \
+            --env "LIBDIR=${LIBDIR}" \
+            --env "ACTIVITY=${ACTIVITY}" \
+            --env "GENERATION=${GENERATION}" \
+            --env "REALIZATION=${REALIZATION}" \
+            --env "profile_file=${profile_file}" \
+            --env "DATABRIDGE_FDB_HOME=${DATABRIDGE_FDB_HOME}" \
+            --env "SCRIPTDIR=${SCRIPTDIR}" \
+            --env "WIPE_REQUESTS_PATH=${WIPE_REQUESTS_PATH}" \
+            --bind "$(realpath $PWD)" \
+            --bind "$(realpath ${SCRATCH_DIR})" \
+            --bind "$(realpath ${LIBDIR}/common)" \
+            --bind "$(realpath ${SCRIPTDIR}/FDB)" \
+            --bind "$(realpath ${DQC_PROFILE_PATH})" \
+            --bind "$(realpath ${FDB_HOME})" \
+            --bind "$(realpath ${DATABRIDGE_FDB_HOME}/etc/fdb)" \
+            --bind "${DATABRIDGE_FDB_HOME}" \
+            --bind "$(realpath ${WIPE_REQUESTS_PATH})" \
+            "$HPC_CONTAINER_DIR"/gsv/gsv_${GSV_VERSION}.sif \
+            bash -c \
+            '
+            set -xuve
+            cd ${WIPE_REQUESTS_PATH}
+            source "${LIBDIR}"/common/util.sh
+            profile_name=$(basename ${profile_file} | cut -d. -f1)
+            BASE_NAME=${profile_name}_sdate_${START_DATE}_endate_${SECOND_TO_LAST_DATE}_real_${REALIZATION}
+            FLAT_REQ_NAME="${BASE_NAME}_request.flat"
+    # lib/common/util.sh (check_messages_wipe) (auto generated comment)
+            check_messages_wipe "${profile_file}"
+            '
+    fi
+done
 
 export METKIT_PARAM_RAW=1
 
-if [ ${PRODUCTION,,} = "true" ]; then
-    FDB_DIR_HEALPIX="${FDB_PROD}"
-    FDB_DIR_LATLON="${FDB_PROD}/latlon"
-    FDB_DIR_NATIVE="${FDB_PROD}/native"
-    EXPID_FDB="0001"
-    unset FDB5_CONFIG_FILE
-    export FDB_HOME=${HPC_FDB_HOME}
-else
-    FDB_DIR_NATIVE="${FDB_DIR}/${EXPID}/fdb/NATIVE_grids"
-    FDB_DIR_HEALPIX="${FDB_DIR}/${EXPID}/fdb/HEALPIX_grids"
-    FDB_DIR_LATLON="${FDB_DIR}/${EXPID}/fdb/REGULARLL_grids"
-    EXPID_FDB=${EXPID}
-    export FDB5_CONFIG_FILE="${FDB_DIR_HEALPIX}/etc/fdb/config.yaml"
-fi
+GENERAL_REQUEST_CLTE="${SCRIPTDIR}/FDB/general_request_clte.yaml"
+GENERAL_REQUEST_CLMN="${SCRIPTDIR}/FDB/general_request_clmn.yaml"
+FLAT_REQ_NAME_CLTE="$(basename ${GENERAL_REQUEST_CLTE} | cut -d. -f1)_${CHUNK}_request.flat"
+FLAT_REQ_NAME_CLMN="$(basename ${GENERAL_REQUEST_CLMN} | cut -d. -f1)_${CHUNK}_request.flat"
+export FDB_HOME=${FDB_HOME}
 
-profiles_path="${HPCROOTDIR}/${PROJDEST}/gsv_interface/gsv/dqc/profiles/${DQC_PROFILE}/${MODEL_NAME,,}"
+singularity exec --cleanenv --no-home \
+    --env "FDB_HOME=${FDB_HOME}" \
+    --env "SCRIPTDIR=${SCRIPTDIR}" \
+    --env "LIBDIR=${LIBDIR}" \
+    --env "GENERAL_REQUEST_CLTE=${GENERAL_REQUEST_CLTE}" \
+    --env "GENERAL_REQUEST_CLMN=${GENERAL_REQUEST_CLMN}" \
+    --env "EXPVER=${EXPVER}" \
+    --env "START_DATE=${START_DATE}" \
+    --env "SECOND_TO_LAST_DATE=${SECOND_TO_LAST_DATE}" \
+    --env "EXPERIMENT=${EXPERIMENT}" \
+    --env "CHUNK=${CHUNK}" \
+    --env "MODEL_NAME=${MODEL_NAME}" \
+    --env "ACTIVITY=${ACTIVITY}" \
+    --env "GENERATION=${GENERATION}" \
+    --env "REALIZATION=${REALIZATION}" \
+    --env "FLAT_REQ_NAME_CLTE=${FLAT_REQ_NAME_CLTE}" \
+    --env "FLAT_REQ_NAME_CLMN=${FLAT_REQ_NAME_CLMN}" \
+    --env "WIPE_DOIT=${WIPE_DOIT}" \
+    --env "WIPE_MONTHLY=${WIPE_MONTHLY}" \
+    --bind "$(realpath $PWD)" \
+    --bind "$(realpath ${SCRATCH_DIR})" \
+    --bind "$(realpath ${LIBDIR}/common)" \
+    --bind "$(realpath ${SCRIPTDIR}/FDB)" \
+    --bind "$(realpath ${DQC_PROFILE_PATH})" \
+    --bind "$(realpath ${FDB_HOME})" \
+    --bind "$(realpath ${FDB_PROD})" \
+    --bind "$(realpath ${HPCROOTDIR})" \
+    --bind "$(realpath ${DATABRIDGE_FDB_HOME}/etc/fdb)" \
+    --bind "${DATABRIDGE_FDB_HOME}" \
+    "$HPC_CONTAINER_DIR"/gsv/gsv_${GSV_VERSION}.sif \
+    bash -c \
+    '
+    set -xuve
+    MINIMUM_KEYS=class,dataset,experiment,activity,expver,model,generation,realization,type,stream
+    source "${LIBDIR}"/common/util.sh
+    # Wipe clte data always
+    # lib/common/util.sh (exec_wipe) (auto generated comment)
+    exec_wipe "${WIPE_DOIT}" "${GENERAL_REQUEST_CLTE}" "${FLAT_REQ_NAME_CLTE}" "${MINIMUM_KEYS},date"
 
-# Check model being used and load DGOV keys
-if [ ${MODEL_NAME} == "icon" ]; then
-    # Get ICON workflow configuration
-    export EXPERIMENT="%SIMULATION.DATA_GOV.EXPERIMENT%"
-    export ACTIVITY="%SIMULATION.DATA_GOV.ACTIVITY%"
-
-elif [ ${MODEL_NAME%%-*} == "ifs" ]; then
-    # Get RAPS configuration
-    export_MULTIO_variables "${RAPS_EXPERIMENT}"
-    export EXPERIMENT="${MULTIO_EXPERIMENT}"
-    export ACTIVITY="${MULTIO_ACTIVITY}"
-else
-    echo "Error: Incorrect model name"
-    exit 1
-fi
-
-mkdir -p ${HPCROOTDIR}/wipe_requests
-cd ${HPCROOTDIR}/wipe_requests
-
-for profile_file in "${profiles_path}"/*.yaml; do
-    export FDB_HOME=${DATABRIDGE_FDB_HOME}
-    python "${LIBDIR}/runscript/FDB/yaml_to_flat_request.py" --file="$profile_file" --expver="${EXPID_FDB}" --startdate="${START_DATE}" --experiment="${EXPERIMENT}" --enddate="${CHUNK_SECOND_TO_LAST_DATE}" --chunk="${CHUNK}" --model="${MODEL_NAME^^}" --activity="${ACTIVITY}" --omit-keys "time,levelist"
-
-    FLAT_REQ_NAME="$(basename $profile_file | cut -d. -f1)_${CHUNK}_request.flat"
-    FDB_LIST_OUTPUT="$(basename $profile_file | cut -d. -f1)_${CHUNK}_list.log"
-    fdb-list --porcelain "$(<${FLAT_REQ_NAME})" >"${FDB_LIST_OUTPUT}"
-    LISTED_MESSAGES=$(cat ${FDB_LIST_OUTPUT} | wc -l)
-
-    EXPECTED_MESSAGES=$(python "${LIBDIR}/runscript/FDB/count_expected_messages.py" --file="$profile_file" --expver="${EXPID_FDB}" --startdate="${START_DATE}" --experiment="${EXPERIMENT}" --enddate="${CHUNK_SECOND_TO_LAST_DATE}" --chunk="${CHUNK}" --model="${MODEL_NAME^^}" --activity="${ACTIVITY}")
-
-    if [ "$LISTED_MESSAGES" == "$EXPECTED_MESSAGES" ]; then
-        echo "Number of messages MATCH ${LISTED_MESSAGES}"
-    else
-        echo "ERROR Number of messages DO NOT MATCH: Listed:  ${LISTED_MESSAGES}, expected: ${EXPECTED_MESSAGES}"
-        exit 1
+    # Wipe clmn data only if first day of month is in the date list
+    if [[ "${WIPE_MONTHLY}" == true ]]; then
+# lib/common/util.sh (exec_wipe) (auto generated comment)
+        exec_wipe "${WIPE_DOIT}" "${GENERAL_REQUEST_CLMN}" "${FLAT_REQ_NAME_CLMN}" "${MINIMUM_KEYS},year,month"
     fi
-
-done
-
-profile_file="${LIBDIR}/runscript/FDB/general_request.yaml"
-FLAT_REQ_NAME="$(basename $profile_file | cut -d. -f1)_${CHUNK}_request.flat"
-
-python "${LIBDIR}/runscript/FDB/yaml_to_flat_request.py" --file="${profile_file}" --expver="${EXPID_FDB}" --startdate="${START_DATE}" --experiment="${EXPERIMENT}" --enddate="${CHUNK_SECOND_TO_LAST_DATE}" --chunk="${CHUNK}" --model="${MODEL_NAME^^}" --activity="${ACTIVITY}" --omit-keys="time,levelist,param,levtype"
-
-export FDB_HOME=${HPC_FDB_HOME}
-fdb-wipe --minimum-keys class,dataset,experiment,activity,expver,model,generation,realization,type,stream,date "$(<${FLAT_REQ_NAME})"
+    '

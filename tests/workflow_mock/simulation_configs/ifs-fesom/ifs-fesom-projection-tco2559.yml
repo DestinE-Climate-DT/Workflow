@@ -1,0 +1,25 @@
+RUN:
+  WORKFLOW: model
+  ENVIRONMENT: intel
+  PROCESSOR_UNIT: cpu
+  TYPE: production
+MODEL:
+  NAME: ifs-fesom
+  SIMULATION: ifs-fesom-projection-tco2559
+  GRID_ATM: tco2559l137
+  VERSION: 'ansible_DE_CY48R1.0_climateDT_20240723-cpu'
+WRAPPERS:
+  WRAPPER_V:
+    TYPE: "vertical"
+    JOBS_IN_WRAPPER: "SIM"
+    # MIN_WRAPPED: 1
+    RETRIALS: 2
+CONFIGURATION:
+  ADDITIONAL_JOBS:
+    TRANSFER: "False"
+    BACKUP: "False"
+    WIPE: "False"
+    MEMORY_CHECKER: "False"
+    DQC: "True"
+    CLEAN: "False"
+    AQUA: "True"

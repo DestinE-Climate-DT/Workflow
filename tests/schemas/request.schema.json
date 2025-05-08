@@ -1,0 +1,62 @@
+{
+  "title": "Request",
+  "$id": "schema:workflow/request",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "Title": "Request",
+  "type": "object",
+  "description": "Request that is used by APPS to retrieve data from the fdb, and for the MODEL to find the correct data in the fdb (used in DQC, AQUA).",
+  "properties": {
+    "CLASS": {
+      "type": "string",
+      "enum": ["d1", "rd"],
+      "description": "Experiment class for data government. `d1` is production(?), `rd` is research."
+    },
+    "EXPVER": {
+      "type": "string",
+      "pattern": "^[A-Za-z0-9]{4}$",
+      "description": "Experiment version string used to identify experiments. Needs to be `0001` for production experiments."
+    },
+    "FDB_HOME": {
+      "type": "string",
+      "description": "Home directory of the fdb that is to be used."
+    },
+    "ACTIVITY": {
+      "type": "string",
+      "description": "Activity key in the FDB",
+      "enum": ["baseline", "projections"]
+    },
+    "REALIZATION": {
+      "type": "integer",
+      "description": "Realization key in the FDB"
+    },
+    "GENERATION": {
+      "type": "integer",
+      "enum": [1, 2],
+      "description": "Generation key in the FDB"
+    },
+    "EXPERIMENT": {
+      "type": "string",
+      "description": "Experiment key in the FDB",
+      "enum": ["cont", "hist", "SSP3-7.0"]
+    },
+    "MODEL": {
+      "type": "string",
+      "description": "Model key in the FDB",
+      "enum": ["ICON", "IFS-NEMO", "IFS-FESOM"]
+    },
+    "INFO_FILE_PATH": {
+      "type": "string",
+      "description": "Path to the FDB directory within the experiment folder"
+    },
+    "INFO_FILE_NAME": {
+      "type": "string",
+      "description": "Path to the YAML file within the FDB directory of the experiment folder"
+    },
+    "RESOLUTION": {
+      "type": "string",
+      "description": "Sets the resolution",
+      "enum": ["standard", "high"]
+    }
+  },
+  "required": ["CLASS", "EXPVER", "FDB_HOME", "ACTIVITY", "REALIZATION", "GENERATION", "EXPERIMENT", "MODEL"]
+}

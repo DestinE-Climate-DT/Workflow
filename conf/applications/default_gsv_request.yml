@@ -1,0 +1,31 @@
+ENERGY_OFFSHORE:
+  GRID: "0.1/0.1"
+  AREA: "70/-12/48/31"
+  METHOD: nn
+ENERGY_ONSHORE:
+  GRID: "0.05/0.05"
+  AREA: "60/-5/50/5"
+  METHOD: "nn"
+OBSALL:
+  GRID: "0.1/0.1"
+  METHOD: "nn"
+HYDROMET:
+  GRID: "0.1/0.1"
+  AREA: "72.0/-21.0/27.0/45.0"
+  METHOD: "nn"
+HYDROLAND:
+  # if grid = 0.1/0.1 -> N = 83.95 | if grid=0.05/0.05 N = 83.975
+  GRID: "0.1/0.1"
+  METHOD: "nn"
+  AREA: "83.95/-180/-56/180"
+WILDFIRES_FWI:
+  GRID: "0.1/0.1"
+  METHOD: "nn"
+WILDFIRES_WISE:
+  GRID: "0.1/0.1"
+  AREA: "71/19/59.5/32"
+  METHOD: "nn"
+DATA:
+  GRID: "0.1/0.1"
+  AREA: "71/19/59.5/32"
+  METHOD: "nn"

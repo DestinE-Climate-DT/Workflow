@@ -1,0 +1,4 @@
+APP:
+  # NAMES: ...
+  READ_EXPID: 1234
+  OUTPATH: '/tmp'

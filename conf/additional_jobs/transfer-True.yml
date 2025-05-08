@@ -1,13 +1,30 @@
 JOBS:
   TRANSFER:
     FILE: templates/transfer.sh
-    PLATFORM: '%DEFAULT.HPCARCH%'
-    PARTITION: "%CURRENT_APP_PARTITION%"
-    DEPENDENCIES: SIM
+    PLATFORM: lumi-transfer
+    DEPENDENCIES: SIM TRANSFER-1
     RUNNING: chunk
-    WALLCLOCK: '00:30'
+    RETRIALS: 5
+    SPLITS: 'auto'
+    WALLCLOCK: '04:00'
     NODES: 1
     PROCESSORS: 1
     TASKS: 1
     THREADS: 1
+    CHECK: on_submission
+EXPERIMENT:
+  SPLITSIZEUNIT: day # default CHUNKSIZEUNIT-1 (month-1 == day)
+  # Split size. NUMERIC: 4, 6, 12
+  SPLITSIZE: 2
+  # Split policy. STRING: flexible, strict
+  SPLITPOLICY: flexible
 
+#WRAPPERS:
+#  WRAPPER_0:
+#    JOBS_IN_WRAPPER: TRANSFER
+#    METHOD: ASTHREAD
+#    TYPE: horizontal
+#    POLICY: mixed
+#    RETRIALS: 5
+#    MIN_WRAPPED: 1
+#    MAX_WRAPPED: 16

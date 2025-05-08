@@ -1,12 +1,38 @@
-JOBS:
-  SIM:
-    FILE: templates/sim_ifs-fesom.sh
-  CLEAN:
-    FILE: templates/clean.sh
-    PLATFORM: "%DEFAULT.HPCARCH%-login"
-    DEPENDENCIES: SIM
-    RUNNING: chunk
-    WALLCLOCK: '00:30'
-
-RUN:
-  TYPE: test
+MODEL:
+  # Place-holders to modify MIR_CACHE_PATHs via main.yml. Leave these parameters empty
+  # to use the default values defined by RAPS. Defining these parameters via the
+  # main.yml might not have an effect in all HPCs. It currently works in: LUMI, MN5
+  RAPS_MIR_CACHE_PATH:
+  RAPS_MIR_FESOM_CACHE_PATH:
+REQUEST:
+  MODEL: IFS-FESOM
+PLATFORMS:
+  LUMI:
+    RAPS_HOST_CPU: lum-c
+    RAPS_HOST_GPU: lum-g
+    RAPS_BIN_HPC_NAME: lumi
+    RAPS_COMPILER: cce
+    # Exports this value as mpilib for RAPS. It doesn't really switch the MPI lib
+    # and it neither affects the name of the rundir (mpilib hard-coded in RAPS for lumi)
+    RAPS_MPILIB: cray-mpich
+  MARENOSTRUM5:
+    RAPS_HOST_CPU: mn5-gpp
+    RAPS_HOST_GPU:
+    RAPS_BIN_HPC_NAME: mn5
+    RAPS_COMPILER: intel
+    # Exports this value as mpilib for RAPS. It doesn't really switch the MPI lib
+    # but it affects the name of the rundir (e.g.
+    # `rundir/tco79l137/t02k/hres/intel.openmpi`)
+    RAPS_MPILIB: openmpi
+  LEVANTE: # TODO: not yet supported in this version of the workflow
+    RAPS_HOST_CPU: lvt
+    RAPS_HOST_GPU:
+    RAPS_BIN_HPC_NAME:
+    RAPS_COMPILER:
+    RAPS_MPILIB:
+  JUWELS: # TODO: not yet supported in this version of the workflow
+    RAPS_HOST_CPU: juw
+    RAPS_HOST_GPU:
+    RAPS_BIN_HPC_NAME:
+    RAPS_COMPILER:
+    RAPS_MPILIB:

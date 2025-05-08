@@ -1,13 +1,11 @@
----
 type: local
 engine: toc
-schema: %CURRENT_FDB_DIR%/%DEFAULT.EXPID%/fdb/NATIVE_grids/etc/fdb/schema
+schema: "%REQUEST.FDB_HOME%/native/etc/fdb/schema"
 spaces:
-- handler: Default
-  roots:
-  - path: %CURRENT_FDB_DIR%/%DEFAULT.EXPID%/fdb/NATIVE_grids
-    wipe: true
-    archive: true
-    list: true
-    retrieve: true
-
+  - handler: Default
+    roots:
+      - path: "%REQUEST.FDB_HOME%/native"
+        wipe: true
+        archive: true
+        list: true
+        retrieve: true

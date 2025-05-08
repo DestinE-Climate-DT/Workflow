@@ -1,15 +1,15 @@
 CONFIGURATION:
   DQC_PROFILE: intermediate
+  DATA_PORTFOLIO: reduced
+  DQC_WALLCLOCK: "00:30"
   IFS:
     GTYPE: tco
     RESOL: 399
     LEVELS: 137
     EXPVER: hz9n
     LABEL: LWDA
-
     IO_NODES: 1
-
-PLATFORMS:    
+PLATFORMS:
   LUMI:
     TYPE: slurm
     PARTITION: "debug"
@@ -18,4 +18,15 @@ PLATFORMS:
     TASKS: 8
     THREADS: 7
     PROCESSORS_PER_NODE: 128
-
+  MARENOSTRUM5:
+    TYPE: slurm
+    QUEUE: "gp_debug"
+    MAX_WALLCLOCK: "2:00"
+    NODES: 2
+    TASKS: 14
+    THREADS: 8
+    PROCESSORS_PER_NODE: 112
+REQUEST:
+  RESOLUTION: standard
+AQUA:
+  RESOLUTION_ATM: hpz5

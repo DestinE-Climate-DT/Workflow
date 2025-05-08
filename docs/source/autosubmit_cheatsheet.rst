@@ -40,7 +40,7 @@ info <https://autosubmit.readthedocs.io/en/master/userguide/monitor_and_check/in
 Run your long workflow
 ~~~~~~~~~~~~~~~~~~~~~~~
 
-``nohup autosubmit run $expid`` 
+``nohup autosubmit run $expid``
 
 If you are planning to launch a long
 workflow, you can launch it with the ``nohup`` option. In this way, you
@@ -57,12 +57,12 @@ yours and kill it: ``kill $jobid``.
 `+
 info <https://autosubmit.readthedocs.io/en/master/userguide/run/index.html>`__
 
-Resubmit your FAILED jobs:
+Resubmit your FAILED jobs
 ~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 ``autosubmit setstatus EXPID -fs FAILED -t WAITING -s``
 
-Skip chunks that you already run:
+Skip chunks that you already run
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 It might happen that you want to restart from a previous run. You are
@@ -97,3 +97,13 @@ How to SYNCHRONIZE your HPC experiment directory with the one in the VM (for exa
    autosubmit setstatus $EXPID -fs SUSPENDED -t READY -s
    # Continue your experiment
    autosubmit run $EXPID
+
+Add applicaitons that are run in an already existing workflow
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+In order to add applications to the workflow, it is not enough to add another element to the APP.NAMES key in main. Here the steps to follow:
+
+-  Edit ``conf/main.yml`` with the applications that you want to add.
+-  Source the githook to modify the workflow structure. ``cd proj/git_project/`` & ``source .githooks/post-checkout``
+
+After this you will see a message saying: ``App jobs created successfully``. After this you can double check that it is what you want by using the GUI or monitoring the exmperiment. After you see what you expected, you are free to create and run the experiment as usual.

@@ -3,9 +3,10 @@
 
 set -xuve
 
-# Interface
-HPCROOTDIR=%HPCROOTDIR%
-PROJDEST=%PROJECT.PROJECT_DESTINATION%
+# HEADER
+
+HPCROOTDIR=${1:-%HPCROOTDIR%}
+PROJDEST=${2:-%PROJECT.PROJECT_DESTINATION%}
 CURRENT_ARCH=${3:-%CURRENT_ARCH%}
 CHUNKSIZE=${4:-%EXPERIMENT.CHUNKSIZE%}
 CHUNKSIZEUNIT=${5:-%EXPERIMENT.CHUNKSIZEUNIT%}
@@ -18,75 +19,96 @@ EXPID=${11:-%DEFAULT.EXPID%}
 ATM_GRID=${12:-%MODEL.GRID_ATM%}
 CHUNK=${13:-%CHUNK%}
 TOTAL_RETRIALS=${14:-%CONFIG.RETRIALS%}
-ICMCL=${15:-%ICMCL%}
-ICMCL=${ICMCL:-ICMCL_%CONFIGURATION.IFS.RESOL%_%CHUNK_START_YEAR%_extra}
+ICMCL=${15:-%MODEL.ICMCL_PATTERN%}
 START_DATE=${16:-%CHUNK_START_DATE%}
 END_DATE=${17:-%CHUNK_END_DATE%}
 END_IN_DAYS=${18:-%CHUNK_END_IN_DAYS%}
 PREV=${19:-%PREV%}
 RUN_DAYS=${20:-%RUN_DAYS%}
-IFS_IO_TASKS=${23:-%CONFIGURATION.IFS.IO_TASKS%}
-NEMO_IO_TASKS=${24:-%CONFIGURATION.NEMO.IO_TASKS%}
-HPC_PROJECT=${25:-%CURRENT_HPC_PROJECT_DIR%}
-MULTIO_ATM_PLANS=${26:-%CONFIGURATION.IFS.MULTIO_PLANS%}
-MULTIO_OCEAN_PLANS=${27:-%CONFIGURATION.NEMO.MULTIO_PLANS%}
-PU=${28:-%RUN.PROCESSOR_UNIT%}
-RAPS_USER_FLAGS=${29:-%CONFIGURATION.RAPS_USER_FLAGS%}
-RAPS_EXPERIMENT=${30:-%CONFIGURATION.RAPS_EXPERIMENT%}
-INPUTS=${31:-%CONFIGURATION.INPUTS%}
-RUN_TYPE=${32:-%RUN.TYPE%}
-FDB_PROD=${33:-%CURRENT_FDB_PROD%}
-FDB_DIR=${34:-%CURRENT_FDB_DIR%}
-IFS_IO_PPN=${35:-%CONFIGURATION.IFS.IO_PPN%}
-IFS_IO_PPN=${IFS_IO_PPN:-0}
-NEMO_IO_PPN=${36:-%CONFIGURATION.NEMO.IO_PPN%}
+IFS_IO_TASKS=${21:-%CONFIGURATION.IFS.IO_TASKS%}
+NEMO_IO_TASKS=${22:-%CONFIGURATION.NEMO.IO_TASKS%}
+HPC_PROJECT=${23:-%CONFIGURATION.HPC_PROJECT_DIR%}
+MULTIO_ATM_PLANS=${24:-%CONFIGURATION.IFS.MULTIO_PLANS%}
+MULTIO_OCEAN_PLANS=${25:-%CONFIGURATION.NEMO.MULTIO_PLANS%}
+PU=${26:-%RUN.PROCESSOR_UNIT%}
+RAPS_USER_FLAGS=${27:-%CONFIGURATION.RAPS_USER_FLAGS%}
+RAPS_EXPERIMENT=${28:-%CONFIGURATION.RAPS_EXPERIMENT%}
+RUN_TYPE=${29:-%RUN.TYPE%}
+IFS_IO_PPN=${30:-%CONFIGURATION.IFS.IO_PPN%}
+NEMO_IO_PPN=${31:-%CONFIGURATION.NEMO.IO_PPN%}
+IFS_IO_NODES=${32:-%CONFIGURATION.IFS.IO_NODES%}
+NEMO_IO_NODES=${33:-%CONFIGURATION.NEMO.IO_NODES%}
+MEMBER=${34:-%MEMBER%}
+MEMBER_LIST=${35:-%EXPERIMENT.MEMBERS%}
+WORKFLOW=${36:-%RUN.WORKFLOW%}
+SPLITS=${37:-%JOBS.DN.SPLITS%}
+EXPVER=${38:-%REQUEST.EXPVER%}
+CLASS=${39:-%REQUEST.CLASS%}
+FDB_HOME=${40:-%REQUEST.FDB_HOME%}
+DQC_PROFILE_PATH=${41:-%CONFIGURATION.DQC_PROFILE_PATH%}
+EXPERIMENT=${42:-%REQUEST.EXPERIMENT%}
+ACTIVITY=${43:-%REQUEST.ACTIVITY%}
+GENERATION=${44:-%REQUEST.GENERATION%}
+MODEL=${45:-%REQUEST.MODEL%}
+IO_ON=${46:-%CONFIGURATION.IO_ON%} # True or False
+LIBDIR=${47:-%CONFIGURATION.LIBDIR%}
+SCRATCH_DIR=${48:-%CURRENT_SCRATCH_DIR%}
+HPC_CONTAINER_DIR=${49:-%CONFIGURATION.CONTAINER_DIR%}
+GSV_VERSION=${50:-%GSV.VERSION%}
+MODEL_ROOT_PATH=${51:-%MODEL.ROOT_PATH%}
+MODEL_PATH=${52:-%MODEL.PATH%}
+MODEL_INPUTS=${53:-%MODEL.INPUTS%}
+SCRIPTDIR=${54:-%CONFIGURATION.SCRIPTDIR%}
+# Platform-dependent RAPS parameters (conf/model/ifs-nemo/ifs-nemo.yml)
+RAPS_HOST_CPU=${55:-%CURRENT_RAPS_HOST_CPU%}
+RAPS_HOST_GPU=${56:-%CURRENT_RAPS_HOST_GPU%}
+RAPS_BIN_HPC_NAME=${57:-%CURRENT_RAPS_BIN_HPC_NAME%}
+RAPS_COMPILER=${58:-%CURRENT_RAPS_COMPILER%}
+RAPS_MPILIB=${59:-%CURRENT_RAPS_MPILIB%}
+# Path to the modules profile (conf/platforms.yml)
+MODULES_PROFILE_PATH=${60:-%CONFIGURATION.MODULES_PROFILE_PATH%}
+
+# END_HEADER
+
+set -xuve
+
+ICMCL=${ICMCL:-ICMCL_%CONFIGURATION.IFS.RESOL%_%CHUNK_START_YEAR%_extra}
+
 NEMO_IO_PPN=${NEMO_IO_PPN:-0}
-IFS_IO_NODES=${37:-%CONFIGURATION.IFS.IO_NODES%}
-NEMO_IO_NODES=${38:-%CONFIGURATION.NEMO.IO_NODES%}
-MEMBER=${39:-%MEMBER%}
-MEMBER_LIST="${40:-%EXPERIMENT.MEMBERS%}"
-WORKFLOW=${41:-%RUN.WORKFLOW%}
-SPLITS=${42:-%JOBS.DN.SPLITS%}
+IFS_IO_PPN=${IFS_IO_PPN:-0}
 
 ATM_MODEL=${MODEL_NAME%%-*}
 
-LIBDIR="${HPCROOTDIR}"/"${PROJDEST}"/lib
 HPC=$(echo "${CURRENT_ARCH}" | cut -d- -f1)
 
 # Source libraries
 . "${LIBDIR}"/common/util.sh
 . "${LIBDIR}"/"${HPC}"/config.sh
 
+# Source the module profile if defined
+if [ -n "${MODULES_PROFILE_PATH}" ]; then
+    . "${MODULES_PROFILE_PATH}"
+fi
+
 export MODEL_VERSION
 export ENVIRONMENT
 export HPCARCH
 export HPCROOTDIR
-export INPUTS
 export PROJDEST
 
-load_model_dir
-load_inproot_precomp_path
-
 # Directory definition
-if [ -z "${MODEL_VERSION}" ]; then
-    RAPS_BIN="${HPCROOTDIR}/${PROJDEST}/${MODEL_NAME}/source/raps/bin"
-else
-    RAPS_BIN="${PRECOMP_MODEL_PATH}/source/raps/bin"
-fi
 
-PRE_RESTART_DIR=${HPCROOTDIR}/restarts/${MEMBER}
-RESTART_DIR=${PRE_RESTART_DIR}/current
-
-if [ -z "${MODEL_VERSION}" ]; then
-    BUNDLE_BUILD_DIR=${HPCROOTDIR}/${PROJDEST}/${MODEL_NAME}/build
-else
-    BUNDLE_BUILD_DIR=${PRECOMP_MODEL_PATH}/build
-fi
+RAPS_BIN="${MODEL_PATH}/source/raps/bin"
+BUNDLE_BUILD_DIR=${MODEL_PATH}/build
 
 export BUNDLE_BUILD_DIR
 export PATH=${RAPS_BIN}:$PATH
 
+PRE_RESTART_DIR=${HPCROOTDIR}/restarts/${MEMBER}
+RESTART_DIR=${PRE_RESTART_DIR}/current
+
 OUTROOT=${HPCROOTDIR}/rundir
+export OUTROOT=${OUTROOT}
 
 mkdir -p ${PRE_RESTART_DIR}
 cd ${PRE_RESTART_DIR}
@@ -107,35 +129,24 @@ for file in "${files[@]}"; do
     fi
 done
 
+# TODO REVISE THIS
 if [ -d ${HPCROOTDIR}/inipath/${MEMBER} ]; then
     export INPROOT=${HPCROOTDIR}/inipath/${MEMBER}
 else
-    export INPROOT=${INPROOT}
+    export INPROOT=${MODEL_INPUTS}
 fi
-
-export OUTROOT=${OUTROOT}
 
 export MULTIO_RAPS_PLANS_PATH=${RAPS_BIN}/../multio_yaml
 
 if [ ! -z "$MULTIO_ATM_PLANS" ]; then
     export MULTIO_IFSIO_CONFIG_FILE=${MULTIO_RAPS_PLANS_PATH}/multio-ifsio-config-${MULTIO_ATM_PLANS}.yaml
-else
-    export MULTIO_IFSIO_CONFIG_FILE=${MULTIO_RAPS_PLANS_PATH}/multio-ifsio-config.yaml
 fi
 
 if [ ! -z "$MULTIO_OCEAN_PLANS" ]; then
-    export MULTIO_NEMO_CONFIG_FILE=${MULTIO_RAPS_PLANS_PATH}/multio-ocean-client-skeleton-${MULTIO_OCEAN_PLANS}.yaml
-else
-    export MULTIO_NEMO_CONFIG_FILE=${MULTIO_RAPS_PLANS_PATH}/multio-ocean-client-skeleton.yaml
+    export MULTIO_NEMO_CONFIG_FILE=${MULTIO_RAPS_PLANS_PATH}/multio-nemo-${MULTIO_OCEAN_PLANS}.yaml
 fi
 
-set_data_gov ${RUN_TYPE}
-
-if [ "${FDB_TYPE}" = "PROD" ]; then
-    export FDB_DIRS="${FDB_PROD}/native:${FDB_PROD}:${FDB_PROD}/latlon"
-else
-    export FDB_DIRS="${FDB_DIR}/${EXPID}/fdb/NATIVE_grids:${FDB_DIR}/${EXPID}/fdb/HEALPIX_grids:${FDB_DIR}/${EXPID}/fdb/REGULARLL_grids"
-fi
+export FDB_DIRS="${FDB_HOME}/native:${FDB_HOME}:${FDB_HOME}/latlon"
 
 #####################################################
 # Sets experiment dependent variables for RAPS
@@ -146,7 +157,7 @@ fi
 ######################################################
 function load_experiment_ifs() {
 
-    export expver=%CONFIGURATION.IFS.EXPVER%
+    export input_expver=%CONFIGURATION.IFS.EXPVER%
     export label=%CONFIGURATION.IFS.LABEL%
 
     export gtype=%CONFIGURATION.IFS.GTYPE%
@@ -157,7 +168,7 @@ function load_experiment_ifs() {
     yyyymmdd=${SDATE::8}
     export yyyymmddzz=${yyyymmdd}00
 
-    if [ "${CHUNKSIZEUNIT}" == "month" ] || [ "${CHUNKSIZEUNIT}" == "year" ]; then
+    if [ "${CHUNKSIZEUNIT,,}" == "month" ] || [ "${CHUNKSIZEUNIT,,}" == "year" ]; then
         runlength=%CHUNK_END_IN_DAYS%
         CHUNKSIZEUNIT=day
     else
@@ -173,7 +184,7 @@ function load_experiment_ifs() {
 # Runs an hres simulation
 # Globals:
 #	RAPS_BIN
-#	bin_hpc_name
+#	RAPS_BIN_HPC_NAME
 #	BUNDLE_BUILD_DIR
 #	ICMCL
 #	OCEAN_GRID
@@ -194,33 +205,42 @@ function load_experiment_ifs() {
 ######################################################
 function run_experiment_ifs() {
 
-    cd "${RAPS_BIN}"/SLURM/"${bin_hpc_name}"
+    cd "${RAPS_BIN}"/SLURM/"${RAPS_BIN_HPC_NAME}"
 
-    get_member_number "$MEMBER_LIST" "$MEMBER"
+    # lib/common/util.sh (get_member_number) (auto generated comment)
+    MEMBER_NUMBER=$(get_member_number "${MEMBER_LIST}" ${MEMBER})
 
-    other="--ifs-bundle-build-dir=${BUNDLE_BUILD_DIR} --icmcl ${ICMCL} -R --nemo --nemo-ver=V40 --nemo-grid=${OCEAN_GRID} --nemo-xproc=${nemox} --nemo-yproc=${nemoy} --deep  --nonemopart --keepnetcdf --nextgemsout=6 --wam-multio --ifs-multio --restartdirectory=${RESTART_DIR} --realization=${MEMBER_NUMBER} --keeprestart --experiment=${RAPS_EXPERIMENT} $RAPS_USER_FLAGS"
+    other="--ifs-bundle-build-dir=${BUNDLE_BUILD_DIR} --icmcl ${ICMCL} -R --nemo \
+    --nemo-ver=V40 --nemo-grid=${OCEAN_GRID} --nemo-xproc=${nemox} --nemo-yproc=${nemoy} \
+    --deep  --nonemopart  --restartdirectory=${RESTART_DIR}  \
+    --keeprestart $RAPS_USER_FLAGS"
 
     export other
 
-    flags_fdb="--keepfdb --multio-production-fdbs=${FDB_DIRS} --outexp=${EXPVER}"
-
-    io_flags=""
-
-    # Undefined IO for NEMO, default configuration. Uses half of the IO resources for IFS and half for NEMO.
-    if [ -z "${NEMO_IO_TASKS}" ] && [ -z "${NEMO_IO_NODES}" ] && [ -n "${IFS_IO_NODES}" ]; then
-        echo "Same tasks for IFS and NEMO"
-        IFS_IO_TASKS=$((${IFS_IO_NODES} * ${SLURM_CPUS_ON_NODE} / ${SLURM_CPUS_PER_TASK} / 2))
-        NEMO_IO_TASKS=$((${IFS_IO_NODES} * ${SLURM_CPUS_ON_NODE} / ${SLURM_CPUS_PER_TASK} / 2))
-    fi
-
-    # Check for IFS and NEMO server resources
-    if [ -n "${IFS_IO_TASKS}" ] && [ -n "${NEMO_IO_TASKS}" ]; then
-        io_flags="--io-tasks=${IFS_IO_TASKS} --nemo-multio-server-num=${NEMO_IO_TASKS}"
-    elif [ -n "${IFS_IO_NODES}" ] && [ -n "${NEMO_IO_NODES}" ]; then
-        io_flags="--io-nodes=${IFS_IO_NODES} --io-ppn=${IFS_IO_PPN} --nemo-multio-server-nodes=${NEMO_IO_NODES} --nemo-multio-server-ppn=${NEMO_IO_PPN}"
+    if [ ${IO_ON,,} == "false" ]; then
+        flags_fdb=""
+        io_flags=""
     else
-        echo 'Error: No resources selected for IFS or NEMO servers. Add IFS_IO_NODES and NEMO_IO_NODES or IFS_IO_TASKS and NEMO_IO_TASKS variables.'
-        exit 1
+        flags_fdb="--keepfdb --multio-production-fdbs=${FDB_DIRS} --outexp=${EXPVER} \
+        --realization=${MEMBER_NUMBER} --generation=${GENERATION} --experiment=${RAPS_EXPERIMENT}"
+        io_flags="--keepnetcdf --nextgemsout=6 --wam-multio --ifs-multio"
+
+        # Undefined IO for NEMO, default configuration. Uses half of the IO resources for IFS and half for NEMO.
+        if [ -z "${NEMO_IO_TASKS}" ] && [ -z "${NEMO_IO_NODES}" ] && [ -n "${IFS_IO_NODES}" ]; then
+            echo "Same tasks for IFS and NEMO"
+            IFS_IO_TASKS=$((${IFS_IO_NODES} * ${SLURM_CPUS_ON_NODE} / ${SLURM_CPUS_PER_TASK} / 2))
+            NEMO_IO_TASKS=$((${IFS_IO_NODES} * ${SLURM_CPUS_ON_NODE} / ${SLURM_CPUS_PER_TASK} / 2))
+        fi
+
+        # Check for IFS and NEMO server resources
+        if [ -n "${IFS_IO_TASKS}" ] && [ -n "${NEMO_IO_TASKS}" ]; then
+            io_flags+=" --io-tasks=${IFS_IO_TASKS} --nemo-multio-server-num=${NEMO_IO_TASKS}"
+        elif [ -n "${IFS_IO_NODES}" ] && [ -n "${NEMO_IO_NODES}" ]; then
+            io_flags+=" --io-nodes=${IFS_IO_NODES} --io-ppn=${IFS_IO_PPN} --nemo-multio-server-nodes=${NEMO_IO_NODES} --nemo-multio-server-ppn=${NEMO_IO_PPN}"
+        else
+            echo 'Error: No resources selected for IFS or NEMO servers. Add IFS_IO_NODES and NEMO_IO_NODES or IFS_IO_TASKS and NEMO_IO_TASKS variables.'
+            exit 1
+        fi
     fi
 
     export other
@@ -246,11 +266,12 @@ function run_experiment_ifs() {
     hres \
         -p "$mpi" -t "$omp" -h "$ht" \
         -j "$jobid" -J "$jobname" \
-        -d "$yyyymmddzz" -e "$expver" -L "$label" \
+        -d "$yyyymmddzz" -e "$input_expver" -L "$label" \
         -T "$gtype" -r "$resol" -l "$levels" -f "$fclen" \
         -x "$ifsMASTER" \
         -N "$nproma" \
-        -H "$host" -n "$nodes" -C "$compiler" ${other:-} ${flags_fdb} ${io_flags}
+        -H "$host" -n "$nodes" -C "$RAPS_COMPILER" ${other:-} ${flags_fdb} ${io_flags} |
+        grep -v 'IO_SERV_CLOSE_EC FLUSHFDB'
 }
 
 ###################################################
@@ -342,7 +363,11 @@ function restarts_moving() {
 
 }
 
-load_SIM_env_"${ATM_MODEL}"_"${PU}"
+# Defines the host as RAPS_HOST_CPU or RAPS_HOST_GPU depending on the PU
+# lib/common/util.sh (get_host_for_raps) (auto generated comment)
+host=$(get_host_for_raps "${PU}" "${RAPS_HOST_CPU}" "${RAPS_HOST_GPU}")
+# Exports mpilib for RAPS
+export mpilib=${RAPS_MPILIB}
 
 load_experiment_"${ATM_MODEL}"
 
@@ -353,46 +378,44 @@ nemoy=-1
 
 export LD_LIBRARY_PATH=$BUNDLE_BUILD_DIR/ifs_sp:$LD_LIBRARY_PATH
 
-if [ "${WORKFLOW}" == "maestro-end-to-end" ]; then
-    # Before we can run the Maestro-enabled model, we need the Pool Manager info to
-    # connect to Maestro (file produced by templates/mstro_pm.sh)
-    PM_INFO="${HPCROOTDIR}/LOG_${EXPID}/pm_${CHUNK}.info"
-    while [ ! -s $PM_INFO ]; do
-        echo "Waiting for pool manager credentials ..."
-        sleep 1
-    done
-    echo "done."
-    # reading for semi-colon separated line in the $PM_INFO file
-    exec 4<$PM_INFO
-    read -d ';' -u 4 pm_info_varname
-    read -d ';' -u 4 pm_info
-    MSTRO_POOL_MANAGER_INFO="$pm_info"
-    export MSTRO_POOL_MANAGER_INFO
-    echo "MSTRO_POOL_MANAGER_INFO=${MSTRO_POOL_MANAGER_INFO}"
-
-    # We also need to wait for the OPA JOBS ready to listen to data events
-    for i in $(seq 1 $SPLITS); do
-        OPA_READY="${HPCROOTDIR}"/"LOG_${EXPID}"/"opa_"${CHUNK}"_"${i}"_mstrodep"
-        while [ ! -f $OPA_READY ]; do
-            echo "Waiting for OPA_${CHUNK}_${i} to prepare ..."
-            sleep 1
-        done
-        echo "done."
-    done
-
-    load_environment_maestro_end_to_end
-    export MSTRO_WORKFLOW_NAME="Maestro ECMWF Demo Workflow"
-    export COMPONENT_NAME="IFS-Nemo"
-fi
-
 run_experiment_"${ATM_MODEL}"
-
-# FIXME Perhaps using the Autosubmit-generated completed files is more economical
-if [ "${WORKFLOW}" == "maestro-end-to-end" ]; then
-    touch "${HPCROOTDIR}/LOG_${EXPID}/producer_${CHUNK}_mstrodep"
-fi
 
 echo "The model ran successfully."
 echo "Moving the restart files to the next chunk folder to use them in the following chunk"
 
 restarts_moving
+
+cd $OUTROOT
+
+# lib/LUMI/config.sh (load_singularity) (auto generated comment)
+# lib/MARENOSTRUM5/config.sh (load_singularity) (auto generated comment)
+load_singularity
+singularity exec --cleanenv --no-home \
+    --env "LIBDIR=${LIBDIR}" \
+    --env "DQC_PROFILE_PATH=${DQC_PROFILE_PATH}" \
+    --env "EXPVER=${EXPVER}" \
+    --env "EXPERIMENT=${EXPERIMENT}" \
+    --env "ACTIVITY=${ACTIVITY}" \
+    --env "REALIZATION=${MEMBER_NUMBER}" \
+    --env "GENERATION=${GENERATION}" \
+    --env "MODEL=${MODEL}" \
+    --env "START_DATE=${START_DATE}" \
+    --env "END_DATE=${END_DATE}" \
+    --env "CHUNK=${CHUNK}" \
+    --env "FDB_HOME=${FDB_HOME}" \
+    --env "HPCROOTDIR=${HPCROOTDIR}" \
+    --env "SCRIPTDIR=${SCRIPTDIR}" \
+    --bind "$(realpath ${HPCROOTDIR})" \
+    --bind "$(realpath ${FDB_HOME})" \
+    --bind "$(realpath ${SCRATCH_DIR})" \
+    "$HPC_CONTAINER_DIR"/gsv/gsv_${GSV_VERSION}.sif \
+    bash -c \
+    '
+    set -xuve
+    cd ${HPCROOTDIR}
+    . "${LIBDIR}"/common/util.sh
+# lib/common/util.sh (fix_constant_variables) (auto generated comment)
+    fix_constant_variables "${LIBDIR}" "${DQC_PROFILE_PATH}" "${EXPVER}" \
+        "${EXPERIMENT}" "${ACTIVITY}" "${MODEL}" "${START_DATE}" \
+        "${END_DATE}" "${CHUNK}" "${FDB_HOME}" "${REALIZATION}" "${GENERATION}"
+    '

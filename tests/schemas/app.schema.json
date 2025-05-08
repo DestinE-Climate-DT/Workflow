@@ -1,0 +1,23 @@
+{
+  "$id": "schema:workflow/app",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "title": "App",
+  "description": "Schema for the app section of the workflow",
+  "properties": {
+    "NAMES": {
+      "type": "list",
+      "description": "List of applications to run"
+    },
+    "OUTPATH": {
+      "type": "string",
+      "description": "Path to the output directory"
+    },
+    "READ_FROM_DATABRIDGE": {
+      "type": "string",
+      "enum": ["False", "True"],
+      "description": "If the data will be read from the databridge"
+    }
+  },
+  "required": ["NAMES", "OUTPATH"]
+}

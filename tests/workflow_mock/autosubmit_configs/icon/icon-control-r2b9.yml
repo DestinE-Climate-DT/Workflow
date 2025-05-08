@@ -1,0 +1,7 @@
+EXP1:
+  CREATE:
+    DESCRIPTION: Testing icon-control-r2b9
+    HPC: lumi
+    GIT_AS_CONF: conf/bootstrap/
+    GIT_REPO: https://earth.bsc.es/gitlab/digital-twins/de_340/workflow
+    GIT_BRANCH: mock

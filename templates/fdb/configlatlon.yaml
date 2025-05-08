@@ -1,0 +1,11 @@
+type: local
+engine: toc
+schema: "%REQUEST.FDB_HOME%/latlon/etc/fdb/schema"
+spaces:
+  - handler: Default
+    roots:
+      - path: "%REQUEST.FDB_HOME%/latlon"
+        wipe: true
+        archive: true
+        list: true
+        retrieve: true

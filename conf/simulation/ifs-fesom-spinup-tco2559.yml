@@ -1,0 +1,20 @@
+experiment:
+  DATELIST: 19880101
+  MEMBERS: fc0
+  CHUNKSIZEUNIT: month
+  CHUNKSIZE: 1
+  NUMCHUNKS: 3
+  CALENDAR: standard
+CONFIGURATION:
+  DQC_PROFILE: production
+  DATA_PORTFOLIO: production
+  ICMCL: "monthly"
+  RAPS_EXPERIMENT: "control"
+  RAPS_USER_FLAGS: "--wam-grib-version=1 --no-wam-output --fixyear 1990 --cbmf_reduced --no-ozone --drhook --hugepages --runoff-mapper --sicoupl=thermodynamical"
+  IFS:
+    EXPVER: hzfy
+REQUEST:
+  ACTIVITY: baseline
+  EXPERIMENT: cont
+  GENERATION: 2
+  REALIZATION: 1

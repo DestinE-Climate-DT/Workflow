@@ -1,0 +1,52 @@
+{
+  "$id": "schema:workflow/run",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "title": "Run",
+  "description": "Schema for the RUN section of the workflow",
+  "properties": {
+    "TYPE": {
+      "type": "string",
+      "enum": ["production", "research", "pre-production", "test"],
+      "description": "The type of run to be executed, it will set the data governance"
+    },
+    "WORKFLOW": {
+      "type": "string",
+      "enum": ["end-to-end", "model", "apps", "simless"],
+      "description": "The type of workflow to run, it will set the joblist"
+    },
+    "if": {
+      "properties": {
+      "WORKFLOW": { "enum": ["model", "end-to-end"] }
+      }
+    },
+    "then": {"if": {"properties": {"MODEL": {"properties": {"NAME": { "enum": ["ifs-nemo", "ifs-fesom"]}}}}},
+        "then": {"properties": {"MODEL": {"$ref": "./tests/schemas/model_ifs.schema.json"}}},
+        "else": {"properties": {"MODEL": {"$ref": "./tests/schemas/model_icon.schema.json"}}}
+    },
+    "else": {
+      "if": {
+      "properties": {
+        "WORKFLOW": { "enum": ["apps"] }
+      }
+      },
+      "then": {
+      "type": "object",
+      "properties": {
+        "$ref": "./tests/schemas/app.schema.json"
+        }
+      }
+    },
+    "ENVIRONMENT": {
+      "type": "string",
+      "enum": ["cray", "intel"],
+      "description": "The environment in which the workflow is run"
+    },
+    "PROCESSOR_UNIT": {
+      "type": "string",
+      "enum": ["cpu", "gpu", "gpu_gpu"],
+      "description": "The processor unit used to run the workflow"
+    }
+  },
+  "required": ["TYPE", "WORKFLOW", "ENVIRONMENT", "PROCESSOR_UNIT"]
+}

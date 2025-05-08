@@ -1,0 +1,23 @@
+RUN:
+  WORKFLOW: model
+  ENVIRONMENT: cray
+  PROCESSOR_UNIT: gpu
+  TYPE: test
+MODEL:
+  NAME: icon
+  SIMULATION: test-icon
+  GRID_ATM: r2b8
+  GRID_OCE: r2b8
+  VERSION: 'master-v.1.1'
+CONFIGURATION:
+  ADDITIONAL_JOBS:
+    TRANSFER: "False"
+    BACKUP: "False"
+    MEMORY_CHECKER: "False"
+    DQC: "True"
+    CLEAN: "True"
+    AQUA: "True"
+PLATFORMS:
+  LUMI:
+    TYPE: slurm
+    APP_PARTITION: debug

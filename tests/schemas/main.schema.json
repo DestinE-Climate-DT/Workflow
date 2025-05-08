@@ -1,0 +1,59 @@
+{
+  "$id": "schema:workflow/main",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "RUN": {
+      "$ref": "./tests/schemas/run.schema.json"
+    },
+    "EXPERIMENT": {
+      "$ref": "./tests/schemas/experiment.schema.json"
+    },
+    "REQUEST": {
+      "$ref": "./tests/schemas/request.schema.json"
+    },
+    "CONFIGURATION": {
+      "$ref": "./tests/schemas/configuration.schema.json"
+    },
+    "GSV": {
+      "$ref": "./tests/schemas/gsv.schema.json"
+    },
+    "JOBS": {
+      "$ref": "./tests/schemas/jobs.schema.json"
+    },
+    "PLATFORMS": {
+      "$ref": "./tests/schemas/platforms.schema.json"
+    }
+  },
+  "required": [
+    "RUN",
+    "EXPERIMENT",
+    "REQUEST",
+    "CONFIGURATION"
+  ],
+  "if": {
+    "properties": {
+      "CONFIGURATION": {
+        "properties": {
+          "ADDITIONAL_JOBS": {
+            "properties": {
+              "AQUA": {
+                "const": "True"
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "then": {
+    "properties": {
+      "AQUA": {
+        "$ref": "./tests/schemas/aqua.schema.json"
+      }
+    },
+    "required": [
+      "AQUA"
+    ]
+  }
+}

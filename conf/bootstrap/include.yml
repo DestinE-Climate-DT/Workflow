@@ -6,19 +6,39 @@
 DEFAULT:
   CUSTOM_CONFIG:
     PRE:
+      # Basic configuration: platforms, jobs and defaults
       - "%PROJDIR%/conf/platforms.yml"
-      - "%PROJDIR%/conf/jobs_%RUN.WORKFLOW%.yml" 
+      - "%PROJDIR%/conf/jobs_%RUN.WORKFLOW%.yml"
+      - "%PROJDIR%/conf/defaults/defaults_%RUN.WORKFLOW%.yml"
+      - "%PROJDIR%/conf/gsv.yml"
+      - "%PROJDIR%/conf/general.yml"
+      # Model configuration
       - "%PROJDIR%/conf/simulation/%MODEL.SIMULATION%.yml"
       - "%PROJDIR%/conf/model/%MODEL.NAME%/%MODEL.NAME%.yml"
       - "%PROJDIR%/conf/model/%MODEL.NAME%/%MODEL.GRID_ATM%-%RUN.PROCESSOR_UNIT%.yml"
       - "%PROJDIR%/conf/model/%MODEL.NAME%/ICMCL-%CONFIGURATION.ICMCL%.yml"
+      - "%PROJDIR%/conf/model/%MODEL.NAME%/%MODEL.GRID_OCE%.yml"
+      # Additional jobs
       - "%PROJDIR%/conf/additional_jobs/transfer-%CONFIGURATION.ADDITIONAL_JOBS.TRANSFER%.yml"
       - "%PROJDIR%/conf/additional_jobs/backup-%CONFIGURATION.ADDITIONAL_JOBS.BACKUP%.yml"
-      - "%PROJDIR%/conf/additional_jobs/memory_checker-%CONFIGURATION.ADDITIONAL_JOBS.MEMORY_CHECKER%.yml" 
-      - "%PROJDIR%/conf/additional_jobs/dqc-%CONFIGURATION.ADDITIONAL_JOBS.DQC%.yml" 
-      - "%PROJDIR%/conf/additional_jobs/wipe-%CONFIGURATION.ADDITIONAL_JOBS.WIPE%.yml" 
-      - "%PROJDIR%/conf/applications/%APP.NAMES%"
-      - "%PROJDIR%/conf/additional_jobs/clean-%CONFIGURATION.ADDITIONAL_JOBS.CLEAN%.yml" 
+      - "%PROJDIR%/conf/additional_jobs/memory_checker-%CONFIGURATION.ADDITIONAL_JOBS.MEMORY_CHECKER%.yml"
+      - "%PROJDIR%/conf/additional_jobs/dqc-%CONFIGURATION.ADDITIONAL_JOBS.DQC%.yml"
+      - "%PROJDIR%/conf/additional_jobs/wipe-%CONFIGURATION.ADDITIONAL_JOBS.WIPE%.yml"
+      - "%PROJDIR%/conf/additional_jobs/aqua-%CONFIGURATION.ADDITIONAL_JOBS.AQUA%.yml"
+      - "%PROJDIR%/conf/additional_jobs/clean-%CONFIGURATION.ADDITIONAL_JOBS.CLEAN%.yml"
+      - "%PROJDIR%/conf/additional_jobs/scaling-%CONFIGURATION.ADDITIONAL_JOBS.SCALING%.yml"
+      - "%PROJDIR%/conf/additional_jobs/aqua-%CONFIGURATION.ADDITIONAL_JOBS.AQUA%.yml"
+      - "%PROJDIR%/conf/additional_jobs/postproc_energy_onshore-%CONFIGURATION.ADDITIONAL_JOBS.POSTPROC_ENERGY_ONSHORE%.yml"
+      - "%PROJDIR%/conf/additional_jobs/postproc_hydroland-%CONFIGURATION.ADDITIONAL_JOBS.POSTPROC_HYDROLAND%.yml"
+      # Applications
+      - "%PROJDIR%/conf/applications/" # this loads everything under this directory (so doing the same as below). It wil have to be changed to $app specific from main.yml
+      - "%PROJDIR%/conf/applications/opa.yml"
+      - "%PROJDIR%/conf/applications/container_versions.yml"
+      - "%PROJDIR%/conf/applications/default_gsv_request.yml"
+      # Data configuration
+      - "%PROJDIR%/conf/run_types/%RUN.TYPE%.yml"
+      # Mother request
+      - "%PROJDIR%/conf/mother_request.yml"
     POST:
       - "~/platforms.yml"
-
+      - "%AS_ENV_PLATFORMS_PATH%"

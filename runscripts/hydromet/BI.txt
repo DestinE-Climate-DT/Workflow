@@ -1,0 +1,7 @@
+x_min: -10
+x_max: 2
+y_min: 50
+y_max: 59 
+x_var: lon
+y_var : lat
+
