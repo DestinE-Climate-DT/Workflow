@@ -1,13 +1,13 @@
 # Climate DT (DE_340) workflow
 Welcome to the Climate DT Workflow documentation!
 
-Version v5.0.5 includes the possibility to run end-to-end, models or applications.
+Version v5.1.0 includes the possibility to run end-to-end, models or applications.
 
 ## Getting Started
 
 All the experiments should be created in the [Autosubmit Virtual Machine](https://wiki.eduuni.fi/display/cscRDIcollaboration/Autosubmit+VM). To access the VM, you need a user and your SSH key to be authorized. Add your name, e-mail, preferred username, and SSH (local) public key to the [table](https://wiki.eduuni.fi/display/cscRDIcollaboration/Autosubmit+VM+Users).
 
-Make sure you have a recent Autosubmit version running `autosubmit --version`. This workflow has been developed using the `4.1.12` version of Autosubmit. Otherwise update it by typing  `module load autosubmit/v4.1.12`. You can follow more detailed description about Autosubmit in [Autosubmit Readthedocs](https://autosubmit.readthedocs.io/en/master/).
+Make sure you have a recent Autosubmit version running `autosubmit --version`. This workflow has been developed using the `4.1.14` version of Autosubmit. Otherwise update it by typing  `module load autosubmit/v4.1.14`. You can follow more detailed description about Autosubmit in [Autosubmit Readthedocs](https://autosubmit.readthedocs.io/en/master/).
 
 ### Prerequisites
 
