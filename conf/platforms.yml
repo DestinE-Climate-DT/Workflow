@@ -3,9 +3,9 @@ Platforms:
     TYPE: slurm
     HOST: mn5-cluster1
     # This needs that a ~/.ssh/config exists with the following:
-    # the login node in mn0 allows internet acces
-    # Host mn4-cluster1
-    #     Hostname mn0.bsc.es
+    # the login node in glogin4 allows internet access
+    # Host mn5-cluster1
+    #     Hostname glogin4.bsc.es
     #     IdentifyFile ~/.ssh/<your_sshkey>
     #     User <bsc user>
     PROJECT: ehpc01
@@ -20,6 +20,7 @@ Platforms:
     # To change the production data directory, change the FDB_PROD variable
     # in main.yml
     FDB_PROD: /gpfs/projects/ehpc01/dte/fdb
+    DATABRIDGE_FDB_HOME: "/home/service/databridge"
     DATA_DIR: /gpfs/projects/ehpc01/
     ADD_PROJECT_TO_HOST: False
     TEMP_DIR: ''
@@ -31,17 +32,18 @@ Platforms:
     HPCARCH_lowercase: "marenostrum5"
     CATALOG_NAME: mn5-phase2
     # Some HPCs might require to source a file to be able to use their module system.
-    # This parameddter allows you to provide the module profile path via the conf files.
+    # This parameter allows you to provide the module profile path via the conf files.
     MODULES_PROFILE_PATH:
     TEST_APP_AUX_IN_DATA_DIR: "/gpfs/projects/ehpc01/applications/"
     PROD_APP_AUX_IN_DATA_DIR: "/gpfs/scratch/ehpc01/input_data/applications/"
+    CONTAINER_COMMAND: "singularity"
   marenostrum5-login:
     TYPE: ps
     HOST: mn5-cluster1
     # This needs that a ~/.ssh/config exists with the following:
-    # the login node in mn0 allows internet acces
-    # Host mn4-cluster1
-    #     Hostname mn0.bsc.es
+    # the login node in glogin4 allows internet access
+    # Host mn5-cluster1
+    #     Hostname glogin4.bsc.es
     #     IdentifyFile ~/.ssh/<your_sshkey>
     #     User <bsc user>
     PROJECT: "%PLATFORMS.MARENOSTRUM5.PROJECT%"
@@ -57,53 +59,37 @@ Platforms:
     MAX_WALLCLOCK: '48:00'
     HPCARCH_short: "%PLATFORMS.MARENOSTRUM5.HPCARCH_short%"
     HPCARCH_lowercase: "%PLATFORMS.MARENOSTRUM5.HPCARCH_lowercase%"
-    CATALOG_NAME: "%PLATFORMS.MARENOSTRUM5.CATALOG_NAME%"
     # Some HPCs might require to source a file to be able to use their module system.
-    # This parameddter allows you to provide the module profile path via the conf files.
+    # This parameter allows you to provide the module profile path via the conf files.
     MODULES_PROFILE_PATH: "%PLATFORMS.MARENOSTRUM5.MODULES_PROFILE_PATH%"
-  juwels-login:
+    CONTAINER_COMMAND: "%PLATFORMS.MARENOSTRUM5.CONTAINER_COMMAND%"
+  marenostrum5-transfer:
     TYPE: ps
-    HOST: juwels-cluster
+    HOST: mn5-prod-client1
     # This needs that a ~/.ssh/config exists with the following:
-    # Host juwels-cluster
-    #     Hostname %.fz-juelich.de
+    # the login node in glogin4 allows internet access
+    # Host mn5-cluster1
+    #     Hostname glogin4.bsc.es
     #     IdentifyFile ~/.ssh/<your_sshkey>
-    #     User <juwels user>
-    PROJECT: "%PLATFORMS.JUWELS.PROJECT%"
-    HPC_PROJECT_DIR: null
-    USER: <to-be-overloaded-in-user-conf>
-    SCRATCH_DIR: /p/scratch
-    SCRATCH_PROJECT_DIR: chhb19
+    #     User <bsc user>
+    PROJECT: "%PLATFORMS.MARENOSTRUM5.PROJECT%"
+    DEVELOPMENT_PROJECT: "%PLATFORMS.MARENOSTRUM5.DEVELOPMENT_PROJECT%"
+    OPERATIONAL_PROJECT: "%PLATFORMS.MARENOSTRUM5.DEVELOPMENT_PROJECT%"
+    HPC_PROJECT_ROOT: "%PLATFORMS.MARENOSTRUM5-TRANSFER.SCRATCH_DIR%"
+    USER: datamover
+    SCRATCH_DIR: /staging
     ADD_PROJECT_TO_HOST: False
     TEMP_DIR: ''
+    FDB_PROD: "/home/service/gateway"
+    EXECUTABLE: "/bin/bash --login"
+    DATABRIDGE_FDB_HOME: "/home/service/databridge"
+    TOTALJOBS: 1
     # Some HPCs might require to source a file to be able to use their module system.
-    # This parameddter allows you to provide the module profile path via the conf files.
-    MODULES_PROFILE_PATH: "%PLATFORMS.JUWELS.MODULES_PROFILE_PATH%"
-  juwels:
-    TYPE: slurm
-    HOST: juwels-cluster
-    # This needs that a ~/.ssh/config exists with the following:
-    # Host juwels-cluster
-    #     Hostname %.fz-juelich.de
-    #     IdentifyFile ~/.ssh/<your_sshkey>
-    #     User <juwels user>
-    PROJECT: hhb19
-    HPC_PROJECT_DIR: null
-    USER: <to-be-overloaded-in-user-conf>
-    QUEUE: ""
-    CUSTOM_DIRECTIVES: '#SBATCH -p standard -N 1 --ntasks-per-node=24 --cpus-per-task=2'
-    SCRATCH_DIR: /p/scratch
-    SCRATCH_PROJECT_DIR: chhb19
-    PARTITION: devel
-    ADD_PROJECT_TO_HOST: False
-    MAX_WALLCLOCK: '48:00'
-    TEMP_DIR: ''
-    PROCESSORS_PER_NODE: 24
-    # Some HPCs might require to source a file to be able to use their module system.
-    # This parameddter allows you to provide the module profile path via the conf files.
-    MODULES_PROFILE_PATH:
-    TEST_APP_AUX_IN_DATA_DIR:
-    PROD_APP_AUX_IN_DATA_DIR:
+    # This parameter allows you to provide the module profile path via the conf files.
+    MODULES_PROFILE_PATH: "%PLATFORMS.MARENOSTRUM5.MODULES_PROFILE_PATH%"
+    CONTAINER_COMMAND: "/home/datamover/apptainer-install-dir/bin/apptainer"
+    MARS_BINARY: "/usr/bin/"
+    DATABRIDGE_DATABASE: "databridge"
   lumi-login:
     TYPE: ps
     HOST: lumi-cluster
@@ -127,10 +113,10 @@ Platforms:
     MAX_WAITING_JOBS: 1
     HPCARCH_short: "lumi"
     HPCARCH_lowercase: "lumi"
-    CATALOG_NAME: "%PLATFORMS.LUMI.CATALOG_NAME%"
     # Some HPCs might require to source a file to be able to use their module system.
-    # This parameddter allows you to provide the module profile path via the conf files.
+    # This parameter allows you to provide the module profile path via the conf files.
     MODULES_PROFILE_PATH: "%PLATFORMS.LUMI.MODULES_PROFILE_PATH%"
+    CONTAINER_COMMAND: "singularity"
   lumi:
     TYPE: slurm
     HOST: lumi-cluster #lumi.csc.fi
@@ -147,7 +133,7 @@ Platforms:
     SCRATCH_DIR: /scratch
     ADD_PROJECT_TO_HOST: False
     TEMP_DIR: ''
-    # Currently BUDGET is not suported by Autosubmit (Autosubmit #1365)
+    # Currently BUDGET is not supported by Autosubmit (Autosubmit #1365)
     BUDGET: "%PLATFORMS.LUMI.PROJECT%"
     EXECUTABLE: "/bin/bash --login"
     DATABRIDGE_FDB_HOME: "/appl/local/destine/databridge"
@@ -163,11 +149,13 @@ Platforms:
     HPCARCH_short: "lumi"
     HPCARCH_lowercase: "lumi"
     CATALOG_NAME: "lumi-phase2"
+    MARS_BINARY: "%PLATFORMS.LUMI-TRANSFER.MARS_BINARY%"
     # Some HPCs might require to source a file to be able to use their module system.
-    # This parameddter allows you to provide the module profile path via the conf files.
+    # This parameter allows you to provide the module profile path via the conf files.
     MODULES_PROFILE_PATH:
     TEST_APP_AUX_IN_DATA_DIR: "/project/project_465000454/applications/"
     PROD_APP_AUX_IN_DATA_DIR: "/appl/local/climatedt/input_data/applications/"
+    CONTAINER_COMMAND: "singularity"
   lumi-transfer:
     TYPE: slurm
     HOST: lumi-cluster #lumi.csc.fi
@@ -185,6 +173,7 @@ Platforms:
     ADD_PROJECT_TO_HOST: False
     TEMP_DIR: ''
     BUDGET: "%PLATFORMS.LUMI.PROJECT%"
+    APP_PARTITION: "%PLATFORMS.LUMI.APP_PARTITION%"
     EXECUTABLE: "/bin/bash --login"
     DATABRIDGE_FDB_HOME: "%PLATFORMS.LUMI.DATABRIDGE_FDB_HOME%"
     EXCLUSIVE: "True"
@@ -196,48 +185,8 @@ Platforms:
     TOTALJOBS: 1
     PROCESSORS_PER_NODE: 128
     # Some HPCs might require to source a file to be able to use their module system.
-    # This parameddter allows you to provide the module profile path via the conf files.
+    # This parameter allows you to provide the module profile path via the conf files.
     MODULES_PROFILE_PATH: "%PLATFORMS.LUMI.MODULES_PROFILE_PATH%"
-  levante-login:
-    TYPE: ps
-    HOST: levante
-    # This needs that a ~/.ssh/config exists with the following:
-    # Host levante-cluster
-    #     Hostname levante.dkrz.de
-    #     IdentifyFile ~/.ssh/<your_sshkey>
-    #     User <levante user>
-    PROJECT: <to-be-overloaded-by-user>
-    HPC_PROJECT_DIR: "/work/bb1153"
-    USER: <to-be-overloaded-in-user-conf>
-    SCRATCH_DIR: /work
-    ADD_PROJECT_TO_HOST: False
-    TEMP_DIR: ''
-    EXECUTABLE: "/usr/bin/bash -l" # this is needed on levante to make it find the module command
-    # Some HPCs might require to source a file to be able to use their module system.
-    # This parameddter allows you to provide the module profile path via the conf files.
-    MODULES_PROFILE_PATH: "%PLATFORMS.LEVANTE.MODULES_PROFILE_PATH%"
-  levante:
-    TYPE: slurm
-    HOST: levante
-    # This needs that a ~/.ssh/config exists with the following:
-    # Host levante-cluster
-    #     Hostname levante.dkrz.de
-    #     IdentifyFile ~/.ssh/<your_sshkey>
-    #     User <levante user>
-    PROJECT: <to-be-overloaded-by-user>
-    HPC_PROJECT_DIR: "/work/bb1153"
-    PARTITION: 'compute'
-    USER: <to-be-overloaded-in-user-conf>
-    QUEUE: ""
-    SCRATCH_DIR: /work
-    ADD_PROJECT_TO_HOST: False
-    MAX_WALLCLOCK: '00:29'
-    TEMP_DIR: ''
-    PROCESSORS_PER_NODE: 128
-    BUDGET: <to-be-overloaded-by-user>
-    EXECUTABLE: "/usr/bin/bash -l" # this is needed on levante to make it find the module command
-    # Some HPCs might require to source a file to be able to use their module system.
-    # This parameddter allows you to provide the module profile path via the conf files.
-    MODULES_PROFILE_PATH: /sw/etc/profile.levante
-    TEST_APP_AUX_IN_DATA_DIR:
-    PROD_APP_AUX_IN_DATA_DIR:
+    CONTAINER_COMMAND: "singularity"
+    MARS_BINARY: "/appl/local/destine/bin"
+    DATABRIDGE_DATABASE: "databridge-fdb"

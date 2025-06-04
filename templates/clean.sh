@@ -42,24 +42,24 @@ LOG_DIR="${HPCROOTDIR}/LOG_${EXPID}"
 . "${LIBDIR}/${HPC}"/config.sh
 source "${LIBDIR}"/common/util.sh
 
-# Run FDB purge
+# lib/common/util.sh (get_member_number) (auto generated comment)
+MEMBER_NUMBER=$(get_member_number "${MEMBER_LIST}" ${MEMBER})
+
+# Define paths for the request
 profile_file="${SCRIPTDIR}/FDB/general_request.yaml"
-FLAT_REQ_NAME="$(basename $profile_file | cut -d. -f1)_${CHUNK}_request.flat"
+FLAT_REQ_NAME="$(basename $profile_file | cut -d. -f1)_${CHUNK}_${MEMBER_NUMBER}_request.flat"
 
 CLEAN_DIR=${HPCROOTDIR}/clean_requests/
 mkdir -p ${CLEAN_DIR}
 
 export FDB_HOME=${FDB_HOME}
 
-# lib/common/util.sh (get_member_number) (auto generated comment)
-MEMBER_NUMBER=$(get_member_number "${MEMBER_LIST}" ${MEMBER})
-
 # Convert YAML profile to flat request file
 # lib/LUMI/config.sh (load_singularity) (auto generated comment)
 # lib/MARENOSTRUM5/config.sh (load_singularity) (auto generated comment)
 load_singularity
 singularity exec --cleanenv --no-home \
-    --env "FDB_HOME=${FDB_HOME}" \
+    --env "FDB_HOME=$(realpath ${FDB_HOME})" \
     --env "SCRIPTDIR=${SCRIPTDIR}" \
     --env "EXPVER=${EXPVER}" \
     --env "CHUNK_START_DATE=${CHUNK_START_DATE}" \

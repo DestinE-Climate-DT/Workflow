@@ -65,122 +65,6 @@ function pre-configuration-ifs() {
 
 #####################################################
 # TODO
-# Set environment to be able to run AQUA application
-# Globals:
-# Arguments:
-#
-######################################################
-function load_environment_AQUA() {
-
-    # Load env modules
-    set +xuve
-    module purge
-    set -xuve
-
-}
-
-#####################################################
-# TODO
-# Set environment to be able to run ENERGY_OFFSHORE application
-# Globals:
-# Arguments:
-#
-######################################################
-function load_environment_ENERGY_OFFSHORE() {
-
-    # Load env modules
-    set +xuve
-    module purge
-    module load intel
-    module load mkl
-    module load impi
-    module load hdf5
-    module load python/3.12.1
-    set -xuve
-}
-
-#####################################################
-# TODO
-# Set environment to be able to run HYDROMET application
-# Globals:
-# Arguments:
-#
-######################################################
-function load_environment_HYDROMET() {
-
-    # Load env modules
-    set +xuve
-    module purge
-    module load intel
-    module load mkl
-    module load impi
-    module load hdf5
-    module load python/3.12.1
-    set -xuve
-}
-
-#####################################################
-# TODO
-# Set environment to be able to run WILDFIRES_WISE application
-# Globals:
-# Arguments:
-#
-######################################################
-function load_environment_WILDFIRES_WISE() {
-
-    # Load env modules
-    set +xuve
-    module purge
-    module load intel
-    module load mkl
-    module load impi
-    module load hdf5
-    module load python/3.12.1
-    set -xuve
-}
-
-#####################################################
-# TODO
-# Set environment to be able to run WILDFIRES_SPITFIRE application
-# Globals:
-# Arguments:
-#
-######################################################
-function load_environment_WILDFIRES_SPITFIRE() {
-
-    # Load env modules
-    set +xuve
-    module purge
-    module load intel
-    module load mkl
-    module load impi
-    module load hdf5
-    module load python/3.12.1
-    set -xuve
-}
-
-#####################################################
-# TODO
-# Set environment to be able to run WILDFIRES_FWI application
-# Globals:
-# Arguments:
-#
-######################################################
-function load_environment_WILDFIRES_FWI() {
-
-    # Load env modules
-    set +xuve
-    module purge
-    module load intel
-    module load mkl
-    module load impi
-    module load hdf5
-    module load python/3.12.1
-    set -xuve
-}
-
-#####################################################
-# TODO
 # Set environment to be able to run OBS application
 # Globals:
 # Arguments:
@@ -306,4 +190,18 @@ function load_singularity() {
 function install_BIAS_ADJUSTMENT() {
     # TODO
     true
+}
+
+function rsync_datamover() {
+    # In the data mover machine, we need the runscripts, the lib and also the data portfolio
+
+    TRANSFER_USER=$1
+    TRANSFER_HOST=$2
+    PROJDEST=$3
+    TRANSFER_SCRATCH=$4
+    TRANSFER_PROJECT=$5
+    EXPID=$6
+
+    rsync_to_remote "${TRANSFER_USER}" "${TRANSFER_HOST}" "${PROJDEST}" "${TRANSFER_SCRATCH}"/${TRANSFER_PROJECT}/${TRANSFER_USER}/${EXPID}
+
 }

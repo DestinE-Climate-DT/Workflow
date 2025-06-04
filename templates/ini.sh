@@ -102,9 +102,9 @@ perturb_nemo() {
 
 # THE CLEAN RUN OPTION HAS BEEN DISABLED FOR SAFETY PURPOSES
 
-# only do the following for IFS-NEMO and ICON, IFS-FESOM input has many files and contains links (DVC)
+# only do the following for NEMO, IFS-NEMO and ICON, IFS-FESOM input has many files and contains links (DVC)
 # which leads to problems
-if [[ "${MODEL_NAME^^}" == "IFS-NEMO" || "${MODEL_NAME^^}" == "ICON" ]]; then
+if [[ "${MODEL_NAME^^}" == "NEMO" || "${MODEL_NAME^^}" == "IFS-NEMO" || "${MODEL_NAME^^}" == "ICON" ]]; then
     ## Creates a directory where the inputs are symlinked to the real ones.
     if [ ! -d "${INIPATH}/${MEMBER}" ]; then
         mkdir -p $INIPATH

@@ -1,9 +1,13 @@
 REQUEST:
   EXPVER: "0001"
+  DATASET: climate-dt
+  STREAM: clte
   CLASS: "d1"
   # NOTE: This must NOT match the production FDB path, and the FDB
   # configuration must be pointing to a pre-production location.
   FDB_HOME: "%CONFIGURATION.FDB_DIR%/%REQUEST.EXPVER%/fdb"
+  INFO_FILE_PATH: "%REQUEST.FDB_HOME%"
+  INFO_FILE_NAME: "%REQUEST.INFO_FILE_PATH%/%DEFAULT.EXPID%.yaml"
 APP_AUX_IN_DATA_DIR: "%CURRENT_PROD_APP_AUX_IN_DATA_DIR%"
 HYDROLAND:
   IN_DATA_VERSION: "1.0"

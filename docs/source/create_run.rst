@@ -17,7 +17,7 @@ Create an Autosubmit experiment using minimal configurations
 
 .. warning::
     you MUST change ``<TYPE_YOUR_PLATFORM_HERE>`` below with your platform, and add a description.
-    For example: lumi, marenostrum5, juwels, levante...
+    For example: lumi or marenostrum5.
     Check the available platforms at ``/appl/AS/DefaultConfigs/platforms.yml``
     or ``~/platforms.yml`` if you created this file in your home directory.
 

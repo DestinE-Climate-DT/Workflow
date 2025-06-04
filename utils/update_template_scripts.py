@@ -340,11 +340,9 @@ def extract_paths_from_dir(
 def run():
     root_dir = os.getcwd()
     common_paths = extract_paths_from_dir(dir_path=f"{root_dir}/lib/common")
-    juwels_paths = extract_paths_from_dir(dir_path=f"{root_dir}/lib/JUWELS")
     lumi_paths = extract_paths_from_dir(dir_path=f"{root_dir}/lib/LUMI")
     mn5_paths = extract_paths_from_dir(dir_path=f"{root_dir}/lib/MARENOSTRUM5")
-    levante_paths = extract_paths_from_dir(dir_path=f"{root_dir}/lib/LEVANTE")
-    paths = common_paths + juwels_paths + lumi_paths + mn5_paths + levante_paths
+    paths = common_paths + lumi_paths + mn5_paths
 
     scripts_functions = [
         ScriptFunctions(path)

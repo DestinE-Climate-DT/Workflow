@@ -42,7 +42,7 @@ HPC=$(echo ${CURRENT_ARCH} | cut -d- -f1)
 function run_DQC_prod() {
     # Run DQC script
     singularity exec --cleanenv --no-home \
-        --env "FDB_HOME=${FDB_HOME}" \
+        --env "FDB_HOME=$(realpath ${FDB_HOME})" \
         --env "EXPVER=${1}" \
         --env "DATE=${2}" \
         --env "MODEL=${3}" \
@@ -61,7 +61,7 @@ function run_DQC_prod() {
         --bind "${HPC_SCRATCH}" \
         --bind "${DEVELOPMENT_PROJECT_SCRATCH}" \
         --bind "${OPERATIONAL_PROJECT_SCRATCH}" \
-        --bind "${FDB_HOME}" \
+        --bind "$(realpath ${FDB_HOME})" \
         --bind "${DQC_OUTPUT_DIR}" \
         "$HPC_CONTAINER_DIR"/gsv/gsv_${GSV_VERSION}.sif \
         bash -c \

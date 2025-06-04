@@ -27,6 +27,7 @@ DEFAULT:
       - "%PROJDIR%/conf/additional_jobs/aqua-%CONFIGURATION.ADDITIONAL_JOBS.AQUA%.yml"
       - "%PROJDIR%/conf/additional_jobs/clean-%CONFIGURATION.ADDITIONAL_JOBS.CLEAN%.yml"
       - "%PROJDIR%/conf/additional_jobs/scaling-%CONFIGURATION.ADDITIONAL_JOBS.SCALING%.yml"
+      - "%PROJDIR%/conf/additional_jobs/size_check-%CONFIGURATION.ADDITIONAL_JOBS.SIZE_CHECK%.yml"
       - "%PROJDIR%/conf/additional_jobs/aqua-%CONFIGURATION.ADDITIONAL_JOBS.AQUA%.yml"
       - "%PROJDIR%/conf/additional_jobs/postproc_energy_onshore-%CONFIGURATION.ADDITIONAL_JOBS.POSTPROC_ENERGY_ONSHORE%.yml"
       - "%PROJDIR%/conf/additional_jobs/postproc_hydroland-%CONFIGURATION.ADDITIONAL_JOBS.POSTPROC_HYDROLAND%.yml"

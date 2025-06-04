@@ -188,16 +188,19 @@ function checker_inproot_icon() {
 # Arguments: RUN_TYPE
 #####################################################
 function checker_run_type() {
+
+    # Check if RUN_TYPE is defined
     RUN_TYPE=$1
     if [ -z "${RUN_TYPE}" ]; then
         echo "RUN_TYPE is not defined. Please define it in main.yml"
         exit 1
     fi
 
-    if [ "${RUN_TYPE}" == "production" ] || [ "${RUN_TYPE}" == "research" ] || [ "${RUN_TYPE}" == "test" ] || [ "${RUN_TYPE}" == "pre-production" ]; then
+    # Check if RUN_TYPE is one of the allowed values
+    if [[ "${RUN_TYPE,,}" =~ ^(production|research|test|pre-production|operational|operational-read)$ ]]; then
         echo "RUN_TYPE is ${RUN_TYPE}"
     else
-        echo "RUN_TYPE is not valid. Please choose between production, research, test or pre-production"
+        echo "RUN_TYPE is not valid. Please choose between production, research, test, pre-production or operational"
         exit 1
     fi
 }

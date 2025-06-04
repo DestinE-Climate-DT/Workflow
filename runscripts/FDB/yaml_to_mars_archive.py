@@ -32,6 +32,7 @@ def parse_arguments(argv=None) -> argparse.Namespace:
     )
     parser.add_argument("--generation", help="Generation key in FDB")
     parser.add_argument("--grib_file_name", help="Output GRIB file name")
+    parser.add_argument("--databridge_database", help="Databridge Database")
     return parser.parse_args(argv)
 
 
@@ -58,9 +59,6 @@ def update_request(request, args: argparse.Namespace) -> T.Dict[str, T.Any]:
     """
     Update content of request with values provided in args.
 
-    Additionally, the database key is set to databridge-fdb, since
-    the request is intended to be used for archiving in the databridge.
-
     Arguments
     ---------
     request: Dict[T.Any, str]
@@ -70,7 +68,7 @@ def update_request(request, args: argparse.Namespace) -> T.Dict[str, T.Any]:
         expid, experiment, startdate, enddate, chunk, model, activity
         and grib_file_name
     """
-    request["database"] = "databridge-fdb"
+    request["database"] = args.databridge_database
     request["expver"] = args.expid
     request["experiment"] = args.experiment
     request["model"] = args.model

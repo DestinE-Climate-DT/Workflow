@@ -29,6 +29,7 @@ def test_update_request():
         enddate="20200102",
         grib_file_name="test.grib",
         generation="2",
+        databridge_database="databridge"
     )
     updated_request = update_request(request, args)
     assert updated_request["expver"] == "0001"
@@ -37,7 +38,7 @@ def test_update_request():
     assert updated_request["activity"] == "baseline"
     assert updated_request["generation"] == "2"
     assert updated_request["date"] == "20200101/to/20200102"
-    assert updated_request["database"] == "databridge-fdb"
+    assert updated_request["database"] == "databridge"
     assert updated_request["source"] == "test.grib"
 
 
@@ -105,6 +106,8 @@ def test_main_update_clte():
         "20200131",
         "--grib_file_name",
         str(tmp_dir / "test.grb"),
+        "--databridge_database",
+        "databridge-fdb",
     ]
     main(argv)
 
@@ -161,6 +164,8 @@ def test_main_update_clmn_first_date_included():
         "20200131",
         "--grib_file_name",
         str(tmp_dir / "test.grb"),
+        "--databridge_database",
+        "databridge-fdb",
     ]
     main(argv)
 
@@ -215,6 +220,8 @@ def test_main_update_clmn_first_date_included_two_months():
         "20200301",
         "--grib_file_name",
         str(tmp_dir / "test.grb"),
+        "--databridge_database",
+        "databridge-fdb",
     ]
     main(argv)
 
@@ -269,6 +276,8 @@ def test_main_update_clmn_first_date_excluded():
         "20200103",
         "--grib_file_name",
         str(tmp_dir / "test.grb"),
+        "--databridge_database",
+        "databridge-fdb",
     ]
     main(argv)
 
@@ -301,6 +310,8 @@ def test_main_update_realization():
         "20200131",
         "--grib_file_name",
         str(tmp_dir / "test.grb"),
+        "--databridge_database",
+        "databridge-fdb",
     ]
     main(argv)
 

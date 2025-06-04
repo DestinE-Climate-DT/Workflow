@@ -1,9 +1,21 @@
 JOBS:
-  WIPE:
-    FILE: templates/wipe.sh
-    PLATFORM: '%DEFAULT.HPCARCH%'
+  WIPE_CHECK:
+    FILE: templates/wipe-check.sh
+    PLATFORM: '%DEFAULT.HPCARCH%-transfer'
     PARTITION: "%CURRENT_APP_PARTITION%"
     DEPENDENCIES: TRANSFER WIPE-1
+    RUNNING: chunk
+    WALLCLOCK: '00:30'
+    NODES: 1
+    PROCESSORS: 1
+    TASKS: 1
+    THREADS: 1
+    CHECK: on_submission
+  WIPE:
+    FILE: templates/wipe.sh
+    PLATFORM: "%DEFAULT.HPCARCH%"
+    PARTITION: "%CURRENT_APP_PARTITION%"
+    DEPENDENCIES: WIPE_CHECK
     RUNNING: chunk
     WALLCLOCK: '00:30'
     NODES: 1
@@ -19,3 +31,4 @@ EXPERIMENT:
   SPLITPOLICY: flexible
 CONFIGURATION:
   WIPE_DOIT: "False"
+  GENERATE_PROFILES: "True"

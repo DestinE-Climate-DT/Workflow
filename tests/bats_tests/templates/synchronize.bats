@@ -24,11 +24,13 @@ setup() {
 
     export ROOTDIR="${BATS_TMPDIR}/"
     export PROJDEST="test/bat"
+    export DEFAULT_HPCARCH="MARENOSTRUM5"
 
     # Copy the workflow project into ${BATS_TMPDIR}/proj/workflow,
     # imitating what `autosubmit create|refresh` do -- as this is
     # expected by the `local_setup.sh` template script.
-    mkdir -pv "${ROOTDIR}/proj/${PROJDEST}"
+    mkdir -pv "${ROOTDIR}/proj/${PROJDEST}/lib/${DEFAULT_HPCARCH}"
+    source "lib/MARENOSTRUM5/config.sh"
 
     # cp is slow! https://basila.medium.com/fastest-way-to-copy-a-directory-in-linux-40611d2c5aa4
     # cp -r "${PROJECT_DIR}/." "${ROOTDIR}/proj/${PROJDEST}"

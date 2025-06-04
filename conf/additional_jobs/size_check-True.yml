@@ -1,0 +1,8 @@
+JOBS:
+  CHECK_SIZE:
+    FILE: templates/performance/check_size.sh
+    PLATFORM: "%DEFAULT.HPCARCH%-login"
+    DEPENDENCIES: SIM
+    RUNNING: chunk
+    WALLCLOCK: '00:30'
+    CHECK: on_submission

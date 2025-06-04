@@ -11,7 +11,9 @@ SCRIPT_DIR=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
 PATH="$SCRIPT_DIR:$PATH" # use local versions of yq
 PATH="/home/autosubmit/.local/bin:$PATH" # use path from pipx
 
+PROJECT_DIR=$( realpath ${SCRIPT_DIR}/../)
 
+echo $PROJECT_DIR
 
 RED='\033[0;31m'
 GREEN='\033[0;32m'
@@ -30,8 +32,6 @@ AS_expid=$(cat "$AS_id_file")
 echo "AS_folder: $AS_folder"
 echo "AS_expid: $AS_expid"
 
-
-
 if [ $# -gt 0 ]; then
     # cli arguments given
     simulations=("$@")
@@ -41,7 +41,7 @@ if [ $# -gt 0 ]; then
         cp $mainfile "${AS_folder}/conf/main.yml"
 
         echo "creating job files from mother request..."
-        python3 ${SCRIPT_DIR}/../conf/create_jobs_from_mother_request.py --path-to-conf ${SCRIPT_DIR}/../conf --main "${AS_folder}/conf" --output-path ${SCRIPT_DIR}/../conf
+        python3 ${PROJECT_DIR}/conf/create_jobs_from_mother_request.py --path-to-conf ${PROJECT_DIR}/conf --main "${AS_folder}/conf" --output-path ${PROJECT_DIR}/conf
 
         echo "running autosubmit create..."
         autosubmit create --noplot ${AS_expid}
@@ -59,20 +59,22 @@ if [ $# -gt 0 ]; then
     done
 else
     echo "No simulation provided. Testing complete catalog."
-    for mainfile in "${SCRIPT_DIR}/../mains/"*.yml
+    for mainfile in "${PROJECT_DIR}/mains/"*.yml
     do
         echo "$mainfile"
         shortname="$(basename $mainfile .yml)"
         cp $mainfile "${AS_folder}/conf/main.yml"
 
         # always delete old jobs_end-to-end.yml and jobs_apps.yml
-        rm -rf ${SCRIPT_DIR}../conf/jobs_end-to-end.yml
-        rm -rf ${SCRIPT_DIR}../conf/jobs_apps.yml
+        rm -rf ${PROJECT_DIR}/conf/jobs_end-to-end.yml
+        rm -rf ${PROJECT_DIR}/conf/jobs_apps.yml
         if [ $(yq .RUN.WORKFLOW "${AS_folder}/conf/main.yml") == "end-to-end" ] || [ $(yq .RUN.WORKFLOW "${AS_folder}/conf/main.yml") == "apps" ]
         then
           echo "creating job files from mother request..."
-          python3 ${SCRIPT_DIR}/../conf/create_jobs_from_mother_request.py --path-to-conf ${SCRIPT_DIR}/../conf --main "${AS_folder}/conf/main.yml" --output-path ${SCRIPT_DIR}/../conf
+          python3 ${PROJECT_DIR}/conf/create_jobs_from_mother_request.py --path-to-conf ${PROJECT_DIR}/conf --main "${AS_folder}/conf/main.yml" --output-path ${PROJECT_DIR}/conf
         fi
+
+        git config --global --add safe.directory ${PROJECT_DIR}
 
         echo "running autosubmit create..."
         sed -i "s/PROJECT_SUBMODULES: ''/PROJECT_SUBMODULES: false/g" "${AS_folder}/conf/minimal.yml"

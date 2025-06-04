@@ -24,15 +24,9 @@ PLATFORMS:
     # but it affects the name of the rundir (e.g.
     # `rundir/tco79l137/t02k/hres/intel.openmpi`)
     RAPS_MPILIB: openmpi
-  LEVANTE: # TODO: not yet supported in this version of the workflow
-    RAPS_HOST_CPU: lvt
-    RAPS_HOST_GPU:
-    RAPS_BIN_HPC_NAME:
-    RAPS_COMPILER:
-    RAPS_MPILIB:
-  JUWELS: # TODO: not yet supported in this version of the workflow
-    RAPS_HOST_CPU: juw
-    RAPS_HOST_GPU:
-    RAPS_BIN_HPC_NAME:
-    RAPS_COMPILER:
-    RAPS_MPILIB:
+PERFORMANCE_METRICS:
+  COMPLEXITY:
+    IFS: 10
+    NEMO: 50
+CONFIGURATION:
+  GENERATE_PROFILES: "True"

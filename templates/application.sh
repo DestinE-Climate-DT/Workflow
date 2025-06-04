@@ -74,10 +74,13 @@ function run_ENERGY_ONSHORE() {
     cd "${SCRIPTDIR}/energy_onshore/" || exit
     SRC_DIR=${HPCROOTDIR}/${PROJDEST}/energy_onshore/
 
-    # copy histograms as they were APP output
+    # Check if output directory exists and create it otherwise
+    mkdir -p "${APP_OUTPATH}/energy_onshore/${SPLIT_INI_YEAR}/${SPLIT_INI_MONTH}/${SPLIT_INI_DAY}/"
+
+    # copy histograms as if they were APP output
     FILE=${APP_OUTPATH}/energy_onshore/opa/*histogram_bin*
     if ls $FILE 1>/dev/null 2>&1; then
-        mv $FILE ${APP_OUTPATH}/energy_onshore/
+        mv $FILE ${APP_OUTPATH}/energy_onshore/${SPLIT_INI_YEAR}/${SPLIT_INI_MONTH}/${SPLIT_INI_DAY}/
         echo "Histogram file(s) copied successfully."
     else
         echo "No histogram file found."
@@ -105,7 +108,7 @@ function run_ENERGY_ONSHORE() {
         $HPC_CONTAINER_DIR/energy_onshore/energy_onshore_${ENERGY_ONSHORE_VERSION}.sif \
         bash -c \
         "
-    python3 "${SCRIPTDIR}"/energy_onshore/run_energy_onshore.py --iniyear ${SPLIT_INI_YEAR} --inimonth ${SPLIT_INI_MONTH} --iniday ${SPLIT_INI_DAY} --in_path "${APP_OUTPATH}/energy_onshore/opa/" --finyear ${SPLIT_INI_YEAR} --finmonth ${SPLIT_INI_MONTH} --finday ${SPLIT_INI_DAY} --out_path "${APP_OUTPATH}/energy_onshore/"
+    python3 "${SCRIPTDIR}"/energy_onshore/run_energy_onshore.py --iniyear ${SPLIT_INI_YEAR} --inimonth ${SPLIT_INI_MONTH} --iniday ${SPLIT_INI_DAY} --in_path "${APP_OUTPATH}/energy_onshore/opa/" --finyear ${SPLIT_INI_YEAR} --finmonth ${SPLIT_INI_MONTH} --finday ${SPLIT_INI_DAY} --out_path "${APP_OUTPATH}/energy_onshore/${SPLIT_INI_YEAR}/${SPLIT_INI_MONTH}/${SPLIT_INI_DAY}/"
     "
 }
 
@@ -379,8 +382,6 @@ function run_WILDFIRES_FWI() {
 #####################
 function run_OBSALL() {
     # Define experiment tmp scratch folder
-    # GSVEXTR_DATA_DIR : /scratch/project_465000454/tmp/EXPID - gsv extracted data is here
-    # SRC_DIR : /scratch/project_465000454/ama/EXPID/git_project/obsall - run there py-script
     # lib/LUMI/config.sh (load_environment_OBSALL) (auto generated comment)
     load_environment_OBSALL "$HPC_PROJECT" "$EXPID"
     cd "${SCRIPTDIR}/obsall/" || exit

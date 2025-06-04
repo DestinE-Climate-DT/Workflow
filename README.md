@@ -1,13 +1,12 @@
 # Climate DT (DE_340) workflow
-Welcome to the Climate DT Workflow documentation!
 
-Version v5.1.0 includes the possibility to run end-to-end, models or applications.
+Welcome to the Climate DT Workflow documentation!
 
 ## Getting Started
 
 All the experiments should be created in the [Autosubmit Virtual Machine](https://wiki.eduuni.fi/display/cscRDIcollaboration/Autosubmit+VM). To access the VM, you need a user and your SSH key to be authorized. Add your name, e-mail, preferred username, and SSH (local) public key to the [table](https://wiki.eduuni.fi/display/cscRDIcollaboration/Autosubmit+VM+Users).
 
-Make sure you have a recent Autosubmit version running `autosubmit --version`. This workflow has been developed using the `4.1.14` version of Autosubmit. Otherwise update it by typing  `module load autosubmit/v4.1.14`. You can follow more detailed description about Autosubmit in [Autosubmit Readthedocs](https://autosubmit.readthedocs.io/en/master/).
+Make sure you have a recent Autosubmit version running `autosubmit --version`. Check by doing `module spider autosubmit` and then selecting the latest version of Autosubmit. The version of Autosubmit that has been used for each release can also be found in the [CHANGELOG.md](CHANGELOG.md). You can follow more detailed description about Autosubmit in [Autosubmit Readthedocs](https://autosubmit.readthedocs.io/en/master/).
 
 ### Prerequisites
 
@@ -29,16 +28,15 @@ Platforms:
 ```
 
 You also need to configure password-less access to the platforms where you want to run
-experiments. Further instructions can be found [here](https://wiki.eduuni.fi/display/cscRDIcollaboration/Autosubmit+VM) (Section 4. How to get password-less access from VM to Levante / LUMI / MN5).
+experiments. Further instructions can be found [here](https://wiki.eduuni.fi/display/cscRDIcollaboration/Autosubmit+VM) (Section 4. How to get password-less access from VM to LUMI / MN5).
 The workflow can run as a `local` project or as a `git` project.
-
 
 ### Create your own experiment
 
 1. Create an Autosubmit experiment using minimal configurations.
 
 > **NOTE**: you MUST change `<TYPE_YOUR_PLATFORM_HERE>` below with your platform, and add a description.
-For example: lumi, marenostrum5, juwels, levante...
+For example: lumi or marenostrum5
 > Check the available platforms at `/appl/AS/DefaultConfigs/platforms.yml`
 > or `~/platforms.yml` if you created this file in your home directory.
 
@@ -51,7 +49,6 @@ autosubmit expid \
   --git_repo https://earth.bsc.es/gitlab/digital-twins/de_340-2/workflow \
   --git_branch <latest minor tag>
 ```
-
 
 > **NOTE:** Do not forget to change the keys between `< >`
 
@@ -71,6 +68,7 @@ autosubmit create <expid>
 > **NOTE:** You are asked to introduce the credentials to the remote repositories, therefore you must have access to it to proceed.
 
 You will be further asked to select the type of workflow you want to run:
+
 ```
 Choose a workflow:
 1. model
@@ -189,21 +187,27 @@ make coverage
 This command uses a `Docker` container with both `bats`, support libraries (`bats-assert` and `bats-support`), and `kcov` installed. It will create a local folder `./coverage/` with the HTML coverage report produced
 by `kcov`. You can visualize it by opening `./coverage/index.html` in a browser.
 
-## Contact us!
+## Contact us
 
 For any doubts or issues you can contact the workflow developers:
 
-- Miguel Castrillo (Activity leader): miguel.castrillo@bsc.es @mcastril
-- Leo Arriola (ICON Workflow developer): leo.arriola@bsc.es @larriola
-- Sebastian Beyer (IFS-FESOM Workflow developer): sebastian.beyer@awi.de @sbeyer
-- Francesc Roura Adserias (Applications Workflow developer): francesc.roura@bsc.es @froura
-- Ivan Alsina (Applications workflow developer): ivan.alsina@bsc.es @ialsina
-- Aina Gaya (IFS-NEMO Workflow developer): aina.gayayavila@bsc.es @agayayav
-- Damien McClain (IFS-NEMO workflow developer): damien.mcclain@bsc.es @dmcclain
+- Miguel Castrillo (Activity leader): **miguel.castrillo[@]bsc.es**
+- Leo Arriola (ICON Workflow developer): **leo.arriola[@]bsc.es**
+- Sebastian Beyer (IFS-FESOM Workflow developer): **sebastian.beyer[@]awi.de**
+- Francesc Roura Adserias (Applications Workflow developer): **francesc.roura[@]bsc.es**
+- Ivan Alsina (Applications workflow developer): **ivan.alsina[@]bsc.es**
+- Aina Gaya (IFS-NEMO Workflow developer): **aina.gayayavila[@]bsc.es**
+- Damien McClain (IFS-NEMO workflow developer): **damien.mcclain[@]bsc.es**
 
 Main Autosubmit support:
 
-- Daniel Beltrán (daniel.beltran@bsc.es) @dbeltran
-- Bruno de Paula Kinoshita (bruno.depaulakinoshita@bsc.es) @bdepaula
+- Daniel Beltrán **daniel.beltran[@]bsc.es**
+- Bruno de Paula Kinoshita **bruno.depaulakinoshita[@]bsc.es**
 
 [Link to the Autosubmit tutorial & Hands-on](https://wiki.eduuni.fi/display/cscRDIcollaboration/Autosubmit+introductory+session)
+
+## License
+
+Copyright 2022-2025 European Union (represented by the European Commission)
+
+The ClimateDT workflow is distributed as open-source software under Apache 2.0 License. The copyright owner is the European Union, represented by the European Commission. The development of the ClimateDT workflow has been funded by the European Union through Contract DE_340_CSC - Destination Earth Programme Climate Adaptation Digital Twin (Climate DT). Further info can be found at <https://destine.ecmwf.int/> and <https://destination-earth.eu/>

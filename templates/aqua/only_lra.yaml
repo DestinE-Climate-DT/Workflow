@@ -2,7 +2,7 @@
 target:
   resolution: r100
   frequency: monthly
-  catalog: "%CURRENT_CATALOG_NAME%"
+  catalog: "%HPCCATALOG_NAME%"
 paths:
   outdir: "%APP.OUTPATH%/LRA/%MEMBER%"
   tmpdir: "%APP.OUTPATH%/tmp"

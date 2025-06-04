@@ -2,6 +2,7 @@
 REQUEST:
   EXPVER: <some test expid>
   EXPERIMENT: hist
+  DATASET: climate-dt
   ACTIVITY: baseline
   RESOLUTION: high
   REALIZATION: 1

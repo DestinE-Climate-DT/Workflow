@@ -11,6 +11,9 @@ WRAPPER=${6:-%WRAPPERS.WRAPPER.JOBS_IN_WRAPPER%}
 SDATE=${7:-%SDATE%}
 MEMBER=${8:-%MEMBER%}
 CHUNK=${9:-%CHUNK%}
+MODEL=${10:-%MODEL.NAME%}
+RESOLUTION=${11:-%MODEL.RESOLUTION%}
+SCRIPTDIR=${12:-%CONFIGURATION.SCRIPTDIR%}
 
 # END_HEADER
 
@@ -45,5 +48,9 @@ IFS=', ' read -r -a nodes <<<"$NODES"
 for node in "${nodes[@]}"; do
     file=$node"_mem.txt"
     node2="nid[${node}]"
-    (srun --overlap --jobid="$jobid" -w "$node2" free -s "$FREQUENCY" &) &>"$file"
+    (srun --wait --overlap --jobid="$jobid" -w "$node2" free -s "$FREQUENCY" &) &>"$file"
 done
+
+JSON_FILE_PATH="${HPCROOTDIR}/check_mem/memory_bloat_${CHUNK}.json"
+python3 "${SCRIPTDIR}"/CPMIP/memory_bloat.py --jobID "$jobid" --model "$MODEL" \
+    --resolution "$RESOLUTION" --jsonfile "$JSON_FILE_PATH"

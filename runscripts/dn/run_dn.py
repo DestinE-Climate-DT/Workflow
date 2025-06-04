@@ -114,7 +114,7 @@ def main():
     gsvrequests = list()
     oparequests = list()
 
-    if run_type == "production":
+    if run_type in {"production", "operational"}:
         retry_delay = 60
         max_retries = 2400
     else:  # 30 min

@@ -386,10 +386,6 @@ definitions:
     coupling_period: PT1H
     time_reduction: none
 
-  time_config_1h_acc: &time_config_1h_acc
-    coupling_period: PT1H
-    time_reduction: accumulate
-
   time_config_1h_avg: &time_config_1h_avg
     coupling_period: PT1H
     time_reduction: average
@@ -449,7 +445,10 @@ coupling:
   - <<: [ *atm2yaco_rank_$(( yaco_min_rank + 0 )), *nnn_interp_stack, *time_config_1h_inst ]
     field: [ pressure_levels_temp, pressure_levels_v ]
   - <<: [ *atm2yaco_rank_$(( yaco_min_rank + 1 )), *nnn_interp_stack, *time_config_1h_inst ]
-    field: [ pressure_levels_u, uas, vas, dew2, tcw, sfcwind,  cllvi, pres_sfc, ts_rad, tas, clt ]
+    field: [ pressure_levels_u, uas, vas, dew2, tcw, sfcwind,  cllvi, pres_sfc, ts_rad, tas ]
+  - <<: [ *atm2yaco_rank_$(( yaco_min_rank + 1 )), *nnn_interp_stack, *time_config_1h_inst ]
+    field: clt
+    scale_factor: 100.0 # change of units from 0-1 fraction to percent
   - <<: [ *atm2yaco_rank_$(( yaco_min_rank + 2 )), *nnn_interp_stack, *time_config_1h_inst ]
     field: [ pressure_levels_hus, pressure_levels_pv]
 
@@ -458,7 +457,7 @@ coupling:
   - <<: [ *atm2yaco_rank_$(( yaco_min_rank + 3 )), *nnn_interp_stack, *time_config_1h_inst ]
     field: [ hydro_weq_snow_box ]
     scale_factor: 1000.0 # change of units to kg m**-2, originally in m
-  - <<: [ *atm2yaco_rank_$(( yaco_min_rank + 3 )), *nnn_interp_stack, *time_config_1h_acc ]
+  - <<: [ *atm2yaco_rank_$(( yaco_min_rank + 3 )), *nnn_interp_stack, *time_config_1h_avg ]
     field: [ tauu, tauv ]
 
   - <<: [ *atm2yaco_rank_$(( yaco_min_rank + 4 )), *nnn_interp_stack, *time_config_1h_inst ]
@@ -510,10 +509,13 @@ coupling:
   - <<: [ *atm2yaco_rank_$(( yaco_min_rank + 12 )), *nnn_interp_stack, *time_config_1h_inst ]
     field: [ pressure_levels_temp, pressure_levels_u, pressure_levels_v, pressure_levels_hus, pressure_levels_hur, pressure_levels_clw, pressure_levels_omega, pressure_levels_geop, pressure_levels_pv]
   - <<: [ *atm2yaco_rank_$(( yaco_min_rank + 12 )), *nnn_interp_stack, *time_config_1h_inst ]
-    field: [ ts_rad, tas, clt, uas, vas, dew2, tcw, sfcwind ]
+    field: [ ts_rad, tas, uas, vas, dew2, tcw, sfcwind ]
+  - <<: [ *atm2yaco_rank_$(( yaco_min_rank + 12 )), *nnn_interp_stack, *time_config_1h_inst ]
+    field: [ clt ]
+    scale_factor: 100.0 # change of units from 0-1 fraction to percent
   - <<: [ *atm2yaco_rank_$(( yaco_min_rank + 12 )), *nnn_interp_stack, *time_config_1h_inst ]
     field: [ clivi, cllvi, pres_sfc, pres_msl, prw ]
-  - <<: [ *atm2yaco_rank_$(( yaco_min_rank + 12 )), *nnn_interp_stack, *time_config_1h_acc ]
+  - <<: [ *atm2yaco_rank_$(( yaco_min_rank + 12 )), *nnn_interp_stack, *time_config_1h_avg ]
     field: [ tauu, tauv ]
   - <<: [ *atm2yaco_rank_$(( yaco_min_rank + 12 )), *nnn_interp_stack, *time_config_1h_inst ]
     field: [ hydro_weq_snow_box ]
@@ -538,7 +540,7 @@ coupling:
     field: [ conc, hi, ice_u, ice_v, ssh, tos, sos, sivol, snvol ]
 
   - <<: [ *oce2yaco_rank_$(( yaco_min_rank + 16 )), *nnn_interp_stack, *time_config_24h_avg ]
-    field: to
+    field: [ to ]
     scale_summand: 273.15
   - <<: [ *oce2yaco_rank_$(( yaco_min_rank + 16 )), *nnn_interp_stack, *time_config_24h_avg ]
     field: [ so ]
@@ -548,7 +550,10 @@ coupling:
   # ---- 
   # couplings for icon-to-yaco higher resolution outputs with monthly means
   - <<: [ *atm2yaco_rank_$(( yaco_min_rank + 17 ))_monthly, *nnn_interp_stack, *time_config_monthly_avg ]
-    field: [ ts_rad, tas, clt, uas, vas, dew2, tcw, sfcwind, clivi, cllvi, pres_sfc, pres_msl, prw ]
+    field: [ ts_rad, tas, uas, vas, dew2, tcw, sfcwind, clivi, cllvi, pres_sfc, pres_msl, prw ]
+  - <<: [ *atm2yaco_rank_$(( yaco_min_rank + 17 ))_monthly, *nnn_interp_stack, *time_config_monthly_avg ]
+    field: [ clt ]
+    scale_factor: 100.0 # change of units from 0-1 fraction to percent
   - <<: [ *atm2yaco_rank_$(( yaco_min_rank + 17 ))_monthly, *nnn_interp_stack, *time_config_monthly_avg ]
     field: [ pr, hfss, hfls, tauu, tauv ]
 
@@ -570,7 +575,10 @@ coupling:
   - <<: [ *atm2yaco_rank_$(( yaco_min_rank + 20 ))_monthly, *nnn_interp_stack, *time_config_monthly_avg ]
     field: [ pressure_levels_temp, pressure_levels_u, pressure_levels_v, pressure_levels_hus, pressure_levels_hur, pressure_levels_clw, pressure_levels_omega, pressure_levels_geop, pressure_levels_pv ]
   - <<: [ *atm2yaco_rank_$(( yaco_min_rank + 20 ))_monthly, *nnn_interp_stack, *time_config_monthly_avg ]
-    field: [ ts_rad, tas, clt, uas, vas, dew2, tcw, sfcwind, clivi, cllvi, pres_sfc, pres_msl, prw, pr, hfss, hfls, tauu, tauv, rsds, rlds, rsdt, rsns, rsnt, rlns, rlnt, rsnscs, rsntcs, rlnscs, rlntcs ]
+    field: [ ts_rad, tas, uas, vas, dew2, tcw, sfcwind, clivi, cllvi, pres_sfc, pres_msl, prw, pr, hfss, hfls, tauu, tauv, rsds, rlds, rsdt, rsns, rsnt, rlns, rlnt, rsnscs, rsntcs, rlnscs, rlntcs ]
+  - <<: [ *atm2yaco_rank_$(( yaco_min_rank + 20 ))_monthly, *nnn_interp_stack, *time_config_monthly_avg ]
+    field: [ clt ]
+    scale_factor: 100.0 # change of units from 0-1 fraction to percent
   - <<: [ *atm2yaco_rank_$(( yaco_min_rank + 20 ))_monthly, *nnn_interp_stack, *time_config_monthly_avg ]
     field: [ hydro_vol_weq_soil_sl_box, prls, evspsbl, hydro_runoff_box, hydro_drainage_box ]
   - <<: [ *atm2yaco_rank_$(( yaco_min_rank + 20 ))_monthly, *nnn_interp_stack, *time_config_monthly_avg ]
@@ -580,7 +588,7 @@ coupling:
   - <<: [ *oce2yaco_rank_$(( yaco_min_rank + 21 ))_monthly, *nnn_interp_stack, *time_config_monthly_avg ]
     field: [ conc, hi, ice_u, ice_v, ssh, tos, sos, sivol, snvol, so, heat_content_300m, heat_content_700m, heat_content_total, u, v, w  ]
   - <<: [ *oce2yaco_rank_$(( yaco_min_rank + 21 ))_monthly, *nnn_interp_stack, *time_config_monthly_avg ]
-    field: to
+    field: [ to ]
     scale_summand: 273.15
 EOF
 

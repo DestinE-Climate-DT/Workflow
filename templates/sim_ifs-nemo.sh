@@ -67,6 +67,9 @@ RAPS_COMPILER=${58:-%CURRENT_RAPS_COMPILER%}
 RAPS_MPILIB=${59:-%CURRENT_RAPS_MPILIB%}
 # Path to the modules profile (conf/platforms.yml)
 MODULES_PROFILE_PATH=${60:-%CONFIGURATION.MODULES_PROFILE_PATH%}
+# Extra bindings needed for the container in hpc-fdb
+OPERATIONAL_PROJECT_SCRATCH=${61:-%CONFIGURATION.OPERATIONAL_PROJECT_SCRATCH%}
+DEVELOPMENT_PROJECT_SCRATCH=${62:-%CONFIGURATION.DEVELOPMENT_PROJECT_SCRATCH%}
 
 # END_HEADER
 
@@ -402,12 +405,16 @@ singularity exec --cleanenv --no-home \
     --env "START_DATE=${START_DATE}" \
     --env "END_DATE=${END_DATE}" \
     --env "CHUNK=${CHUNK}" \
-    --env "FDB_HOME=${FDB_HOME}" \
+    --env "FDB_HOME=$(realpath ${FDB_HOME})" \
     --env "HPCROOTDIR=${HPCROOTDIR}" \
     --env "SCRIPTDIR=${SCRIPTDIR}" \
     --bind "$(realpath ${HPCROOTDIR})" \
     --bind "$(realpath ${FDB_HOME})" \
+    --bind "${FDB_HOME}" \
     --bind "$(realpath ${SCRATCH_DIR})" \
+    --bind "${DEVELOPMENT_PROJECT_SCRATCH}" \
+    --bind "$(realpath ${DEVELOPMENT_PROJECT_SCRATCH})" \
+    --bind "${OPERATIONAL_PROJECT_SCRATCH}" \
     "$HPC_CONTAINER_DIR"/gsv/gsv_${GSV_VERSION}.sif \
     bash -c \
     '

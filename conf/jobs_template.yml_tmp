@@ -44,6 +44,7 @@ JOBS:
         SPLITS_FROM:
           'all':
             SPLITS_TO: 'previous'
+      DN-1:
     RUNNING: chunk
     WALLCLOCK: '02:00'
     PLATFORM: "%DEFAULT.HPCARCH%-login"

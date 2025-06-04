@@ -1,7 +1,7 @@
 JOBS:
   TRANSFER:
     FILE: templates/transfer.sh
-    PLATFORM: lumi-transfer
+    PLATFORM: "%DEFAULT.HPCARCH%-transfer"
     DEPENDENCIES: SIM TRANSFER-1
     RUNNING: chunk
     RETRIALS: 5
@@ -18,6 +18,8 @@ EXPERIMENT:
   SPLITSIZE: 2
   # Split policy. STRING: flexible, strict
   SPLITPOLICY: flexible
+CONFIGURATION:
+  GENERATE_PROFILES: "True"
 
 #WRAPPERS:
 #  WRAPPER_0:

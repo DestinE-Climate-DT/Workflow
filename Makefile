@@ -97,6 +97,7 @@ format: container
 test-shell: container
 	sudo docker run --rm -it -v "${PWD}:/code" climatedt/workflow:latest \
 		/usr/local/bin/bats --verbose-run --recursive ./
+	sudo rm flag_profiles_generated
 
 .PHONY: coverage-shell
 coverage-shell: container

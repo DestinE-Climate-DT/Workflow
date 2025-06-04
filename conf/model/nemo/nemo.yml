@@ -1,0 +1,20 @@
+MODEL:
+  VERSION: "dev-marc/DE_CY48R1.0_climateDT_develop"
+  DVC_INPUTS_BRANCH: "feature/nemo-standalone"
+  PATH: "%CONFIGURATION.HPC_PROJECT_DIR%/models/%MODEL.NAME%/%MODEL.VERSION%"
+  USE_FIXED_DVC_COMMIT: "False"
+REQUEST:
+  MODEL: NEMO
+PLATFORMS:
+  LUMI:
+    DVC_INPUTS_CACHE: "/pfs/lustrep3/scratch/project_465000454/pool/data/DVC_DATA_REPOSITORY/"
+    DNB_FILE: "dnb-lumi-g.yaml"
+  LUMI-LOGIN:
+    DVC_INPUTS_CACHE: "%PLATFORMS.LUMI.DVC_INPUTS_CACHE%"
+  MARENOSTRUM5:
+    DVC_INPUTS_CACHE: "/gpfs/scratch/ehpc01/data/.dvc/cache"
+    DNB_FILE: "dnb-mn5-gpp.yaml"
+  MARENOSTRUM5-login:
+    DVC_INPUTS_CACHE: "%PLATFORMS.MARENOSTRUM5.DVC_INPUTS_CACHE%"
+DVC:
+  VERSION: "3.50.1"

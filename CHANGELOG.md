@@ -19,7 +19,44 @@ Then went through the tag body/text adjusting it for consistency.
 Re-wrote the first tag to have a better explanation for users.
 -->
 
-## 5.1.0 (Release Candidate)
+## 5.1.2 (Released June 2025)
+
+#### Highlights
+
+- First version of Tier 3 CPMIP metrics: Memory bload, Data Intensity, Resolution and Complexity
+- Integration of MareNostrum5 Data Bridge, using an intermediate VM (datamover).
+
+### :notebook: List of changes
+
+- Use HPC AS var prefix for catalog names
+- WIPE job was split in 2: `wipe_check`, that is executed in the HPC and checks that the data is correctly transferred to the bridge, and `wipe`, which deletes the data.
+- Fix for ICON "tcc" and "wind stress" data glitches
+- Output for energy onshore is now yyyy/mm/dd directory structure.
+- Dependencies interchunk in OPAs and APPs.
+- Add missing bindings to the sim_ifs-fesom template
+
+#### Autosubmit version
+
+- Tested with Autosubmit v4.1.14
+
+## 5.1.1 (Released May 2025)
+
+### :notebook: List of changes
+
+#### Highlights
+
+Minor improvements in the configuration.
+
+#### Changed
+
+- The logic to generate profiles comes from a configuration key, `CONFIGURATION.GENERATE_PROFILES`.
+- Mains work now out of the box for mn5: apps alone, ifs-nemo alone and ifs-nemo-apps end-to-end.
+- Simplified githook.
+- Updated Autosubmit version to 4.1.14 in the pipelines.
+- Made IO_NODES platform dependent for IFS-NEMO.
+- Re-enabled NEMO standalone with precompiled versions.
+
+## 5.1.0 (Released May 2025)
 
 ### :sparkles: Highlights
 
@@ -38,28 +75,33 @@ This version adds the data retrieval, removes FDB into file creation from REMOTE
 - Updated and expanded the schema/pre-flight tests.
 - Removed FDB info file creation from Remote Setup during NEMO-only runs.
 - Adapt DQC wallclock to model resolutions
-- Hydroland relies on previous Hydroland ouput-files to run for the first time, instead of relying on CHUNK and SPLIT as it was before here.
+- Hydroland relies on previous Hydroland output-files to run for the first time, instead of relying on CHUNK and SPLIT as it was before here.
+
+#### Removed
+
+- References to Levante and Juwels as they are no longer supported.
 
 #### User action required
 
-
-## v5.0.5 (Released Apr 24 12:00 2025 +0200):
+## v5.0.5 (Released Apr 24 12:00 2025 +0200)
 
 ### :sparkles: Highlights
+
 This operational release supports creating the AQUA catalog starting from a different startdate than the one from the experiment. It updates the catalog version to e25.1_v1 and adds the `operational` RUN.TYPE to set up all the operational configurations in MareNostrum5 and LUMI.
 
 ### :notebook: List of changes
 
-#### Added:
+#### Added
+
 - `RUN.TYPE: operational` to use the operational projects and configurations in MN5 and LUMI.
-- `AQUA.STARTDATE` key to define the catalog startdate. By default, it is the one from the experiment. 
+- `AQUA.STARTDATE` key to define the catalog startdate. By default, it is the one from the experiment.
 
 ##### Changed
+
 - Fixed offshore run for chunk > 1
 - `catalog` version to e25.1_v1.
 
 #### User action required
-
 
 ## 5.0.4 (Released Apr 15 12:00 2025 +0200)
 
@@ -555,6 +597,7 @@ Workflow version compatible with tag DE_CY48R1.0_climateDT_20231214 of ifs-bundl
 **What is new:**
 
 New release app-v.0.2.1:
+
 - allows using the new Data Governance
 - Renewed README
 - New versions GSV_interface 11.1, OPA 0.5.1

@@ -27,7 +27,7 @@ Inside the Autosubmit VM, you need to put your user configurations for platforms
             marenostrum5-login:
                 USER: <USER>
 
-You also need to configure password-less access to the platforms where you want to run experiments. Further instructions can be found `here`_ (Section 4. How to get password-less access from VM to Levante / LUMI / MN4).
+You also need to configure password-less access to the platforms where you want to run experiments. Further instructions can be found `here`_ (Section 4. How to get password-less access from VM to LUMI / MN5).
 
 .. _Autosubmit Virtual Machine: https://wiki.eduuni.fi/display/cscRDIcollaboration/Autosubmit+VM
 .. _table: https://wiki.eduuni.fi/display/cscRDIcollaboration/Autosubmit+VM+Users

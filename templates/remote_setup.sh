@@ -6,72 +6,77 @@ set -xuve
 # HEADER
 
 HPCROOTDIR=${1:-%HPCROOTDIR%}
-PROJDEST=${2:-%PROJECT.PROJECT_DESTINATION%}
-MODEL_NAME=${3:-%MODEL.NAME%}
-MODEL_ROOT_PATH=${4:-%MODEL.ROOT_PATH%}
-CURRENT_ARCH=${5:-%CURRENT_ARCH%}
-MODEL_VERSION=${6:-%MODEL.VERSION%}
-ENVIRONMENT=${7:-%RUN.ENVIRONMENT%}
-HPCARCH=${8:-%HPCARCH%}
-ATM_GRID=${9:-%MODEL.GRID_ATM%}
-PU=${10:-%RUN.PROCESSOR_UNIT%}
-HPC_PROJECT=${11:-%CONFIGURATION.HPC_PROJECT_DIR%}
-EXPID=${12:-%DEFAULT.EXPID%}
-DVC_INPUTS_BRANCH=${13:-%MODEL.DVC_INPUTS_BRANCH%}
-INSTALL=${14:-%CONFIGURATION.INSTALL%} #local (default) or shared
-WORKFLOW=${15:-%RUN.WORKFLOW%}
-APP=${16:-%APP.NAMES%}
-RUN_TYPE=${17:-%RUN.TYPE%}
-IFS_EXPVER=${18:-%CONFIGURATION.IFS.EXPVER%}
-IFS_LABEL=${19:-%CONFIGURATION.IFS.LABEL%}
-DATELIST=${20:-%EXPERIMENT.DATELIST%}
-ICMCL=${21:-%MODEL.ICMCL_PATTERN%}
-CATALOG_NAME=${22:-%CURRENT_CATALOG_NAME%}
-AQUA_ON=${23:-%CONFIGURATION.ADDITIONAL_JOBS.AQUA%}
-AQUA_REGENCAT=${24:-%AQUA.REGENERATE_CATALOGS%}
-HPCARCH_short=${25:-%CURRENT_HPCARCH_SHORT%}
-DQC_ACTIVE=${26:-%CONFIGURATION.ADDITIONAL_JOBS.DQC%}
-DQC_PROFILE=${27:-%CONFIGURATION.DQC_PROFILE%}
-DATA_PORTFOLIO=${28:-%CONFIGURATION.DATA_PORTFOLIO%}
-DQC_PROFILE_ROOT=${29:-%CONFIGURATION.DQC_PROFILE_ROOT%}
-GSV_VERSION=${30:-%GSV.VERSION%}
-MODEL_PATH=${31:-%MODEL.PATH%}
-MODEL_INPUTS=${32:-%MODEL.INPUTS%}
-COMPILE=${33:-%MODEL.COMPILE%}
+CURRENT_ROOTDIR=${2:-%CURRENT_ROOTDIR%}
+PROJDEST=${3:-%PROJECT.PROJECT_DESTINATION%}
+MODEL_NAME=${4:-%MODEL.NAME%}
+MODEL_ROOT_PATH=${5:-%MODEL.ROOT_PATH%}
+CURRENT_ARCH=${6:-%CURRENT_ARCH%}
+MODEL_VERSION=${7:-%MODEL.VERSION%}
+ENVIRONMENT=${8:-%RUN.ENVIRONMENT%}
+HPCARCH=${9:-%HPCARCH%}
+ATM_GRID=${10:-%MODEL.GRID_ATM%}
+PU=${11:-%RUN.PROCESSOR_UNIT%}
+HPC_PROJECT=${12:-%CONFIGURATION.HPC_PROJECT_DIR%}
+EXPID=${13:-%DEFAULT.EXPID%}
+DVC_INPUTS_BRANCH=${14:-%MODEL.DVC_INPUTS_BRANCH%}
+INSTALL=${15:-%CONFIGURATION.INSTALL%} #local (default) or shared
+WORKFLOW=${16:-%RUN.WORKFLOW%}
+APP=${17:-%APP.NAMES%}
+RUN_TYPE=${18:-%RUN.TYPE%}
+IFS_EXPVER=${19:-%CONFIGURATION.IFS.EXPVER%}
+IFS_LABEL=${20:-%CONFIGURATION.IFS.LABEL%}
+DATELIST=${21:-%EXPERIMENT.DATELIST%}
+ICMCL=${22:-%MODEL.ICMCL_PATTERN%}
+CATALOG_NAME=${23:-%HPCCATALOG_NAME%}
+AQUA_ON=${24:-%CONFIGURATION.ADDITIONAL_JOBS.AQUA%}
+AQUA_REGENCAT=${25:-%AQUA.REGENERATE_CATALOGS%}
+HPCARCH_short=${26:-%CURRENT_HPCARCH_SHORT%}
+DQC_ACTIVE=${27:-%CONFIGURATION.ADDITIONAL_JOBS.DQC%}
+DQC_PROFILE=${28:-%CONFIGURATION.DQC_PROFILE%}
+DATA_PORTFOLIO=${29:-%CONFIGURATION.DATA_PORTFOLIO%}
+DQC_PROFILE_ROOT=${30:-%CONFIGURATION.DQC_PROFILE_ROOT%}
+GSV_VERSION=${31:-%GSV.VERSION%}
+MODEL_PATH=${32:-%MODEL.PATH%}
+MODEL_INPUTS=${33:-%MODEL.INPUTS%}
+COMPILE=${34:-%MODEL.COMPILE%}
 
 # Load ICON grid identifiers
-ATM_GID=${34:-%CONFIGURATION.ICON.ATM_GID%}
-OCE_GID=${35:-%CONFIGURATION.ICON.OCE_GID%}
+ATM_GID=${35:-%CONFIGURATION.ICON.ATM_GID%}
+OCE_GID=${36:-%CONFIGURATION.ICON.OCE_GID%}
+
 # Load ICON grid res
-ATM_GRID_REF=${36:-%CONFIGURATION.ICON.ATM_REF%}
-OCE_GRID_REF=${37:-%CONFIGURATION.ICON.OCE_REF%}
+ATM_GRID_REF=${37:-%CONFIGURATION.ICON.ATM_REF%}
+OCE_GRID_REF=${38:-%CONFIGURATION.ICON.OCE_REF%}
 
-SCRATCH=${38:-%CURRENT_SCRATCH_DIR%}
-PROJECT=${39:-%CURRENT_PROJECT%}
-HPC_PROJECT=${40:-%CONFIGURATION.HPC_PROJECT_DIR%}
-FDB_HOME=${41:-%REQUEST.FDB_HOME%}
-EXPVER=${42:-%REQUEST.EXPVER%}
-CLASS=${43:-%REQUEST.CLASS%}
-MODEL=${44:-%REQUEST.MODEL%}
+SCRATCH=${39:-%CURRENT_SCRATCH_DIR%}
+PROJECT=${40:-%CURRENT_PROJECT%}
+HPC_PROJECT=${41:-%CONFIGURATION.HPC_PROJECT_DIR%}
+FDB_HOME=${42:-%REQUEST.FDB_HOME%}
+EXPVER=${43:-%REQUEST.EXPVER%}
+CLASS=${44:-%REQUEST.CLASS%}
+MODEL=${45:-%REQUEST.MODEL%}
 
-CONTAINER_VERSION=${45:-%AQUA.CONTAINER_VERSION%}
-HPC_SCRATCH=${46:-%CONFIGURATION.PROJECT_SCRATCH%}
-HPC_CONTAINER_DIR=${47:-%CONFIGURATION.CONTAINER_DIR%}
+CONTAINER_VERSION=${46:-%AQUA.CONTAINER_VERSION%}
+HPC_SCRATCH=${47:-%CONFIGURATION.PROJECT_SCRATCH%}
+HPC_CONTAINER_DIR=${48:-%CONFIGURATION.CONTAINER_DIR%}
+CONTAINER_COMMAND=${49:-%CURRENT_CONTAINER_COMMAND%}
 
-LIBDIR=${48:-%CONFIGURATION.LIBDIR%}
-SCRIPTDIR=${49:-%CONFIGURATION.SCRIPTDIR%}
-DVC_INPUTS_CACHE=${50:-%CURRENT_DVC_INPUTS_CACHE%}
-DVC_VERSION=${51:-%DVC.VERSION%}
+LIBDIR=${50:-%CONFIGURATION.LIBDIR%}
+SCRIPTDIR=${51:-%CONFIGURATION.SCRIPTDIR%}
+DVC_INPUTS_CACHE=${52:-%CURRENT_DVC_INPUTS_CACHE%}
+DVC_VERSION=${53:-%DVC.VERSION%}
 
-ARCH_GPU=${52:-%CURRENT_ARCH_GPU%}
-ARCH_CPU=${53:-%CURRENT_ARCH_CPU%}
-ADDITIONAL_COMPILATION_FLAGS_CPU=${54:-%CURRENT_ADDITIONAL_COMPILATION_FLAGS_CPU%}
-ADDITIONAL_COMPILATION_FLAGS_GPU=${55:-%CURRENT_ADDITIONAL_COMPILATION_FLAGS_GPU%}
+ARCH_GPU=${54:-%CURRENT_ARCH_GPU%}
+ARCH_CPU=${55:-%CURRENT_ARCH_CPU%}
+ADDITIONAL_COMPILATION_FLAGS_CPU=${56:-%CURRENT_ADDITIONAL_COMPILATION_FLAGS_CPU%}
+ADDITIONAL_COMPILATION_FLAGS_GPU=${57:-%CURRENT_ADDITIONAL_COMPILATION_FLAGS_GPU%}
 
-FDB_INFO_FILE_PATH=${56:-%REQUEST.INFO_FILE_PATH%}
-FDB_INFO_FILE_NAME=${57:-%REQUEST.INFO_FILE_NAME%}
-BASE_VERSION=${58:-%BASE.VERSION%}
-AQUA_START_DATE=${59:-%AQUA.START_DATE%}
+FDB_INFO_FILE_PATH=${58:-%REQUEST.INFO_FILE_PATH%}
+FDB_INFO_FILE_NAME=${59:-%REQUEST.INFO_FILE_NAME%}
+BASE_VERSION=${60:-%BASE.VERSION%}
+AQUA_START_DATE=${61:-%AQUA.START_DATE%}
+GENERATE_PROFILES=${62:-%CONFIGURATION.GENERATE_PROFILES%}
+DNB_FILE=${63:-%CURRENT_DNB_FILE%}
 
 # END_HEADER
 
@@ -133,7 +138,6 @@ if [ -n "${DVC_INPUTS_BRANCH}" ]; then
     # lib/LUMI/config.sh (load_singularity) (auto generated comment)
     # lib/MARENOSTRUM5/config.sh (load_singularity) (auto generated comment)
     load_singularity
-    # lib/common/util.sh (manually added comment!)
     # lib/common/util.sh (inputs_dvc_checkout) (auto generated comment)
     inputs_dvc_checkout ${DVC_INPUTS_CACHE}
 fi
@@ -165,8 +169,8 @@ checker_precompiled_model
 
 if [ "${WORKFLOW,,}" != "apps" ] && [ "${WORKFLOW,,}" != "simless" ]; then
     checker_inproot_"${MODEL_NAME}"
-    # Creates fake production fdb if not in production
-    if [[ ${RUN_TYPE,,} != "production" ]] && [[ ${RUN_TYPE,,} != "research" ]]; then
+    # Creates fake production fdb if not in production, research or operational
+    if [[ ! ${RUN_TYPE,,} =~ ^(production|research|operational|operational-read)$ ]]; then
         if [[ ${MODEL_NAME,,} != "nemo" ]]; then
             load_fdb_"${ATM_MODEL}"
         fi
@@ -174,28 +178,12 @@ if [ "${WORKFLOW,,}" != "apps" ] && [ "${WORKFLOW,,}" != "simless" ]; then
 fi
 
 if [ "${MODEL_NAME,,}" != "nemo" ]; then
-    if [ "${DQC_ACTIVE,,}" == "true" ]; then
-        DATA_PORTFOLIO_PATH="${HPCROOTDIR}"/"${PROJDEST}"/"data-portfolio"
-        cd ${DATA_PORTFOLIO_PATH}
-        DATA_PORTFOLIO_VERSION=$(git describe --exact-match --tags)
+    if [ "${GENERATE_PROFILES,,}" == "true" ]; then
         # lib/LUMI/config.sh (load_singularity) (auto generated comment)
         # lib/MARENOSTRUM5/config.sh (load_singularity) (auto generated comment)
         load_singularity
-        mkdir -p ${DQC_PROFILE_ROOT}
-        singularity exec --cleanenv --no-home \
-            --env DATA_PORTFOLIO_PATH="${DATA_PORTFOLIO_PATH}" \
-            --env DATA_PORTFOLIO="${DATA_PORTFOLIO}" \
-            --env DQC_PROFILE="${DQC_PROFILE}" \
-            --env DATA_PORTFOLIO_VERSION="${DATA_PORTFOLIO_VERSION}" \
-            --env DQC_PROFILE_ROOT="${DQC_PROFILE_ROOT}" \
-            --bind "$PWD" \
-            --bind "${DQC_PROFILE_ROOT}" \
-            "$HPC_CONTAINER_DIR"/gsv/gsv_${GSV_VERSION}.sif \
-            bash -c \
-            ' set -xuve
-              python3 -m gsv.dqc.profiles.scripts.generate_profiles -r "${DATA_PORTFOLIO_PATH}" \
-                -p "${DATA_PORTFOLIO}" -c "${DQC_PROFILE}" -t "${DATA_PORTFOLIO_VERSION}" \
-                -o "${DQC_PROFILE_ROOT}" '
+        # lib/common/util.sh (generate_profiles) (auto generated comment)
+        generate_profiles
     fi
 fi
 
@@ -242,9 +230,16 @@ fi
 
 # Compile model sources if requested
 if [ "${COMPILE}" == "True" ]; then
-    # lib/common/util.sh (get_arch_compilation_flags) (auto generated comment)
-    read arch add_flags <<<$(get_arch_compilation_flags "${PU}" "${ARCH_CPU}" "${ARCH_GPU}" "${ADDITIONAL_COMPILATION_FLAGS_CPU}" "${ADDITIONAL_COMPILATION_FLAGS_GPU}")
-    compile_"${MODEL_NAME}" $arch $add_flags
+    if [ "${MODEL_NAME,,}" == "nemo" ]; then
+        # compilation is currently not working for NEMO and blocked in local setup
+        # lib/MARENOSTRUM5/config.sh (load_compile_env_nemo_intel) (auto generated comment)
+        load_compile_env_nemo_intel
+        compile_"${MODEL_NAME}"
+    else
+        # lib/common/util.sh (get_arch_compilation_flags) (auto generated comment)
+        read arch add_flags <<<$(get_arch_compilation_flags "${PU}" "${ARCH_CPU}" "${ARCH_GPU}" "${ADDITIONAL_COMPILATION_FLAGS_CPU}" "${ADDITIONAL_COMPILATION_FLAGS_GPU}")
+        compile_"${MODEL_NAME}" $arch $add_flags
+    fi
     post_compilation_"${MODEL_NAME}"
 else
     # If compilation path is given skip compilation

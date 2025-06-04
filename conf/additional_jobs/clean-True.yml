@@ -9,3 +9,5 @@ JOBS:
     THREADS: 1
     NODES: 1
     CHECK: on_submission
+CONFIGURATION:
+  GENERATE_PROFILES: "True"

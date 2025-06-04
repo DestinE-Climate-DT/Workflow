@@ -45,7 +45,13 @@ function pre-configuration-nemo() {
 #
 #####################################################
 function checker_nemo() {
-    true
+    if [ "${COMPILE,,}" == "true" ]; then
+        # compilation is currently not working for NEMO
+        echo "Please set COMPILE to False and use a pre-compiled version for NEMO."
+        exit 1
+    else
+        true
+    fi
 }
 
 #####################################################
@@ -127,13 +133,13 @@ function get_member_number() {
 
 function print_data_gov() {
     singularity exec --cleanenv --no-home \
-        --env "FDB_HOME=${FDB_HOME}" \
+        --env "FDB_HOME=$(realpath ${FDB_HOME})" \
         --env "EXPVER=${EXPVER}" \
         --bind "${HPCROOTDIR}" \
         --bind "${HPC_SCRATCH}" \
         --bind "${DEVELOPMENT_PROJECT_SCRATCH}" \
         --bind "${OPERATIONAL_PROJECT_SCRATCH}" \
-        --bind "${FDB_HOME}" \
+        --bind "$(realpath ${FDB_HOME})" \
         "${HPC_CONTAINER_DIR}"/gsv/gsv_${GSV_VERSION}.sif \
         bash -c \
         '
@@ -276,22 +282,20 @@ function load_fdb_ifs() {
         RAPS_BIN="${MODEL_PATH}/source/raps/bin"
     fi
 
-    if [[ ${RUN_TYPE,,} != "production" ]] && [[ ${RUN_TYPE,,} != "research" ]]; then
-        mkdir -p ${FDB_HOME}
-        cd ${FDB_HOME}
-        FDB_DIRS=("native" "." "latlon")
+    mkdir -p ${FDB_HOME}
+    cd ${FDB_HOME}
+    FDB_DIRS=("native" "." "latlon")
 
-        for FDB in "${FDB_DIRS[@]}"; do
-            FDB_DIR_PATH="${FDB_HOME}/${FDB}"
-            mkdir -p "${FDB_DIR_PATH}/etc/fdb"
-            chmod -R 750 "${FDB_DIR_PATH}"
+    for FDB in "${FDB_DIRS[@]}"; do
+        FDB_DIR_PATH="${FDB_HOME}/${FDB}"
+        mkdir -p "${FDB_DIR_PATH}/etc/fdb"
+        chmod -R 750 "${FDB_DIR_PATH}"
 
-            FDB_prefix="${FDB//./}"
+        FDB_prefix="${FDB//./}"
 
-            cp "${HPCROOTDIR}/LOG_${EXPID}/config${FDB_prefix,,}_REMOTE_SETUP" "${FDB_DIR_PATH}/etc/fdb/config.yaml"
-            cp "${SCRIPTDIR}/FDB/schema" "${FDB_DIR_PATH}/etc/fdb/schema"
-        done
-    fi
+        cp "${HPCROOTDIR}/LOG_${EXPID}/config${FDB_prefix,,}_REMOTE_SETUP" "${FDB_DIR_PATH}/etc/fdb/config.yaml"
+        cp "${SCRIPTDIR}/FDB/schema" "${FDB_DIR_PATH}/etc/fdb/schema"
+    done
 }
 
 #####################################################
@@ -305,13 +309,10 @@ function load_fdb_ifs() {
 
 function load_fdb_icon() {
 
-    if [[ ${RUN_TYPE,,} != "production" ]] && [[ ${RUN_TYPE,,} != "research" ]]; then
+    mkdir -p "${FDB_HOME}/etc/fdb"
 
-        mkdir -p "${FDB_HOME}/etc/fdb"
-
-        cp "${HPCROOTDIR}/LOG_${EXPID}/config_REMOTE_SETUP" "${FDB_HOME}/etc/fdb/config.yaml"
-        cp "${SCRIPTDIR}/FDB/schema" "${FDB_HOME}/etc/fdb/schema"
-    fi
+    cp "${HPCROOTDIR}/LOG_${EXPID}/config_REMOTE_SETUP" "${FDB_HOME}/etc/fdb/config.yaml"
+    cp "${SCRIPTDIR}/FDB/schema" "${FDB_HOME}/etc/fdb/schema"
 }
 
 ###############################################################################
@@ -330,12 +331,10 @@ function checker_inproot_nemo() {
 ###############################################################################
 function compile_nemo() {
 
-    cd $INSTALL_DIR
-
-    #check_nemo_env_vars
-    generate_nemo_env_file
-
     echo "Starting compilation now..."
+
+    cd "${INSTALL_DIR}/make/${CURRENT_ARCH}-${ENVIRONMENT}/"
+    generate_nemo_env_file
 
     NEMO_CFG="ORCA2"
     NEMO_MAKE_PARALLEL_LEVEL=16
@@ -343,12 +342,11 @@ function compile_nemo() {
     NEMO_KEYS_TO_DELETE="key_top"
     NEMO_KEYS_TO_ADD="key_asminc key_netcdf4 key_sms key_xios2 key_nosignedzero"
 
-    if [ ! -f cfgs/ORCA2/BLD/bin/nemo.exe ]; then
-        ./makenemo -j $NEMO_MAKE_PARALLEL_LEVEL -r ORCA2_ICE_PISCES \
-            -n "$NEMO_CFG" -d "$NEMO_SUBCOMPONENTS" \
-            -m $ARCH_NAME add_key "$NEMO_KEYS_TO_ADD" \
-            del_key "$NEMO_KEYS_TO_DELETE" || fatal "makenemo failed."
-    fi
+    ln -sf ${DNB_FILE} machine.yaml
+    # This is a download phase of the build process.
+    ./dnb.sh :du
+    # Build
+    ./dnb.sh :bi
 }
 
 ###############################################################################
@@ -605,10 +603,13 @@ function fix_constant_variables() {
 #   GENERATION
 #   LIBDIR
 #   REALIZATION
+#   MARS_BINARY
 # Arguments:
-#
+#   profile_file
 #####################################################
 function prepare_transfer() {
+
+    profile_file=$1
 
     if [ ! -f "${BASE_NAME}_COMPLETED" ]; then
 
@@ -622,7 +623,7 @@ function prepare_transfer() {
             --expid="${EXPVER}" --startdate="${START_DATE}" --experiment="${EXPERIMENT,,}" \
             --enddate="${SECOND_TO_LAST_DATE}" --chunk="${CHUNK}" --realization="${REALIZATION}" \
             --generation="${GENERATION}" --model="${MODEL_NAME,,}" --activity="${ACTIVITY,,}" \
-            --grib_file_name="${GRIB_FILE_NAME}"
+            --grib_file_name="${GRIB_FILE_NAME}" --databridge_database="${DATABRIDGE_DATABASE}"
 
     fi
 
@@ -871,4 +872,214 @@ function enable_process_monthly() {
     done
 
     echo "$process_monthly"
+}
+
+#####################################################
+# Retrieves and creates the requests for the FDB transfer.
+# Globals:
+#   CONTAINER_COMMAND
+#   FDB_HOME
+#   EXPVER
+#   START_DATE
+#   CHUNK
+#   SECOND_TO_LAST_DATE
+#   EXPERIMENT
+#   MODEL_NAME
+#   ACTIVITY
+#   REALIZATION
+#   GENERATION
+#   LIBDIR
+#   GRIB_FILE_NAME
+#   SCRIPTDIR
+#   BASE_NAME
+#   CHUNK_SECOND_TO_LAST_DATE
+#   TRANSFER_REQUESTS_PATH
+#   TRANSFER_MONTHLY
+#   SCRATCH_DIR
+#   HPC
+#   MARS_BINARY
+#   CONTAINER_DIR
+# Arguments:
+#   profile_file
+######################################################
+function retrieve_and_create_requests() {
+
+    cd ${TRANSFER_REQUESTS_PATH}
+
+    profile_file=$1
+
+    ${CONTAINER_COMMAND} exec --cleanenv --no-home \
+        --env "FDB_HOME=${FDB_HOME}" \
+        --env "EXPVER=${EXPVER}" \
+        --env "START_DATE=${START_DATE}" \
+        --env "CHUNK=${CHUNK}" \
+        --env "SECOND_TO_LAST_DATE=${SPLIT_SECOND_TO_LAST_DATE}" \
+        --env "EXPERIMENT=${EXPERIMENT}" \
+        --env "MODEL_NAME=${MODEL_NAME}" \
+        --env "ACTIVITY=${ACTIVITY}" \
+        --env "REALIZATION=${REALIZATION}" \
+        --env "GENERATION=${GENERATION}" \
+        --env "profile_file=${profile_file}" \
+        --env "LIBDIR=${LIBDIR}" \
+        --env "GRIB_FILE_NAME=${GRIB_FILE_NAME}" \
+        --env "SCRIPTDIR=$(realpath ${SCRIPTDIR})" \
+        --env "BASE_NAME=${BASE_NAME}" \
+        --env "CHUNK_SECOND_TO_LAST_DATE=${CHUNK_SECOND_TO_LAST_DATE}" \
+        --env "TRANSFER_REQUESTS_PATH=${TRANSFER_REQUESTS_PATH}" \
+        --env "TRANSFER_MONTHLY=${TRANSFER_MONTHLY}" \
+        --env "SCRATCH_DIR=${SCRATCH_DIR}" \
+        --env "HPC=${HPC}" \
+        --env "MARS_BINARY=${MARS_BINARY}" \
+        --env "DATABRIDGE_DATABASE=${DATABRIDGE_DATABASE}" \
+        --env "CONTAINER_DIR=${CONTAINER_DIR}" \
+        --bind "$(realpath $PWD)" \
+        --bind "$(realpath ${SCRATCH_DIR})" \
+        --bind "$(realpath ${LIBDIR}/common)" \
+        --bind "$(realpath ${SCRIPTDIR}/FDB)" \
+        --bind "$(realpath ${DQC_PROFILE_PATH})" \
+        --bind "$(realpath ${FDB_HOME})" \
+        --bind "${FDB_HOME}" \
+        --bind "${DEVELOPMENT_PROJECT_SCRATCH}" \
+        --bind "$(realpath ${DEVELOPMENT_PROJECT_SCRATCH})" \
+        --bind "${OPERATIONAL_PROJECT_SCRATCH}" \
+        "${CONTAINER_DIR}/gsv/gsv_${GSV_VERSION}.sif" \
+        bash -c \
+        '
+        set -xuve
+
+        . "${LIBDIR}"/common/util.sh
+        # lib/common/util.sh (prepare_transfer) (auto generated comment)
+        prepare_transfer ${profile_file}
+        '
+}
+
+#####################################################
+# Purges duplicated data.
+# Globals:
+#   CLEAN_DIR
+#   SCRIPTDIR
+#   EXPVER
+#   START_DATE
+#   EXPERIMENT
+#   GENERATION
+#   REALIZATION
+#   SECOND_TO_LAST_DATE
+#   CHUNK
+#   MODEL_NAME
+#   ACTIVITY
+#   TRANSFER_REQUESTS_PATH
+# Arguments:
+#   profile_file
+######################################################
+function purge_duplicated_data() {
+
+    profile_file=$1
+
+    # Run FDB purge
+    FLAT_REQ_NAME="$(basename $profile_file | cut -d. -f1)_${CHUNK}_request.flat"
+
+    CLEAN_DIR=${HPCROOTDIR}/clean_requests/
+    mkdir -p ${CLEAN_DIR}
+
+    singularity exec --cleanenv --no-home \
+        --env "FDB_HOME=$(realpath ${FDB_HOME})" \
+        --env "EXPVER=${EXPVER}" \
+        --env "START_DATE=${START_DATE}" \
+        --env "CHUNK=${CHUNK}" \
+        --env "SECOND_TO_LAST_DATE=${SPLIT_SECOND_TO_LAST_DATE}" \
+        --env "EXPERIMENT=${EXPERIMENT}" \
+        --env "MODEL_NAME=${MODEL_NAME}" \
+        --env "ACTIVITY=${ACTIVITY}" \
+        --env "REALIZATION=${REALIZATION}" \
+        --env "GENERATION=${GENERATION}" \
+        --env "profile_file=${profile_file}" \
+        --env "LIBDIR=${LIBDIR}" \
+        --env "GRIB_FILE_NAME=${GRIB_FILE_NAME}" \
+        --env "SCRIPTDIR=$(realpath ${SCRIPTDIR})" \
+        --env "BASE_NAME=${BASE_NAME}" \
+        --env "FLAT_REQ_NAME=${FLAT_REQ_NAME}" \
+        --env "CHUNK_SECOND_TO_LAST_DATE=${CHUNK_SECOND_TO_LAST_DATE}" \
+        --env "CLEAN_DIR=${CLEAN_DIR}" \
+        --env "TRANSFER_REQUESTS_PATH=${TRANSFER_REQUESTS_PATH}" \
+        --env "TRANSFER_MONTHLY=${TRANSFER_MONTHLY}" \
+        --bind "$(realpath $PWD)" \
+        --bind "$(realpath ${SCRATCH_DIR})" \
+        --bind "$(realpath ${LIBDIR}/common)" \
+        --bind "$(realpath ${SCRIPTDIR}/FDB)" \
+        --bind "$(realpath ${DQC_PROFILE_PATH})" \
+        --bind "$(realpath ${FDB_HOME})" \
+        --bind "$(realpath ${CLEAN_DIR})" \
+        "$HPC_CONTAINER_DIR"/gsv/gsv_${GSV_VERSION}.sif \
+        bash -c \
+        '
+        # set up for the purge
+        FLAT_REQ_NAME="$(basename $profile_file | cut -d. -f1)_${CHUNK}_request.flat"
+        CLEAN_DIR="${HPCROOTDIR}/clean_requests/"
+        mkdir -p ${CLEAN_DIR}
+
+        MINIMUM_KEYS="class,dataset,experiment,activity,expver,model,generation,realization,stream"
+        OMIT_KEYS="time,levelist,param,levtype,type,resolution"
+        if [[ "$profile_file" == *monthly* ]]; then
+            MINIMUM_KEYS+=",year"
+            OMIT_KEYS+=",month"
+        else
+            MINIMUM_KEYS+=",date"
+        fi
+
+        cd ${CLEAN_DIR}
+        # Convert YAML profile to flat request file
+        python3 "${SCRIPTDIR}/FDB/yaml_to_flat_request.py" \
+            --file="${profile_file}" --expver="${EXPVER}" --startdate="${START_DATE}" \
+            --experiment="${EXPERIMENT}" --generation="${GENERATION}" \
+            --realization="${REALIZATION}" --enddate="${SECOND_TO_LAST_DATE}" \
+            --chunk="${CHUNK}" --model="${MODEL_NAME^^}" --activity="${ACTIVITY}" \
+            --request_name="${FLAT_REQ_NAME}" --omit-keys="${OMIT_KEYS}"
+        # Purge data using FDB purge command
+        fdb purge --ignore-no-data --doit --minimum-keys ${MINIMUM_KEYS} "$(<${FLAT_REQ_NAME})" >/dev/null
+
+        '
+}
+
+#####################################################
+# Check if the profiles exist already. We should generate them in the first transfer that
+# runs.
+# Globals:
+#   CURRENT_ROOTDIR
+#   PROJDEST
+#   DQC_PROFILE_ROOT
+#   CONTAINER_COMMAND
+#   DATA_PORTFOLIO
+#   DQC_PROFILE
+#   HPC_CONTAINER_DIR
+#   GSV_VERSION
+######################################################
+function generate_profiles() {
+
+    DATA_PORTFOLIO_PATH="${CURRENT_ROOTDIR}/${PROJDEST}/data-portfolio"
+    cd ${DATA_PORTFOLIO_PATH}
+    DATA_PORTFOLIO_VERSION=$(git describe --exact-match --tags)
+    mkdir -p ${DQC_PROFILE_ROOT}
+
+    if [ ! -f flag_profiles_generated ]; then
+        echo "Generating profiles"
+        ${CONTAINER_COMMAND} exec --cleanenv --no-home \
+            --env DATA_PORTFOLIO_PATH="${DATA_PORTFOLIO_PATH}" \
+            --env DATA_PORTFOLIO="${DATA_PORTFOLIO}" \
+            --env DQC_PROFILE="${DQC_PROFILE}" \
+            --env DATA_PORTFOLIO_VERSION="${DATA_PORTFOLIO_VERSION}" \
+            --env DQC_PROFILE_ROOT="${DQC_PROFILE_ROOT}" \
+            --bind "$PWD" \
+            --bind "${DQC_PROFILE_ROOT}" \
+            "$HPC_CONTAINER_DIR"/gsv/gsv_${GSV_VERSION}.sif \
+            bash -c \
+            ' set -xuve
+            python3 -m gsv.dqc.profiles.scripts.generate_profiles -r "${DATA_PORTFOLIO_PATH}" \
+            -p "${DATA_PORTFOLIO}" -c "${DQC_PROFILE}" -t "${DATA_PORTFOLIO_VERSION}" \
+            -o "${DQC_PROFILE_ROOT}" '
+        touch flag_profiles_generated
+    else
+        echo "Profiles already generated"
+        return 0
+    fi
+
 }

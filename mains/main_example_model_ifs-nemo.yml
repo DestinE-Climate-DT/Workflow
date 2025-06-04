@@ -1,19 +1,16 @@
 RUN:
   WORKFLOW: model
-  ENVIRONMENT: cray
-  PROCESSOR_UNIT: gpu
+  # Platform-dependent: in LUMI, it should be "cray"
+  ENVIRONMENT: intel
+  PROCESSOR_UNIT: cpu
   TYPE: test
 MODEL:
   NAME: ifs-nemo
   SIMULATION: test-ifs-nemo
   GRID_ATM: tco79l137
   GRID_OCE: eORCA1_Z75
-  VERSION: ''
-  DVC_INPUTS_BRANCH: "experiment/control-100y-1990-debug-configuration"
-JOBS:
-  SIM:
-    WALLCLOCK: "01:30"
-    PARTITION: "small-g"
+  DVC_INPUTS_BRANCH: "ClimateDT-phase2"
+  INPUTS: "%HPCROOTDIR%/%PROJECT.PROJECT_DESTINATION%/dvc-cache-de340"
 EXPERIMENT:
   DATELIST: 19900101 #Startdate
   MEMBERS: fc0
@@ -22,7 +19,7 @@ EXPERIMENT:
   NUMCHUNKS: 2
   CALENDAR: standard
 CONFIGURATION:
-  RAPS_EXPERIMENT: "control"
+  RAPS_USER_FLAGS: "--inproot-namelists"
   ADDITIONAL_JOBS:
     TRANSFER: "False"
     BACKUP: "False"

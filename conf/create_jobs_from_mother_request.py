@@ -165,9 +165,10 @@ def _get_opa_dependencies(opa_names: List[str]) -> List[Dict]:
                     },
                     f"OPA_{opa.upper()}": {
                         "SPLITS_FROM": {
-                            "all": {"SPLITS_TO": "previous", "STATUS": "FAILED"}
+                            "all": {"SPLITS_TO": "previous"}
                         }
                     },
+                    f"OPA_{opa.upper()}-1": {}
                 }
             ]
 
@@ -257,7 +258,6 @@ def main(args=None):
                         "SPLITS_FROM": {
                             "all": {
                                 "SPLITS_TO": '"[1:%JOBS.DN.SPLITS%]*\\\\1"',
-                                "STATUS": "FAILED",
                             }
                         }
                     }
@@ -267,9 +267,10 @@ def main(args=None):
             {
                 f"APP_{app.upper()}": {
                     "SPLITS_FROM": {
-                        "all": {"SPLITS_TO": "previous", "STATUS": "FAILED"}
+                        "all": {"SPLITS_TO": "previous"}
                     }
-                }
+                },
+                f"APP_{app.upper()}-1": {}
             }
         )
         # TODO: \\1 is the frequency app runs (1=1 day, 2=2 days). Possibly some other modifications needed.
@@ -289,13 +290,11 @@ def main(args=None):
             tmp_dict = {
                 "SIM": {"STATUS": "RUNNING"},
                 "DN": {"SPLITS_FROM": {"all": {"SPLITS_TO": "previous"}}},
-                f"APP_{app.upper()}-1": {"STATUS": "FAILED"},
             }
         if main_yml["RUN"]["WORKFLOW"] == WorkflowType.APPS:
             tmp_dict = {
                 "REMOTE_SETUP": {"STATUS": "COMPLETED"},
                 "DN": {"SPLITS_FROM": {"all": {"SPLITS_TO": "previous"}}},
-                f"APP_{app.upper()}-1": {"STATUS": "FAILED"},
             }
         update_dict_recursively(jobs_dn_dependencies, tmp_dict)
 

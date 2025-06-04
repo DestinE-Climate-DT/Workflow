@@ -3,21 +3,33 @@ RUN:
   ENVIRONMENT: cray
   PROCESSOR_UNIT: gpu
   TYPE: test
+
 MODEL:
   NAME: icon
   SIMULATION: test-icon
   GRID_ATM: r2b8
   GRID_OCE: r2b8
-  VERSION: 'master-v.1.1'
+  VERSION: 'destine_phase2_v1.2.0'
+
+EXPERIMENT:
+  DATELIST: 19900101
+  MEMBERS: "default"
+  CHUNKSIZEUNIT: day
+  CHUNKSIZE: 1
+  NUMCHUNKS: 2
+  CALENDAR: standard
+
 CONFIGURATION:
   ADDITIONAL_JOBS:
     TRANSFER: "False"
     BACKUP: "False"
     MEMORY_CHECKER: "False"
-    DQC: "True"
-    CLEAN: "True"
+    DQC: "False"
     AQUA: "True"
-PLATFORMS:
-  LUMI:
-    TYPE: slurm
-    APP_PARTITION: debug
+
+JOBS:
+  SIM:
+    PARTITION: standard-g
+    WALLCLOCK: '00:15'
+    NODES: 16
+    CUSTOM_DIRECTIVES: "['#SBATCH --gpus-per-node=8', '#SBATCH --exclusive']"

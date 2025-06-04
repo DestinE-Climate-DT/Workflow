@@ -4,7 +4,7 @@ JOBS:
     FOR:
       NAME: ["BASIC", "FULL"]
       DEPENDENCIES: ["SIM", "DQC_BASIC"]
-      # Activates/desactivates checkers
+      # Activates/deactivates checkers
       CHECK_STANDARD_COMPLIANCE: ["False", "True"]
       CHECK_SPATIAL_COMPLETENESS: ["True", "True"]
       CHECK_SPATIAL_CONSISTENCY: ["True", "True"]
@@ -19,5 +19,4 @@ JOBS:
     RUNNING: chunk
     CHECK: on_submission
 CONFIGURATION:
-  DQC_PROFILE_ROOT: "%HPCROOTDIR%/profiles"
-  DQC_PROFILE_PATH: "%CONFIGURATION.DQC_PROFILE_ROOT%/%MODEL.NAME%"
+  GENERATE_PROFILES: "True"
