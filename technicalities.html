@@ -1,0 +1,199 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="./">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Technicalities &mdash; Climate DT Workflow April 2025 documentation</title>
+      <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=80d5e7a1" />
+      <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=e59714d7" />
+
+  
+      <script src="_static/jquery.js?v=5d32c60e"></script>
+      <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="_static/documentation_options.js?v=8bc9b8fe"></script>
+      <script src="_static/doctools.js?v=9bcbadda"></script>
+      <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="_static/js/theme.js"></script>
+    <link rel="author" title="About these documents" href="about.html" />
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Operators guide" href="operators_guide.html" />
+    <link rel="prev" title="Cheat Sheet for Autosubmit" href="autosubmit_cheatsheet.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="index.html" class="icon icon-home">
+            Climate DT Workflow
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="about.html">About the project</a></li>
+<li class="toctree-l1"><a class="reference internal" href="getting_started.html">Getting Started</a></li>
+<li class="toctree-l1"><a class="reference internal" href="create_run.html">Create your own experiment</a></li>
+<li class="toctree-l1"><a class="reference internal" href="create_run.html#customize-your-experiment">Customize your experiment</a></li>
+<li class="toctree-l1"><a class="reference internal" href="create_run.html#execute-the-workflow">Execute the workflow</a></li>
+<li class="toctree-l1"><a class="reference internal" href="auto_keys_main.html">WIP: Automatic generation of keys</a></li>
+<li class="toctree-l1"><a class="reference internal" href="keys_main.html">Available keys in main.yml</a></li>
+<li class="toctree-l1"><a class="reference internal" href="keys_request.html">Available keys in request.yml</a></li>
+<li class="toctree-l1"><a class="reference internal" href="autosubmit_cheatsheet.html">Cheat Sheet for Autosubmit</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Technicalities</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#directories-created-with-the-workflow-ifs-nemo">Directories created with the workflow (IFS-NEMO)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#restarts-ifs-nemo">Restarts (IFS-NEMO)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#data-governance">Data governance</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#data-streaming">Data streaming</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#update-a-component-version-development">Update a component version (development)</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#component-is-integrated-as-submodule">Component is integrated as submodule</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#component-is-integrated-as-a-container">Component is integrated as a container</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="operators_guide.html">Operators guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="FAQ.html">FAQ</a></li>
+<li class="toctree-l1"><a class="reference internal" href="update_apps.html">Update apps</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">Climate DT Workflow</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">Technicalities</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="_sources/technicalities.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="technicalities">
+<h1>Technicalities<a class="headerlink" href="#technicalities" title="Link to this heading"></a></h1>
+<section id="directories-created-with-the-workflow-ifs-nemo">
+<h2>Directories created with the workflow (IFS-NEMO)<a class="headerlink" href="#directories-created-with-the-workflow-ifs-nemo" title="Link to this heading"></a></h2>
+<p>The experiment directory in the HPC is located in the scratch of the user. During the steps of the workflow, a set of directories is created:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">%PROJDIR%</span></code> (default: git_project): contains the workflow project</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">rundir</span></code>: where the simulation runs. RAPS creates a directory for each run attempt.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">restarts</span></code>: restart files of the model, separated by each chunk.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">inipath</span></code>: symlinks to the initial data used to execute the model, one per member. If the namelists or the initial conditions are modified, it is reflected in this directory.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">LOGS_{EXPID}</span></code>: logs of the experiment.</p></li>
+</ul>
+</section>
+<section id="restarts-ifs-nemo">
+<h2>Restarts (IFS-NEMO)<a class="headerlink" href="#restarts-ifs-nemo" title="Link to this heading"></a></h2>
+<p>After each SIM chunk, the resulting restart files are automatically relocated to separate subdirectories, all inside a directory identified by the chunk number. The restart directory is also automatically defined as a symbolic link to the current chunk’s restart directory, allowing users to rerun any particular chunk at their convenience.
+In a regular execution, the directory 1/ will be empty (initializing from initial conditions), the restart 2/ contain the restart files necessary to start the second chunk, and so on.</p>
+<p>In case of a failure:
+- If the failure is before writing the restarts, the retrial will take the restart files to initialize the chunk again.
+- If the failure is during the writing of the restart files, the worfklow will detect that and use the not corrupted set of restart files.</p>
+<p>To-do: explain restart mechanism for ICON and IFS-FESOM, and also for the applications.</p>
+</section>
+<section id="data-governance">
+<h2>Data governance<a class="headerlink" href="#data-governance" title="Link to this heading"></a></h2>
+<p>The data in the FDB is encoded with a set of keys. This is the current 1st layer of the schema used in Climate-DT, that is used to encode the data in the FDB. The keys are:</p>
+<p><code class="docutils literal notranslate"><span class="pre">class=d1,</span> <span class="pre">dataset=climate-dt,</span> <span class="pre">activity,</span> <span class="pre">experiment,</span> <span class="pre">generation,</span> <span class="pre">model,</span> <span class="pre">realization,</span> <span class="pre">expver,</span> <span class="pre">stream=clte/wave,</span> <span class="pre">date</span></code></p>
+<p>Most of them are governed by the workflow, under <code class="docutils literal notranslate"><span class="pre">REQUEST</span></code> keys:</p>
+<ul class="simple">
+<li><p>CLASS is currently fixed to <code class="docutils literal notranslate"><span class="pre">d1</span></code>.</p></li>
+<li><p>DATASET is currently fixed to <code class="docutils literal notranslate"><span class="pre">climate-dt</span></code>.</p></li>
+<li><p>EXPERIMENT and ACTIVITY are set by RAPS in IFS-NEMO and IFS-FESOM. In the SIMULATION config files, we set the key %CONFIGURATION.RAPS_EXPERIMENT% to specify which experiment we run. RAPS associates the corresponding ACTIVITY. To read the data, we set the keys REQUEST.EXPERIMENT and REQUEST.ACTIVITY. In ICON, the values of REQUEST.EXPERIMENT and REQUEST.ACTIVITY are directly used by the model.</p></li>
+<li><p>REALIZATION is a number, starting from 1. It is set in the workflow according to the member number.</p></li>
+<li><p>GENERATION is a number (1 or 2 currently) that marks in which operational cycle the data was produced.</p></li>
+<li><p>MODEL is set in the <code class="docutils literal notranslate"><span class="pre">main.yml</span></code>, where we set the key <code class="docutils literal notranslate"><span class="pre">%MODEL.NAME%</span></code> to specify which model we run.</p></li>
+<li><p>EXPVER is <code class="docutils literal notranslate"><span class="pre">0001</span></code> (if <code class="docutils literal notranslate"><span class="pre">RUN.TYPE</span></code> is <code class="docutils literal notranslate"><span class="pre">production``</span></code> or <code class="docutils literal notranslate"><span class="pre">pre-production</span></code>) or the EXPID of the experiment that produced the data (if <code class="docutils literal notranslate"><span class="pre">RUN.TYPE</span></code> is <code class="docutils literal notranslate"><span class="pre">research</span></code> or <code class="docutils literal notranslate"><span class="pre">test``</span></code>).</p></li>
+<li><p>STREAM is set by RAPS in IFS-NEMO and IFS-FESOM.</p></li>
+<li><p>DATE is the date of the data.</p></li>
+</ul>
+<p>The keys <code class="docutils literal notranslate"><span class="pre">REQUEST.EXPERIMENT</span></code>, <code class="docutils literal notranslate"><span class="pre">REQUEST.ACTIVITY</span></code>, <code class="docutils literal notranslate"><span class="pre">REQUEST.GENERATION</span></code>, <code class="docutils literal notranslate"><span class="pre">REQUEST.MODEL</span></code>, <code class="docutils literal notranslate"><span class="pre">REQUEST.REALIZATION</span></code> and <code class="docutils literal notranslate"><span class="pre">REQUEST.RESOLUTION</span></code> are used to read the data from the FDB.</p>
+</section>
+<section id="data-streaming">
+<h2>Data streaming<a class="headerlink" href="#data-streaming" title="Link to this heading"></a></h2>
+<p>The data streaming is a fundamental piece to run the ClimateDT successfully. Internally the Data Notifier (DN) and the One Pass Algorithms (OPA) run at daily simulation steps, that is, every time the model produces a day of data an instance of the OPA is triggered by the DN. Applications are launched also daily by default, but the workflow allows the possibility to run them at other frequencies (always equal or lower than the OPA, e.g. monthly) always that they can run at such frequencies (e.g. there are no memory constraints).</p>
+</section>
+<section id="update-a-component-version-development">
+<h2>Update a component version (development)<a class="headerlink" href="#update-a-component-version-development" title="Link to this heading"></a></h2>
+<section id="component-is-integrated-as-submodule">
+<h3>Component is integrated as submodule<a class="headerlink" href="#component-is-integrated-as-submodule" title="Link to this heading"></a></h3>
+<p>If the component is integrated as a submodule, the developer of the component has to do the following steps:</p>
+<p>Note: this includes <code class="docutils literal notranslate"><span class="pre">ifs-nemo</span></code>, <code class="docutils literal notranslate"><span class="pre">catalog</span></code>, <code class="docutils literal notranslate"><span class="pre">dvc-cache-de340</span></code>, <code class="docutils literal notranslate"><span class="pre">data-portfolio</span></code> and <code class="docutils literal notranslate"><span class="pre">nemo</span></code>.</p>
+<ul class="simple">
+<li><p>Clone this repository. Check out the <code class="docutils literal notranslate"><span class="pre">update-components</span></code> branch.`</p></li>
+<li><p>Run <code class="docutils literal notranslate"><span class="pre">git</span> <span class="pre">submodule</span> <span class="pre">update</span> <span class="pre">--init</span> <span class="pre">${COMPONENT}</span></code></p></li>
+<li><p>Go to the component directory and checkout the desired commit (<code class="docutils literal notranslate"><span class="pre">cd</span> <span class="pre">${COMPONENT}</span> <span class="pre">&amp;&amp;</span> <span class="pre">git</span> <span class="pre">fetch</span> <span class="pre">&amp;&amp;</span> <span class="pre">git</span> <span class="pre">checkout</span> <span class="pre">${COMMIT}</span></code>).</p></li>
+<li><p>Go back to the root directory and commit the changes (<code class="docutils literal notranslate"><span class="pre">git</span> <span class="pre">add</span> <span class="pre">${COMPONENT}</span> <span class="pre">&amp;&amp;</span> <span class="pre">git</span> <span class="pre">commit</span> <span class="pre">-m</span> <span class="pre">&quot;Update</span> <span class="pre">${COMPONENT}</span> <span class="pre">to</span> <span class="pre">${COMMIT}&quot;</span></code>). Push the changes to the remote repository.</p></li>
+</ul>
+</section>
+<section id="component-is-integrated-as-a-container">
+<h3>Component is integrated as a container<a class="headerlink" href="#component-is-integrated-as-a-container" title="Link to this heading"></a></h3>
+<p>If the component is integrated as a container, the developer of the component has to do the following steps:</p>
+<ul class="simple">
+<li><p>Clone this repository. Check out the <code class="docutils literal notranslate"><span class="pre">update-components</span></code> branch.</p></li>
+<li><p>Upload the container to the containers folder.</p></li>
+<li><p>Update the container version in the configuration file where the <code class="docutils literal notranslate"><span class="pre">VERSION</span></code> of the component is defined (conf/applications/container_version.yml in app cases).</p></li>
+<li><p>Commit the changes and push them to the remote repository.</p></li>
+</ul>
+</section>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="autosubmit_cheatsheet.html" class="btn btn-neutral float-left" title="Cheat Sheet for Autosubmit" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="operators_guide.html" class="btn btn-neutral float-right" title="Operators guide" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2025, A7.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

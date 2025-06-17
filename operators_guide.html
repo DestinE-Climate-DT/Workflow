@@ -1,0 +1,211 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="./">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Operators guide &mdash; Climate DT Workflow April 2025 documentation</title>
+      <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=80d5e7a1" />
+      <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=e59714d7" />
+
+  
+      <script src="_static/jquery.js?v=5d32c60e"></script>
+      <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="_static/documentation_options.js?v=8bc9b8fe"></script>
+      <script src="_static/doctools.js?v=9bcbadda"></script>
+      <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="_static/js/theme.js"></script>
+    <link rel="author" title="About these documents" href="about.html" />
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="FAQ" href="FAQ.html" />
+    <link rel="prev" title="Technicalities" href="technicalities.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="index.html" class="icon icon-home">
+            Climate DT Workflow
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="about.html">About the project</a></li>
+<li class="toctree-l1"><a class="reference internal" href="getting_started.html">Getting Started</a></li>
+<li class="toctree-l1"><a class="reference internal" href="create_run.html">Create your own experiment</a></li>
+<li class="toctree-l1"><a class="reference internal" href="create_run.html#customize-your-experiment">Customize your experiment</a></li>
+<li class="toctree-l1"><a class="reference internal" href="create_run.html#execute-the-workflow">Execute the workflow</a></li>
+<li class="toctree-l1"><a class="reference internal" href="auto_keys_main.html">WIP: Automatic generation of keys</a></li>
+<li class="toctree-l1"><a class="reference internal" href="keys_main.html">Available keys in main.yml</a></li>
+<li class="toctree-l1"><a class="reference internal" href="keys_request.html">Available keys in request.yml</a></li>
+<li class="toctree-l1"><a class="reference internal" href="autosubmit_cheatsheet.html">Cheat Sheet for Autosubmit</a></li>
+<li class="toctree-l1"><a class="reference internal" href="technicalities.html">Technicalities</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Operators guide</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#how-to-switch-projects">How to switch projects</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#how-to-use-a-robot-account">How to use a robot account</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#how-to-set-the-paths-in-the-e-o-suite">How to set the paths in the E/O-suite</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#how-to-set-container-versions">How to set container versions</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#how-to-set-resolutions-of-applications">How to set resolutions of applications</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#a-chunk-runs-successfully-but-needs-to-be-rerun-ifs-fesom-use-case">A chunk runs successfully, but needs to be rerun (IFS-FESOM use case)</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="FAQ.html">FAQ</a></li>
+<li class="toctree-l1"><a class="reference internal" href="update_apps.html">Update apps</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">Climate DT Workflow</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">Operators guide</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="_sources/operators_guide.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="operators-guide">
+<h1>Operators guide<a class="headerlink" href="#operators-guide" title="Link to this heading"></a></h1>
+<section id="how-to-switch-projects">
+<h2>How to switch projects<a class="headerlink" href="#how-to-switch-projects" title="Link to this heading"></a></h2>
+<p>In order to change the project used by the workflow, the operator has to add, in the <code class="docutils literal notranslate"><span class="pre">conf/main.yml</span></code> file the following lines:
+The REMOTE_SETUP job runs on the login node therefore the project also has to be specified for that.</p>
+<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">PLATFORMS</span><span class="p">:</span>
+<span class="w">  </span><span class="c1"># LUMI as example, but it can be any platform</span>
+<span class="w">  </span><span class="nt">LUMI</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">PROJECT</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">&lt;PROJECT&gt;</span>
+
+<span class="w">  </span><span class="nt">LUMI-LOGIN</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">PROJECT</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">&lt;PROJECT&gt;</span>
+</pre></div>
+</div>
+</section>
+<section id="how-to-use-a-robot-account">
+<h2>How to use a robot account<a class="headerlink" href="#how-to-use-a-robot-account" title="Link to this heading"></a></h2>
+<p>To switch the account used for the simulation one can change the user for the corresponding platform in <code class="docutils literal notranslate"><span class="pre">conf/main.yml</span></code>:</p>
+<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">PLATFORMS</span><span class="p">:</span>
+<span class="w">  </span><span class="c1"># LUMI as example, but it can be any platform</span>
+<span class="w">  </span><span class="nt">LUMI</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">USER</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">&lt;USER&gt;</span>
+</pre></div>
+</div>
+<p>If in <code class="docutils literal notranslate"><span class="pre">conf/platforms.yml</span></code> the following is defined <code class="docutils literal notranslate"><span class="pre">USER:</span> <span class="pre">&lt;to-be-overloaded-in-user-conf&gt;</span></code> then the user may be overloaded if a user is given in <code class="docutils literal notranslate"><span class="pre">~/platforms.yml</span></code>.</p>
+</section>
+<section id="how-to-set-the-paths-in-the-e-o-suite">
+<h2>How to set the paths in the E/O-suite<a class="headerlink" href="#how-to-set-the-paths-in-the-e-o-suite" title="Link to this heading"></a></h2>
+<p>The default paths used in the development projects are not the same as in the operational project.
+Therefore, one has to set the desired paths to the input data and the software from the specific suite (as example E-25.0), in the <code class="docutils literal notranslate"><span class="pre">conf/main.yml</span></code>:</p>
+<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">MODEL</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">VERSION</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;DE_CY48R1.0_climateDT_20240723&#39;</span>
+<span class="w">  </span><span class="nt">ROOT_PATH</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;%CONFIGURATION.HPC_PROJECT_DIR%/E-25.0/models/%MODEL.NAME%&quot;</span><span class="w"> </span><span class="c1"># Where to find the models</span>
+<span class="w">  </span><span class="nt">PATH</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;%MODEL.ROOT_PATH%/%MODEL.VERSION%/&quot;</span><span class="w"> </span><span class="c1"># Where to find the specific model version</span>
+<span class="w">  </span><span class="nt">INPUTS</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;%MODEL.ROOT_PATH%/%MODEL.VERSION%/inidata&quot;</span><span class="w"> </span><span class="c1"># Where to find the input data</span>
+
+<span class="nt">CONFIGURATION</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">CONTAINER_DIR</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;%CONFIGURATION.HPC_PROJECT_DIR%/E-25.0/containers&quot;</span>
+</pre></div>
+</div>
+<p>For IFS-FESOM the MIR_CACHE_PATH must also be updated. This can be done in <code class="docutils literal notranslate"><span class="pre">conf/main.yml</span></code></p>
+<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">MODEL</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">NAME</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">ifs-fesom</span>
+<span class="w">  </span><span class="nt">RAPS_MIR_CACHE_PATH</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;/scratch/&lt;project&gt;/path/to/multio_mir_cache&quot;</span>
+<span class="w">  </span><span class="nt">RAPS_MIR_FESOM_CACHE_PATH</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;/scratch/&lt;project&gt;/path/to/multio_mir_cache/fesom&quot;</span>
+</pre></div>
+</div>
+</section>
+<section id="how-to-set-container-versions">
+<h2>How to set container versions<a class="headerlink" href="#how-to-set-container-versions" title="Link to this heading"></a></h2>
+<p>The versions of the containers need to be configured in the workflow to ensure the correct version is used.
+For the applications and OPA the versions can be set in <code class="docutils literal notranslate"><span class="pre">conf/applications/container_versions.yml</span></code>.
+For the GSV and AQUA it can be set in the <code class="docutils literal notranslate"><span class="pre">main.yml</span></code>.</p>
+<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">GSV</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">VERSION</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">2.9.0</span>
+</pre></div>
+</div>
+</section>
+<section id="how-to-set-resolutions-of-applications">
+<h2>How to set resolutions of applications<a class="headerlink" href="#how-to-set-resolutions-of-applications" title="Link to this heading"></a></h2>
+<p>The applications use input data from the models that can be interpolated to different resolutions. Therefore, one must set the desired resolution for each application.
+This can be done in <code class="docutils literal notranslate"><span class="pre">/conf/applications/resolutions.yml&quot;</span></code>. The following encoding is used:</p>
+<ul class="simple">
+<li><p>100km = 1.0</p></li>
+<li><p>10km = 0.1</p></li>
+<li><p>5km = 0.05</p></li>
+</ul>
+</section>
+<section id="a-chunk-runs-successfully-but-needs-to-be-rerun-ifs-fesom-use-case">
+<h2>A chunk runs successfully, but needs to be rerun (IFS-FESOM use case)<a class="headerlink" href="#a-chunk-runs-successfully-but-needs-to-be-rerun-ifs-fesom-use-case" title="Link to this heading"></a></h2>
+<p>Use case example:</p>
+<p>Chunk 450 has not run successfully but it was manually set as COMPLETED. It needed to be rerun together with chunk 451.</p>
+<p>These were the steps involved in restarting the 450 chunk:</p>
+<ol class="arabic simple">
+<li><p>Check that the time reflected in <code class="docutils literal notranslate"><span class="pre">&lt;expid&gt;/restarts/fesom_raw_restart/fesom.clock</span></code> matches the latest time of the previous chunk. If those dates match then you can move on to step 2. If they don’t, backup the fesom_raw_restart and find the <code class="docutils literal notranslate"><span class="pre">fesom_raw_restart_*</span></code> in <code class="docutils literal notranslate"><span class="pre">&lt;expid&gt;/restarts</span></code> that contains a <code class="docutils literal notranslate"><span class="pre">fesom.clock</span></code> that matches the latest time of the previous chunk and copy it to fesom_raw_restart. In our example, the final time of the previous chunk to the one we wanted to run was 161640 hours (from the rundir name <code class="docutils literal notranslate"><span class="pre">h161640.N284.T1920xt14xh1+ioT320xt14xh0.nextgems_6h.i32r1w32.a1oo_...</span></code>) and we wanted to rerun the chunk of final time 162000. Our simulation started on 1st of January 2020, so if we add 161640/24 days to it in a calendar application (e.g. <a class="reference external" href="https://www.timeanddate.com/date/dateadded.html?d1=1&amp;m1=1&amp;y1=2038&amp;type=add&amp;ay=&amp;am=&amp;aw=&amp;ad=161&amp;rec=">Timeanddate website</a>) we get 10 June 2038 which was in agreement with the content of the fesom.clock (day 160 2038, which is indeed 10 June 2038).</p></li>
+<li><p>Check the <code class="docutils literal notranslate"><span class="pre">&lt;expid&gt;/restarts/rcf</span></code> file and make sure that the CTIME matches the final time of the previous chunk. The format of CTIME is such as 0067350000 where the 4 digits on the right are maybe for hours and seconds, and the rest of the digits (006735) indicate the days since the beginning of the simulation. This file is used by IFS to understand which restarts to load, so as long as this date is correct the correct restarts should be loaded. If it is not correct, find one of the rcf_* backup files in &lt;expid&gt;/restarts that match the expected simulated time and rename it to rcf.</p></li>
+<li><p>In the Autosubmit VM manually remove all the COMPLETED files in <code class="docutils literal notranslate"><span class="pre">/appl/AS/AUTOSUBMIT_DATA/&lt;expid&gt;/tmp</span></code> that have a chunk number &gt;= than the chunk you want to resume the simulation from. In our case, we wanted to rerun chunk 450, so every file matching <code class="docutils literal notranslate"><span class="pre">a1oo_20200101_450_*_COMPLETED</span></code>, <code class="docutils literal notranslate"><span class="pre">a1oo_20200101_451_*_COMPLETED</span></code>, <code class="docutils literal notranslate"><span class="pre">a1oo_20200101_452_*_COMPLETED</span></code> … was removed. This “resets” Autosubmit to the chunk where we want to resume. The reccomended way to do this is using the <code class="docutils literal notranslate"><span class="pre">setstatus</span></code> command.</p></li>
+<li><p>Run <code class="docutils literal notranslate"><span class="pre">autosubmit</span> <span class="pre">create</span> <span class="pre">a1oo</span></code></p></li>
+<li><p>Run <code class="docutils literal notranslate"><span class="pre">autosubmit</span> <span class="pre">recovery</span> <span class="pre">a1oo</span> <span class="pre">-s</span> <span class="pre">--all</span></code> (<a class="reference external" href="https://autosubmit.readthedocs.io/en/master/userguide/modifying_workflow/index.html#how-to-recover-an-experiment">Autosubmit docs</a>)</p></li>
+<li><p>Run <code class="docutils literal notranslate"><span class="pre">autosubmit</span> <span class="pre">run</span> <span class="pre">a1oo</span></code> to resume the run starting from the desired chunk.</p></li>
+</ol>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="technicalities.html" class="btn btn-neutral float-left" title="Technicalities" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="FAQ.html" class="btn btn-neutral float-right" title="FAQ" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2025, A7.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

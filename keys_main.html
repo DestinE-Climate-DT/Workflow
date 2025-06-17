@@ -1,0 +1,653 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="./">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Available keys in main.yml &mdash; Climate DT Workflow April 2025 documentation</title>
+      <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=80d5e7a1" />
+      <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=e59714d7" />
+
+  
+      <script src="_static/jquery.js?v=5d32c60e"></script>
+      <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="_static/documentation_options.js?v=8bc9b8fe"></script>
+      <script src="_static/doctools.js?v=9bcbadda"></script>
+      <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="_static/js/theme.js"></script>
+    <link rel="author" title="About these documents" href="about.html" />
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Available keys in request.yml" href="keys_request.html" />
+    <link rel="prev" title="WIP: Automatic generation of keys" href="auto_keys_main.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="index.html" class="icon icon-home">
+            Climate DT Workflow
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="about.html">About the project</a></li>
+<li class="toctree-l1"><a class="reference internal" href="getting_started.html">Getting Started</a></li>
+<li class="toctree-l1"><a class="reference internal" href="create_run.html">Create your own experiment</a></li>
+<li class="toctree-l1"><a class="reference internal" href="create_run.html#customize-your-experiment">Customize your experiment</a></li>
+<li class="toctree-l1"><a class="reference internal" href="create_run.html#execute-the-workflow">Execute the workflow</a></li>
+<li class="toctree-l1"><a class="reference internal" href="auto_keys_main.html">WIP: Automatic generation of keys</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Available keys in main.yml</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#run">RUN:</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#workflow">WORKFLOW:</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#environment">ENVIRONMENT:</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#processor-unit">PROCESSOR_UNIT:</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#type">TYPE:</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#model">MODEL:</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#name">NAME:</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#grid-atm">GRID_ATM:</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#grid-oce">GRID_OCE:</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#version">VERSION:</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#compile">COMPILE:</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#simulation">SIMULATION:</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#dvc-inputs-branch">DVC_INPUTS_BRANCH:</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#raps-mir-cache-path">RAPS_MIR_CACHE_PATH</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#raps-mir-fesom-cache-path">RAPS_MIR_FESOM_CACHE_PATH</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#app">APP:</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#names">NAMES:</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#outpath-deprecated-moved-to-opa-outpath-in-conf-application-opa-yml-soon-to-be-removed-from-main-yml">OUTPATH: (deprecated. Moved to OPA_OUTPATH in conf/application/opa.yml, soon to be removed from <cite>main.yml</cite>)</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#read-from-databridge">READ_FROM_DATABRIDGE:</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#configuration">CONFIGURATION:</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#container-dir">CONTAINER_DIR:</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#project-scratch">PROJECT_SCRATCH:</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#libdir">LIBDIR:</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#scriptdir">SCRIPTDIR:</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#additional-jobs">ADDITIONAL_JOBS:</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#dqc">DQC</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#transfer">TRANSFER</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#wipe">WIPE</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#clean">CLEAN</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#scaling">SCALING</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#aqua">AQUA</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#experiment">EXPERIMENT:</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#datelist">DATELIST:</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#members">MEMBERS:</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#chunksizeunit">CHUNKSIZEUNIT:</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#splitsizeunit">SPLITSIZEUNIT:</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#chunksize">CHUNKSIZE:</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#numchunks">NUMCHUNKS:</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#calendar">CALENDAR:</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#gsv">GSV:</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#id1">VERSION:</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#weights-path">WEIGHTS_PATH:</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#test-files">TEST_FILES:</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#definition-path">DEFINITION_PATH:</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#request">REQUEST:</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#id2">EXPERIMENT:</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#activity">ACTIVITY:</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#generation">GENERATION:</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#realization">REALIZATION:</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#expver">EXPVER:</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#fdb-home">FDB_HOME:</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#id3">MODEL:</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#jobs">JOBS:</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#platforms">PLATFORMS:</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#arch-gpu">ARCH_GPU:</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#arch-cpu">ARCH_CPU:</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#additional-compilation-flags-gpu">ADDITIONAL_COMPILATION_FLAGS_GPU:</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#additional-compilation-flags-cpu">ADDITIONAL_COMPILATION_FLAGS_CPU:</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#dvc-inputs-cache">DVC_INPUTS_CACHE:</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#fdb-dir">FDB_DIR:</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#fdb-prod">FDB_PROD:</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#hpc-project-dir">HPC_PROJECT_DIR:</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="keys_request.html">Available keys in request.yml</a></li>
+<li class="toctree-l1"><a class="reference internal" href="autosubmit_cheatsheet.html">Cheat Sheet for Autosubmit</a></li>
+<li class="toctree-l1"><a class="reference internal" href="technicalities.html">Technicalities</a></li>
+<li class="toctree-l1"><a class="reference internal" href="operators_guide.html">Operators guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="FAQ.html">FAQ</a></li>
+<li class="toctree-l1"><a class="reference internal" href="update_apps.html">Update apps</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">Climate DT Workflow</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">Available keys in main.yml</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="_sources/keys_main.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="available-keys-in-main-yml">
+<h1>Available keys in main.yml<a class="headerlink" href="#available-keys-in-main-yml" title="Link to this heading"></a></h1>
+<section id="run">
+<h2>RUN:<a class="headerlink" href="#run" title="Link to this heading"></a></h2>
+<p>Minimum set of parameters that define an experiment.</p>
+<section id="workflow">
+<h3>WORKFLOW:<a class="headerlink" href="#workflow" title="Link to this heading"></a></h3>
+<ul class="simple">
+<li><p><strong>Intention:</strong> select the workflow type.</p></li>
+<li><p><strong>Options:</strong> <code class="docutils literal notranslate"><span class="pre">end-to-end</span></code>, <code class="docutils literal notranslate"><span class="pre">model</span></code>, <code class="docutils literal notranslate"><span class="pre">apps</span></code>. <code class="docutils literal notranslate"><span class="pre">simless</span></code>.</p></li>
+<li><p><strong>Usage:</strong> selects the job list. This key is used in <a class="reference external" href="https://earth.bsc.es/gitlab/digital-twins/de_340/workflow/-/blob/main/conf/bootstrap/include.yml">conf/bootstrap/include.yml</a> to load the joblist file. It will load <a class="reference external" href="https://earth.bsc.es/gitlab/digital-twins/de_340/workflow/-/blob/main/conf/jobs_apps.yml">jobs_apps.yml</a>, <a class="reference external" href="https://earth.bsc.es/gitlab/digital-twins/de_340/workflow/-/blob/main/conf/jobs_model.yml">jobs_model.yml</a> or <a class="reference external" href="https://earth.bsc.es/gitlab/digital-twins/de_340/workflow/-/blob/main/conf/jobs_end-to-end.yml">jobs_end-to-end.yml</a></p></li>
+</ul>
+</section>
+<section id="environment">
+<h3>ENVIRONMENT:<a class="headerlink" href="#environment" title="Link to this heading"></a></h3>
+<ul class="simple">
+<li><p><strong>Intention:</strong> to select the environment being used. Generally <code class="docutils literal notranslate"><span class="pre">cray</span></code> for <code class="docutils literal notranslate"><span class="pre">LUMI</span></code> and <code class="docutils literal notranslate"><span class="pre">intel</span></code>, <code class="docutils literal notranslate"><span class="pre">openmp</span></code>… for Marenostrum.</p></li>
+<li><p><strong>Options:</strong> In LUMI, <code class="docutils literal notranslate"><span class="pre">cray</span></code>.</p></li>
+<li><p><strong>What it sets:</strong> It sets the environment to use with the pre-compiled binaries. Check the models’ pre-compiled directory to see which environments are supported.</p></li>
+<li><p><strong>Usage:</strong> as a switch and as a variable in the workflow.</p></li>
+</ul>
+</section>
+<section id="processor-unit">
+<h3>PROCESSOR_UNIT:<a class="headerlink" href="#processor-unit" title="Link to this heading"></a></h3>
+<ul class="simple">
+<li><p><strong>Intention:</strong> To select the processor unit being used.</p></li>
+<li><p><strong>Options:</strong> <code class="docutils literal notranslate"><span class="pre">cpu</span></code> for <code class="docutils literal notranslate"><span class="pre">ifs-nemo</span></code> &amp; <code class="docutils literal notranslate"><span class="pre">icon</span></code> (r2b4 only), <code class="docutils literal notranslate"><span class="pre">gpu</span></code> for <code class="docutils literal notranslate"><span class="pre">ifs-nemo</span></code> and <code class="docutils literal notranslate"><span class="pre">gpu_gpu</span></code> for <code class="docutils literal notranslate"><span class="pre">icon</span></code> (hetjobs for r2b8 and r2b9).</p></li>
+<li><p><strong>What it sets:</strong> It sets the processor_unit variable, which is used to load specific environment settings, runscripts or general configuration for running on the different options.</p></li>
+<li><p><strong>Usage:</strong> as a switch and as a variable in the workflow.</p></li>
+</ul>
+</section>
+<section id="type">
+<h3>TYPE:<a class="headerlink" href="#type" title="Link to this heading"></a></h3>
+<ul class="simple">
+<li><p><strong>Intention:</strong> To mark the experiment as a production, research, test or pre-production, define where it outputs, the expver and if it should go to the data bridge or not. This key also is used for the apps workflow to read from experiments that have the configuration (e.g. read from TYPE: [production, research, pre-production, test]).</p></li>
+<li><p><strong>Options:</strong> <code class="docutils literal notranslate"><span class="pre">production</span></code>, <code class="docutils literal notranslate"><span class="pre">research</span></code>, <code class="docutils literal notranslate"><span class="pre">pre-production</span></code> or <code class="docutils literal notranslate"><span class="pre">test</span></code> (default).</p></li>
+<li><dl class="simple">
+<dt><strong>What it sets:</strong></dt><dd><ul>
+<li><p>Production: The experiment writes the data using 0001 expver instead of the expid provided by Autosubmit. It writes in the HPC-FDB instead of in a local FDB.</p></li>
+<li><p>Research: The experiment writes the data using the expid provided by Autosubmit. It writes in the HPC-FDB instead of in a local FDB.</p></li>
+<li><p>Pre-production: The experiment writes the data using 0001 expver instead of the expid provided by Autosubmit. It writes in a local FDB.</p></li>
+<li><p>Test: The experiment writes the data using the expid provided by Autosubmit. It writes in a local FDB.</p></li>
+</ul>
+</dd>
+</dl>
+</li>
+</ul>
+</section>
+</section>
+<section id="model">
+<h2>MODEL:<a class="headerlink" href="#model" title="Link to this heading"></a></h2>
+<p>Only if WORKFLOW: <code class="docutils literal notranslate"><span class="pre">end-to-end</span></code> or <code class="docutils literal notranslate"><span class="pre">model</span></code>.</p>
+<section id="name">
+<h3>NAME:<a class="headerlink" href="#name" title="Link to this heading"></a></h3>
+<ul class="simple">
+<li><p><strong>Intention:</strong> to select which model runs.</p></li>
+<li><p><strong>Options:</strong> <code class="docutils literal notranslate"><span class="pre">icon</span></code>, <code class="docutils literal notranslate"><span class="pre">ifs-nemo</span></code>, <code class="docutils literal notranslate"><span class="pre">ifs-fesom</span></code>, <code class="docutils literal notranslate"><span class="pre">nemo</span></code>.</p></li>
+<li><p><strong>What it sets:</strong> Select which SIM template will run. Select <a class="reference external" href="https://earth.bsc.es/gitlab/digital-twins/de_340/workflow/-/blob/main/conf/model/">the directory</a> to load the grid-specific parameters.</p></li>
+<li><p><strong>Usage:</strong> as a switch and as a variable in the workflow.</p></li>
+</ul>
+</section>
+<section id="grid-atm">
+<h3>GRID_ATM:<a class="headerlink" href="#grid-atm" title="Link to this heading"></a></h3>
+<ul class="simple">
+<li><p><strong>Intention:</strong> to select the resolution (grid) of the atmosphere.</p></li>
+<li><p><strong>Options:</strong> depend on the model. For ICON: <code class="docutils literal notranslate"><span class="pre">r2b4</span></code> (test), <code class="docutils literal notranslate"><span class="pre">r2b8</span></code> (development) &amp; <code class="docutils literal notranslate"><span class="pre">r2b9</span></code> (production). For IFS-NEMO: <code class="docutils literal notranslate"><span class="pre">tco79l137</span></code> (test), <code class="docutils literal notranslate"><span class="pre">tco1279l137</span></code> (development), <code class="docutils literal notranslate"><span class="pre">tco2559l137</span></code> (production).</p></li>
+<li><p><strong>What it sets:</strong> Selects which file of the <a class="reference external" href="https://earth.bsc.es/gitlab/digital-twins/de_340/workflow/-/tree/main/conf/model/ifs-nemo">model directory</a> will be loaded. In IFS-based models, it sets keys related to the inputs: <code class="docutils literal notranslate"><span class="pre">GTYPE</span></code> (tco), <code class="docutils literal notranslate"><span class="pre">EXPVER</span></code> (experiment ID of the inputs), <code class="docutils literal notranslate"><span class="pre">RESOL</span></code> (resolution), <code class="docutils literal notranslate"><span class="pre">LEVELS</span></code> (pressure levels) and <code class="docutils literal notranslate"><span class="pre">LABEL</span></code>.</p></li>
+<li><p><strong>Usage:</strong> as a switch and as a variable in the workflow.</p></li>
+</ul>
+</section>
+<section id="grid-oce">
+<h3>GRID_OCE:<a class="headerlink" href="#grid-oce" title="Link to this heading"></a></h3>
+<ul class="simple">
+<li><p><strong>Intention:</strong> to select the resolution (grid) of the ocean.</p></li>
+<li><p><strong>Options:</strong> depends on the model. For ICON: <code class="docutils literal notranslate"><span class="pre">r2b4</span></code> (test), <code class="docutils literal notranslate"><span class="pre">r2b8</span></code> (development) &amp; <code class="docutils literal notranslate"><span class="pre">r2b9</span></code> (production). For IFS-NEMO: <code class="docutils literal notranslate"><span class="pre">eORCA1_Z75</span></code>, <code class="docutils literal notranslate"><span class="pre">eORCA12_Z75</span></code></p></li>
+<li><p><strong>Usage:</strong> as a variable in the workflow.</p></li>
+</ul>
+</section>
+<section id="version">
+<h3>VERSION:<a class="headerlink" href="#version" title="Link to this heading"></a></h3>
+<ul class="simple">
+<li><p><strong>Intention:</strong> to select model pre-compiled binaries to run.</p></li>
+<li><p><strong>Options:</strong> depends on the model. All model versions are stored in <code class="docutils literal notranslate"><span class="pre">/projappl/project_465000454/models/{icon,ifs-nemo,ifs-fesom}</span></code>.</p></li>
+<li><p><strong>What it sets:</strong> It sets the pre-compiled binaries of the model version to run, and the default inputs used.</p></li>
+<li><p><strong>Usage:</strong> as a switch and as a variable in the workflow.</p></li>
+</ul>
+</section>
+<section id="compile">
+<h3>COMPILE:<a class="headerlink" href="#compile" title="Link to this heading"></a></h3>
+<ul class="simple">
+<li><p>Only for IFS-NEMO.</p></li>
+<li><p><strong>Intention:</strong> to compile the model.</p></li>
+<li><p><strong>Options:</strong> <code class="docutils literal notranslate"><span class="pre">True</span></code> or <code class="docutils literal notranslate"><span class="pre">False</span></code>.</p></li>
+</ul>
+</section>
+<section id="simulation">
+<h3>SIMULATION:<a class="headerlink" href="#simulation" title="Link to this heading"></a></h3>
+<ul class="simple">
+<li><p><strong>Intention:</strong> to set the keys that characterize a type of simulation.</p></li>
+<li><p><strong>Options:</strong> All the files of <a class="reference external" href="https://earth.bsc.es/gitlab/digital-twins/de_340/workflow/-/tree/main/conf/simulation">the simulation directory</a>.</p></li>
+<li><p><strong>What it sets:</strong> <code class="docutils literal notranslate"><span class="pre">EXPERIMENT</span></code> keys (date, chunk length), default <code class="docutils literal notranslate"><span class="pre">PARTITION</span></code> and <code class="docutils literal notranslate"><span class="pre">MAX_WALLCLOCK</span></code> for each platform, default <code class="docutils literal notranslate"><span class="pre">WALLCLOCK</span></code> of the <code class="docutils literal notranslate"><span class="pre">SIM</span></code> step, default number of retrials in the <code class="docutils literal notranslate"><span class="pre">SIM</span></code> step.</p></li>
+<li><p><strong>IFS-NEMO:</strong> type of <code class="docutils literal notranslate"><span class="pre">RAPS_EXPERIMET</span></code>, and only in some <code class="docutils literal notranslate"><span class="pre">MODEL_VERSIONS</span></code> the selection of the MultIO plans.</p></li>
+<li><p><strong>Usage:</strong> switch. Not used as a variable in the workflow.</p></li>
+</ul>
+</section>
+<section id="dvc-inputs-branch">
+<h3>DVC_INPUTS_BRANCH:<a class="headerlink" href="#dvc-inputs-branch" title="Link to this heading"></a></h3>
+<ul class="simple">
+<li><p>Only for IFS-NEMO.</p></li>
+<li><p><strong>Intention:</strong> to specify the input files for the simulation.</p></li>
+<li><p><strong>Options:</strong> branches of <a class="reference external" href="https://earth.bsc.es/gitlab/digital-twins/de_340-2/dvc-de_340.git">https://earth.bsc.es/gitlab/digital-twins/de_340-2/dvc-de_340.git</a></p></li>
+<li><p><strong>What it sets:</strong></p></li>
+<li><p><strong>Note:</strong> if this option is used, the submodule dvc-cache-de340 needs to be cloned (specified in minimal.yml)</p></li>
+</ul>
+</section>
+<section id="raps-mir-cache-path">
+<h3>RAPS_MIR_CACHE_PATH<a class="headerlink" href="#raps-mir-cache-path" title="Link to this heading"></a></h3>
+<ul class="simple">
+<li><p><strong>Purpose:</strong> override the default value for <cite>MIR_CACHE_PATH</cite> defined by RAPS. Currently not usable for LUMI as it is enforved by RAPS for this machine.</p></li>
+<li><p><strong>Default:</strong> empty. Uses the default defined by RAPS.</p></li>
+<li><p><strong>Options:</strong> a directory.</p></li>
+<li><p><strong>Sets:</strong> exports <cite>MIR_CACHE_PATH</cite></p></li>
+</ul>
+</section>
+<section id="raps-mir-fesom-cache-path">
+<h3>RAPS_MIR_FESOM_CACHE_PATH<a class="headerlink" href="#raps-mir-fesom-cache-path" title="Link to this heading"></a></h3>
+<ul class="simple">
+<li><p>Only for IFS-FESOM.</p></li>
+<li><p><strong>Purpose:</strong> override the default value for <cite>MIR_FESOM_CACHE_PATH</cite> defined by RAPS. Currently not usable for LUMI as it is enforved by RAPS for this machine.</p></li>
+<li><p><strong>Default:</strong> empty. Uses the default defined by RAPS.</p></li>
+<li><p><strong>Options:</strong> a directory.</p></li>
+<li><p><strong>Sets:</strong> exports <cite>MIR_FESOM_CACHE_PATH</cite></p></li>
+</ul>
+</section>
+</section>
+<section id="app">
+<h2>APP:<a class="headerlink" href="#app" title="Link to this heading"></a></h2>
+<section id="names">
+<h3>NAMES:<a class="headerlink" href="#names" title="Link to this heading"></a></h3>
+<ul class="simple">
+<li><p><strong>Intention:</strong> to select the application(s) that will run in a simulation.</p></li>
+<li><p><strong>Options:</strong> ENERGY_ONSHORE, ENERGY_OFSHORE, MHM, HYDROMET, WILDFIRES_FWI, WILDFIRES_WISE, DATA.</p></li>
+<li><p><strong>What it sets:</strong>  the application that will be run either in workflow type: <code class="docutils literal notranslate"><span class="pre">apps</span></code> or <code class="docutils literal notranslate"><span class="pre">end-to-end</span></code>.</p></li>
+<li><p><strong>Usage:</strong> [’<strong>option</strong>’]. e.g. [‘ENERGY_ONSHORE’]. For multiple apps: [ENERGY_ONSHORE, HYDROLAND, …]</p></li>
+</ul>
+</section>
+<section id="outpath-deprecated-moved-to-opa-outpath-in-conf-application-opa-yml-soon-to-be-removed-from-main-yml">
+<h3>OUTPATH: (deprecated. Moved to OPA_OUTPATH in conf/application/opa.yml, soon to be removed from <cite>main.yml</cite>)<a class="headerlink" href="#outpath-deprecated-moved-to-opa-outpath-in-conf-application-opa-yml-soon-to-be-removed-from-main-yml" title="Link to this heading"></a></h3>
+</section>
+<section id="read-from-databridge">
+<h3>READ_FROM_DATABRIDGE:<a class="headerlink" href="#read-from-databridge" title="Link to this heading"></a></h3>
+<ul class="simple">
+<li><p><strong>Intention:</strong> to specify if the application should read from the databridge.</p></li>
+<li><p><strong>Options:</strong> “true” or “false”.</p></li>
+</ul>
+</section>
+</section>
+<section id="configuration">
+<h2>CONFIGURATION:<a class="headerlink" href="#configuration" title="Link to this heading"></a></h2>
+<section id="container-dir">
+<h3>CONTAINER_DIR:<a class="headerlink" href="#container-dir" title="Link to this heading"></a></h3>
+<ul class="simple">
+<li><p><strong>Intention:</strong> to specify the container directory.</p></li>
+<li><p><strong>Default:</strong> “%CONFIGURATION.HPC_PROJECT_DIR%/containers”</p></li>
+<li><p><strong>Options:</strong> any path the user has the container stored.</p></li>
+</ul>
+</section>
+<section id="project-scratch">
+<h3>PROJECT_SCRATCH:<a class="headerlink" href="#project-scratch" title="Link to this heading"></a></h3>
+<ul class="simple">
+<li><p><strong>Intention:</strong> to specify the project scratch directory.</p></li>
+<li><p><strong>Default:</strong>  “%CURRENT_SCRATCH_DIR%/%CURRENT_PROJECT%”</p></li>
+</ul>
+</section>
+<section id="libdir">
+<h3>LIBDIR:<a class="headerlink" href="#libdir" title="Link to this heading"></a></h3>
+<ul class="simple">
+<li><p><strong>Default:</strong> “%HPCROOTDIR%/%PROJECT.PROJECT_DESTINATION%/lib”</p></li>
+</ul>
+</section>
+<section id="scriptdir">
+<h3>SCRIPTDIR:<a class="headerlink" href="#scriptdir" title="Link to this heading"></a></h3>
+<ul class="simple">
+<li><p><strong>Default:</strong> “%HPCROOTDIR%/%PROJECT.PROJECT_DESTINATION%/runscripts”</p></li>
+</ul>
+</section>
+<section id="additional-jobs">
+<h3>ADDITIONAL_JOBS:<a class="headerlink" href="#additional-jobs" title="Link to this heading"></a></h3>
+<section id="dqc">
+<h4>DQC<a class="headerlink" href="#dqc" title="Link to this heading"></a></h4>
+<ul class="simple">
+<li><p><strong>Intention:</strong> activates the data quality checker jobs.</p></li>
+<li><p><strong>Options:</strong> “true” or “false”.</p></li>
+</ul>
+</section>
+<section id="transfer">
+<h4>TRANSFER<a class="headerlink" href="#transfer" title="Link to this heading"></a></h4>
+<ul class="simple">
+<li><p><strong>Intention:</strong> activates the transfer jobs.</p></li>
+<li><p><strong>Options:</strong> “true” or “false”.</p></li>
+<li><p><strong>Note:</strong> only suitable for RESEARCH and PRODUCTION experiments.</p></li>
+</ul>
+</section>
+<section id="wipe">
+<h4>WIPE<a class="headerlink" href="#wipe" title="Link to this heading"></a></h4>
+<ul class="simple">
+<li><p><strong>Intention:</strong> activates the wipe jobs.</p></li>
+<li><p><strong>Options:</strong> “true” or “false”.</p></li>
+<li><p><strong>Note:</strong> only suitable for RESEARCH and PRODUCTION experiments.</p></li>
+</ul>
+</section>
+<section id="clean">
+<h4>CLEAN<a class="headerlink" href="#clean" title="Link to this heading"></a></h4>
+<ul class="simple">
+<li><p><strong>Intention:</strong> activates the clean jobs.</p></li>
+<li><p><strong>Options:</strong> “true” or “false”.</p></li>
+</ul>
+</section>
+<section id="scaling">
+<h4>SCALING<a class="headerlink" href="#scaling" title="Link to this heading"></a></h4>
+<ul class="simple">
+<li><p><strong>Intention:</strong> activates the scaling jobs.</p></li>
+<li><p><strong>Options:</strong> “true” or “false”.</p></li>
+<li><p><strong>Note:</strong> should be used in a <code class="docutils literal notranslate"><span class="pre">simless</span></code> workflow.</p></li>
+</ul>
+</section>
+<section id="aqua">
+<h4>AQUA<a class="headerlink" href="#aqua" title="Link to this heading"></a></h4>
+<ul class="simple">
+<li><p><strong>Intention:</strong> activates the aqua jobs.</p></li>
+<li><p><strong>Options:</strong> “true” or “false”.</p></li>
+</ul>
+</section>
+</section>
+</section>
+<section id="experiment">
+<h2>EXPERIMENT:<a class="headerlink" href="#experiment" title="Link to this heading"></a></h2>
+<p>See <a class="reference external" href="https://autosubmit.readthedocs.io/en/master/userguide/configure/develop_a_project.html#expdef-configuration">https://autosubmit.readthedocs.io/en/master/userguide/configure/develop_a_project.html#expdef-configuration</a></p>
+<section id="datelist">
+<h3>DATELIST:<a class="headerlink" href="#datelist" title="Link to this heading"></a></h3>
+<ul class="simple">
+<li><p><strong>Intention:</strong> to specify the list of dates for the simulation.</p></li>
+<li><p><strong>Options:</strong> depends on the inputs.</p></li>
+<li><p><strong>What it sets:</strong></p></li>
+<li><p><strong>Usage:</strong></p></li>
+</ul>
+</section>
+<section id="members">
+<h3>MEMBERS:<a class="headerlink" href="#members" title="Link to this heading"></a></h3>
+<ul class="simple">
+<li><p><strong>Intention:</strong> to specify the members for ensemble simulations. (WIP)</p></li>
+<li><p><strong>Options:</strong></p></li>
+<li><p><strong>What it sets:</strong></p></li>
+<li><p><strong>Usage:</strong></p></li>
+</ul>
+</section>
+<section id="chunksizeunit">
+<h3>CHUNKSIZEUNIT:<a class="headerlink" href="#chunksizeunit" title="Link to this heading"></a></h3>
+<ul class="simple">
+<li><p><strong>Intention:</strong> to specify the unit of chunk size.</p></li>
+<li><p><strong>Options:</strong> hour, day, month, year</p></li>
+<li><p><strong>What it sets:</strong> The unit lenght of the chunk in the simulation.</p></li>
+<li><p><strong>Usage:</strong></p></li>
+</ul>
+</section>
+<section id="splitsizeunit">
+<h3>SPLITSIZEUNIT:<a class="headerlink" href="#splitsizeunit" title="Link to this heading"></a></h3>
+<ul class="simple">
+<li><p><strong>Intention:</strong> to specify the unit of chunk size.</p></li>
+<li><p><strong>Options:</strong> day (more options to come)</p></li>
+<li><p><strong>What it sets:</strong> The lenght of the split execution.</p></li>
+<li><p><strong>Usage:</strong></p></li>
+</ul>
+</section>
+<section id="chunksize">
+<h3>CHUNKSIZE:<a class="headerlink" href="#chunksize" title="Link to this heading"></a></h3>
+<ul class="simple">
+<li><p><strong>Intention:</strong> to specify the chunk size.</p></li>
+<li><p><strong>Options:</strong> numerical (1, 2, 3…)</p></li>
+<li><p><strong>What it sets:</strong></p></li>
+<li><p><strong>Usage:</strong></p></li>
+</ul>
+</section>
+<section id="numchunks">
+<h3>NUMCHUNKS:<a class="headerlink" href="#numchunks" title="Link to this heading"></a></h3>
+<ul class="simple">
+<li><p><strong>Intention:</strong> to specify the number of chunks.</p></li>
+<li><p><strong>Options:</strong> numerical (1, 2, 3…)</p></li>
+<li><p><strong>What it sets:</strong></p></li>
+<li><p><strong>Usage:</strong></p></li>
+</ul>
+</section>
+<section id="calendar">
+<h3>CALENDAR:<a class="headerlink" href="#calendar" title="Link to this heading"></a></h3>
+<ul class="simple">
+<li><p><strong>Intention:</strong> to specify the calendar for the simulation.</p></li>
+<li><p><strong>Options:</strong> standard, noleap</p></li>
+<li><p><strong>What it sets:</strong></p></li>
+<li><p><strong>Usage:</strong></p></li>
+</ul>
+</section>
+</section>
+<section id="gsv">
+<h2>GSV:<a class="headerlink" href="#gsv" title="Link to this heading"></a></h2>
+<section id="id1">
+<h3>VERSION:<a class="headerlink" href="#id1" title="Link to this heading"></a></h3>
+<ul class="simple">
+<li><p>Specify the version of the GSV_interface contianer used in the workflow.</p></li>
+<li><p>Default: 2.9.7</p></li>
+</ul>
+</section>
+<section id="weights-path">
+<h3>WEIGHTS_PATH:<a class="headerlink" href="#weights-path" title="Link to this heading"></a></h3>
+<ul class="simple">
+<li><p>Path to the weighs.</p></li>
+<li><p>Default: “%CONFIGURATION.HPC_PROJECT_DIR%/gsv_files/gsv_weights”</p></li>
+</ul>
+</section>
+<section id="test-files">
+<h3>TEST_FILES:<a class="headerlink" href="#test-files" title="Link to this heading"></a></h3>
+<ul class="simple">
+<li><p>Default: “%CONFIGURATION.HPC_PROJECT_DIR%/gsv_files/gsv_test_files”</p></li>
+</ul>
+</section>
+<section id="definition-path">
+<h3>DEFINITION_PATH:<a class="headerlink" href="#definition-path" title="Link to this heading"></a></h3>
+<ul class="simple">
+<li><p>Default: “%CONFIGURATION.HPC_PROJECT_DIR%/gsv_files/grid_definitions”</p></li>
+</ul>
+</section>
+</section>
+<section id="request">
+<h2>REQUEST:<a class="headerlink" href="#request" title="Link to this heading"></a></h2>
+<ul class="simple">
+<li><p>By default, this is specified in <code class="docutils literal notranslate"><span class="pre">conf/simulation</span></code> and <code class="docutils literal notranslate"><span class="pre">conf/data_gov</span></code>. If the user wants to read from other simulations (for example in a SIMLESS worfklow) this keys can be used to specify the keys that he/she wants to read from.</p></li>
+</ul>
+<section id="id2">
+<h3>EXPERIMENT:<a class="headerlink" href="#id2" title="Link to this heading"></a></h3>
+<ul class="simple">
+<li><p><strong>Intention:</strong> to specify the experiment.</p></li>
+<li><p><strong>Options:</strong> “cont”, “hist”, “SSPX-Y.Z”…</p></li>
+<li><p><strong>What it sets:</strong> the experiment key in the FDB.</p></li>
+</ul>
+</section>
+<section id="activity">
+<h3>ACTIVITY:<a class="headerlink" href="#activity" title="Link to this heading"></a></h3>
+<ul class="simple">
+<li><p><strong>Intention:</strong> to specify the activity.</p></li>
+<li><p><strong>Options:</strong> “projections”, “baseline”</p></li>
+<li><p><strong>What it sets:</strong> the activity key in the FDB.</p></li>
+</ul>
+</section>
+<section id="generation">
+<h3>GENERATION:<a class="headerlink" href="#generation" title="Link to this heading"></a></h3>
+<ul class="simple">
+<li><p><strong>Intention:</strong> to specify the generation.</p></li>
+<li><p><strong>Options:</strong> “1”</p></li>
+<li><p><strong>What it sets:</strong> the generation key in the FDB.</p></li>
+</ul>
+</section>
+<section id="realization">
+<h3>REALIZATION:<a class="headerlink" href="#realization" title="Link to this heading"></a></h3>
+<ul class="simple">
+<li><p><strong>Intention:</strong> to specify the realization.</p></li>
+<li><p><strong>Options:</strong> integer, starting from “1”.</p></li>
+<li><p><strong>What it sets:</strong> the realization key in the FDB.</p></li>
+</ul>
+</section>
+<section id="expver">
+<h3>EXPVER:<a class="headerlink" href="#expver" title="Link to this heading"></a></h3>
+<ul class="simple">
+<li><p><strong>Intention:</strong> to specify the experiment version.</p></li>
+<li><p><strong>Options:</strong> “0001” for production, Autosubmit experiment ID for the rest.</p></li>
+<li><p><strong>What it sets:</strong> the expver key in the FDB.</p></li>
+</ul>
+</section>
+<section id="fdb-home">
+<h3>FDB_HOME:<a class="headerlink" href="#fdb-home" title="Link to this heading"></a></h3>
+<ul class="simple">
+<li><p><strong>Intention:</strong> to specify the path of the FDB.</p></li>
+<li><p><strong>Options:</strong> any path the user wants to read from.</p></li>
+<li><p><strong>What it sets:</strong> the FDB_HOME variable in the workflow.</p></li>
+</ul>
+</section>
+<section id="id3">
+<h3>MODEL:<a class="headerlink" href="#id3" title="Link to this heading"></a></h3>
+<ul class="simple">
+<li><p><strong>Intention:</strong> to specify the model.</p></li>
+<li><p><strong>Options:</strong> “icon”, “ifs-nemo”, “ifs-fesom”</p></li>
+<li><p><strong>What it sets:</strong> the model key in the FDB.</p></li>
+</ul>
+</section>
+</section>
+<section id="jobs">
+<h2>JOBS:<a class="headerlink" href="#jobs" title="Link to this heading"></a></h2>
+<p>See <a class="reference external" href="https://autosubmit.readthedocs.io/en/master/userguide/configure/develop_a_project.html#jobs-configuration">https://autosubmit.readthedocs.io/en/master/userguide/configure/develop_a_project.html#jobs-configuration</a>
+Default values in conf/jobs_${WORKFLOW}.yml</p>
+</section>
+<section id="platforms">
+<h2>PLATFORMS:<a class="headerlink" href="#platforms" title="Link to this heading"></a></h2>
+<p>See <a class="reference external" href="https://autosubmit.readthedocs.io/en/master/userguide/configure/develop_a_project.html#platform-configuration">https://autosubmit.readthedocs.io/en/master/userguide/configure/develop_a_project.html#platform-configuration</a>
+Default values in conf/platform.yml</p>
+<section id="arch-gpu">
+<h3>ARCH_GPU:<a class="headerlink" href="#arch-gpu" title="Link to this heading"></a></h3>
+<ul class="simple">
+<li><p><strong>Intention:</strong> to specify the architecture to compile IFS-NEMO in GPUs.</p></li>
+</ul>
+</section>
+<section id="arch-cpu">
+<h3>ARCH_CPU:<a class="headerlink" href="#arch-cpu" title="Link to this heading"></a></h3>
+<ul class="simple">
+<li><p><strong>Intention:</strong> to specify the architecture to compile IFS-NEMO in CPUs.</p></li>
+</ul>
+</section>
+<section id="additional-compilation-flags-gpu">
+<h3>ADDITIONAL_COMPILATION_FLAGS_GPU:<a class="headerlink" href="#additional-compilation-flags-gpu" title="Link to this heading"></a></h3>
+<ul class="simple">
+<li><p><strong>Intention:</strong> to specify additional compilation flags for IFS-NEMO in GPUs.</p></li>
+</ul>
+</section>
+<section id="additional-compilation-flags-cpu">
+<h3>ADDITIONAL_COMPILATION_FLAGS_CPU:<a class="headerlink" href="#additional-compilation-flags-cpu" title="Link to this heading"></a></h3>
+<ul class="simple">
+<li><p><strong>Intention:</strong> to specify additional compilation flags for IFS-NEMO in CPUs.</p></li>
+</ul>
+</section>
+<section id="dvc-inputs-cache">
+<h3>DVC_INPUTS_CACHE:<a class="headerlink" href="#dvc-inputs-cache" title="Link to this heading"></a></h3>
+<ul class="simple">
+<li><p><strong>Intention:</strong> to specify the path of the DVC cache for the simulation.</p></li>
+</ul>
+</section>
+<section id="fdb-dir">
+<h3>FDB_DIR:<a class="headerlink" href="#fdb-dir" title="Link to this heading"></a></h3>
+<ul class="simple">
+<li><p><strong>Intention:</strong> to specify the path of the FDB directory for test and pre-production experiment.</p></li>
+</ul>
+</section>
+<section id="fdb-prod">
+<h3>FDB_PROD:<a class="headerlink" href="#fdb-prod" title="Link to this heading"></a></h3>
+<ul class="simple">
+<li><p><strong>Intention:</strong> to specify the path of the FDB directory for production experiment.</p></li>
+</ul>
+</section>
+<section id="hpc-project-dir">
+<h3>HPC_PROJECT_DIR:<a class="headerlink" href="#hpc-project-dir" title="Link to this heading"></a></h3>
+<ul class="simple">
+<li><p><strong>Intention:</strong> to specify the path of the HPC project directory, where permanent data and containers are stored.</p></li>
+</ul>
+</section>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="auto_keys_main.html" class="btn btn-neutral float-left" title="WIP: Automatic generation of keys" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="keys_request.html" class="btn btn-neutral float-right" title="Available keys in request.yml" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2025, A7.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

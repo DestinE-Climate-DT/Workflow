@@ -1,0 +1,197 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="./">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>About the project &mdash; Climate DT Workflow April 2025 documentation</title>
+      <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=80d5e7a1" />
+      <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=e59714d7" />
+
+  
+      <script src="_static/jquery.js?v=5d32c60e"></script>
+      <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="_static/documentation_options.js?v=8bc9b8fe"></script>
+      <script src="_static/doctools.js?v=9bcbadda"></script>
+      <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="_static/js/theme.js"></script>
+    <link rel="author" title="About these documents" href="#" />
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Getting Started" href="getting_started.html" />
+    <link rel="prev" title="Welcome to Climate DT Workflow’s documentation!" href="index.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="index.html" class="icon icon-home">
+            Climate DT Workflow
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1 current"><a class="current reference internal" href="#">About the project</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#workflow-modes">Workflow modes</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#list-of-jobs">List of jobs</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#additional-jobs-optionals">Additional jobs (optionals)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#selectable-configuration">Selectable configuration</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#containers-usage">Containers usage</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="getting_started.html">Getting Started</a></li>
+<li class="toctree-l1"><a class="reference internal" href="create_run.html">Create your own experiment</a></li>
+<li class="toctree-l1"><a class="reference internal" href="create_run.html#customize-your-experiment">Customize your experiment</a></li>
+<li class="toctree-l1"><a class="reference internal" href="create_run.html#execute-the-workflow">Execute the workflow</a></li>
+<li class="toctree-l1"><a class="reference internal" href="auto_keys_main.html">WIP: Automatic generation of keys</a></li>
+<li class="toctree-l1"><a class="reference internal" href="keys_main.html">Available keys in main.yml</a></li>
+<li class="toctree-l1"><a class="reference internal" href="keys_request.html">Available keys in request.yml</a></li>
+<li class="toctree-l1"><a class="reference internal" href="autosubmit_cheatsheet.html">Cheat Sheet for Autosubmit</a></li>
+<li class="toctree-l1"><a class="reference internal" href="technicalities.html">Technicalities</a></li>
+<li class="toctree-l1"><a class="reference internal" href="operators_guide.html">Operators guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="FAQ.html">FAQ</a></li>
+<li class="toctree-l1"><a class="reference internal" href="update_apps.html">Update apps</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">Climate DT Workflow</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">About the project</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="_sources/about.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="about-the-project">
+<h1>About the project<a class="headerlink" href="#about-the-project" title="Link to this heading"></a></h1>
+<p>This repository contains the DE_340 workflow. It is used for production, development and testing in conjunction with <a class="reference external" href="https://earth.bsc.es/gitlab/es/autosubmit">Autosubmit4</a>. The implemented workflow tasks keep a model-agnostic interface and contain the merged sub-workflows for ICON, IFS-FESOM, and IFS-NEMO. Currently, LUMI is supported for IFS-NEMO and ICON to perform simulations. MareNostrum5 is supported for IFS-NEMO.</p>
+<section id="workflow-modes">
+<h2>Workflow modes<a class="headerlink" href="#workflow-modes" title="Link to this heading"></a></h2>
+<p>There are 4 modes of the workflow:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">model</span></code>: runs the model (ICON, IFS-FESOM, IFS-NEMO).</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">end-to-end</span></code>: runs the model and the selected applications in a streaming fashion.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">applications</span></code>: runs the applications only by simulating the data streaming (<code class="docutils literal notranslate"><span class="pre">DN</span></code> + <code class="docutils literal notranslate"><span class="pre">OPA</span></code> + <code class="docutils literal notranslate"><span class="pre">APP</span></code>).
+- <code class="docutils literal notranslate"><span class="pre">data</span></code>: same as <code class="docutils literal notranslate"><span class="pre">applications</span></code> but with a single dummy <cite>APP</cite> named <cite>DATA</cite>.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">simless</span></code>: runs the steps previous to the model without executing the SIM step. This is useful to run additional jobs (e.g. backup, transfer, etc.) and deal with data produced in a separate experiment.</p></li>
+</ul>
+</section>
+<section id="list-of-jobs">
+<h2>List of jobs<a class="headerlink" href="#list-of-jobs" title="Link to this heading"></a></h2>
+<p>The templates are located in <code class="docutils literal notranslate"><span class="pre">/workflow/templates</span></code>.</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">local_setup</span></code>: performs basic checks as well as compressing the workflow project in order to be sent through the network. Runs in the Autosubmit VM.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">synchronize</span></code>: syncs the workflow project with the remote platform. Runs in the Autosubmit VM.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">remote_setup</span></code>: loads the necessary environment and then compiles the different models/applications. Performs checks in the remote platform. Runs in the remote platform (login nodes for LUMI, interactive partition for MareNostrum5). Installs the running applications and the GSV interface.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">ini</span></code>: prepares any necessary initial data for the climate model runs. Runs in the login node of the HPC.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">sim</span></code>: runs one chunk of climate simulation. Runs in the HPC.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">dqc</span></code>: performs basic checks on the data produced by the simulation. Runs in the HPC. It has two modes: BASIC and FULL.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">dn</span></code>: notifies when the wanted data is already produced by the model. Runs in the login node of the HPC.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">opa</span></code>: creates the statistics required by the data consumers (Apps). Runs in the HPC.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">applications</span></code>: creates usable output using the applications from the different use cases. Runs in the HPC.</p></li>
+</ul>
+</section>
+<section id="additional-jobs-optionals">
+<h2>Additional jobs (optionals)<a class="headerlink" href="#additional-jobs-optionals" title="Link to this heading"></a></h2>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">transfer</span></code>: transfers the data produced in the simulation to the Data Bridge. Runs in the HPC.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">backup</span></code>: copies the rundir and the restarts to another partition. Runs in the HPC.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">check_mem</span></code>: monitors the memory consumption of the SIM jobs. Runs in the login node of the HPC.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">wipe</span></code>: wipes already transferred data from the HPC-FDB. Runs in the HPC.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">clean</span></code>: compresses the rundir and the logs from the HPC. Purges the data of the FDB (deletes repeated entries). Runs in the login node of the HPC.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">scaling</span></code>: performs a scaling test of the model. Runs in the HPC.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">aqua</span></code>: contains 3 jobs: LRA_GENERATOR, AQUA_ANALYSIS and AQUA_PUSH. The first one generates the LRA files and the second one performs the analysis of the AQUA files. Both run in the HPC. The last one pushes the AQUA plots to LUMI-O. Runs in the Autosubmit VM.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">POSTPROC_$APP_NAME</span></code>: enables the placeholder job at the end of the chunk (to be used in app or end-to-end modes) to run postprocessing scripts outside the core streaming. It is a job per application.</p></li>
+</ul>
+</section>
+<section id="selectable-configuration">
+<h2>Selectable configuration<a class="headerlink" href="#selectable-configuration" title="Link to this heading"></a></h2>
+<p>We are now running the workflow with the new version of the CUSTOM_CONFIG and the minimal configuration new features of Autosubmit.
+This new configuration scheme allows for a distributed, hierarchical parametrization of the workflow, thereby providing a more customizable, modular, and user-friendly workflow.
+The structure, domain and use of this new configuration scheme will likely evolve as it adapts to the needs of other work packages.</p>
+<p>In the <code class="docutils literal notranslate"><span class="pre">main.yml</span></code> the user will decide the parameters of the simulation. Depending on what the user selects, one set or another of configurations will be loaded.
+The parameters <code class="docutils literal notranslate"><span class="pre">RUN.WORKFLOW</span></code>, <code class="docutils literal notranslate"><span class="pre">RUN.TYPE</span></code>, <code class="docutils literal notranslate"><span class="pre">MODEL.NAME</span></code>, <code class="docutils literal notranslate"><span class="pre">MODEL.SIMULATION</span></code>, <code class="docutils literal notranslate"><span class="pre">MODEL.GRID_ATM</span></code>, <code class="docutils literal notranslate"><span class="pre">CONFIGURATION.ADDITIONAL_JOBS.*</span></code>, <code class="docutils literal notranslate"><span class="pre">APP.NAMES</span></code> will be used to load the configuration files.
+The user can overwrite any parameter defininig it in the <code class="docutils literal notranslate"><span class="pre">main.yml</span></code> file. It will have priority over the default configuration files loaded previously.</p>
+<p>In the <code class="docutils literal notranslate"><span class="pre">minimal.yml</span></code> the basic information of the experiment is defined. It is the last file loaded in the configuration process. For more information: <a class="reference external" href="https://autosubmit.readthedocs.io/en/master/userguide/set_and_share_the_configuration/index.html#advanced-configuration">Autosubmit documentation on minimal experiments</a>.</p>
+</section>
+<section id="containers-usage">
+<h2>Containers usage<a class="headerlink" href="#containers-usage" title="Link to this heading"></a></h2>
+<p>The workflow runs some componens conteinarized. Those containers are already deployed in the HPCs. The containers are used for the following components:
+- AQUA (<a class="reference external" href="https://github.com/DestinE-Climate-DT/AQUA/pkgs/container/aqua">https://github.com/DestinE-Climate-DT/AQUA/pkgs/container/aqua</a>)
+- GSV_INTERFACE (<a class="reference external" href="https://github.com/DestinE-Climate-DT/ContainerRecipes/pkgs/container/gsv">https://github.com/DestinE-Climate-DT/ContainerRecipes/pkgs/container/gsv</a> currently patched, installing jinja2)
+- BASE (<a class="reference external" href="https://github.com/DestinE-Climate-DT/ContainerRecipes/pkgs/container/BASE">https://github.com/DestinE-Climate-DT/ContainerRecipes/pkgs/container/BASE</a>)
+- DVC
+- ENERGY_ONSHORE
+- ENERGY_OFFSHORE
+- HYDROMET
+- HYDROLAND
+- WILDFIRES_FWI
+- WILDFIRES_WISE
+- ONE_PASS
+- TOOLS
+- ENSEMBLES</p>
+<p>(NOTE: <cite>https://github.com/DestinE-Climate-DT/ContainerRecipes/pkgs/container</cite> does not hold all the containers under but they should be soon deployed automatically to the HPCs.)</p>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="index.html" class="btn btn-neutral float-left" title="Welcome to Climate DT Workflow’s documentation!" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="getting_started.html" class="btn btn-neutral float-right" title="Getting Started" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2025, A7.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

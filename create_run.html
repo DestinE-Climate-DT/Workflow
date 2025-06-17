@@ -1,0 +1,538 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="./">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Create your own experiment &mdash; Climate DT Workflow April 2025 documentation</title>
+      <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=80d5e7a1" />
+      <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=e59714d7" />
+
+  
+      <script src="_static/jquery.js?v=5d32c60e"></script>
+      <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="_static/documentation_options.js?v=8bc9b8fe"></script>
+      <script src="_static/doctools.js?v=9bcbadda"></script>
+      <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="_static/js/theme.js"></script>
+    <link rel="author" title="About these documents" href="about.html" />
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="WIP: Automatic generation of keys" href="auto_keys_main.html" />
+    <link rel="prev" title="Getting Started" href="getting_started.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="index.html" class="icon icon-home">
+            Climate DT Workflow
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="about.html">About the project</a></li>
+<li class="toctree-l1"><a class="reference internal" href="getting_started.html">Getting Started</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Create your own experiment</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#create-an-autosubmit-experiment-using-minimal-configurations">Create an Autosubmit experiment using minimal configurations</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="#customize-your-experiment">Customize your experiment</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#how-to-switch-between-configurations-main-yml">How to switch between configurations: <code class="docutils literal notranslate"><span class="pre">main.yml</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#how-to-add-wrappers-into-the-workflow">How to add wrappers into the workflow</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#how-to-run-the-additional-jobs">How to run the additional jobs</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#how-to-change-default-start-dates-chunk-size-and-the-number-of-chunks-recommended-option">How to change default start dates, chunk size, and the number of chunks (Recommended option)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#how-to-use-your-own-input-data-and-model-installation">How to use your own input data and model installation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#ifs-nemo-dvc-inputs">IFS-NEMO: DVC inputs</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#ifs-based-models-icmcl-files">IFS-based models: ICMCL files</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#how-to-manage-the-retrials">How to manage the Retrials</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#data-governance-fdb-management">Data governance, FDB management</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#ensembles-ifs-nemo">Ensembles (IFS-NEMO)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#scaling-tests">Scaling tests</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#namelist-modifications-ifs-nemo">Namelist modifications (IFS-NEMO)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#aqua-usage">AQUA usage</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#run-without-io-ifs-nemo">Run without IO (IFS-NEMO):</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#set-application-versions">Set application versions:</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#set-applications-request-details">Set applications request details:</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#set-additional-application-specific-keys">Set additional application-specific keys:</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="#execute-the-workflow">Execute the workflow</a></li>
+<li class="toctree-l1"><a class="reference internal" href="auto_keys_main.html">WIP: Automatic generation of keys</a></li>
+<li class="toctree-l1"><a class="reference internal" href="keys_main.html">Available keys in main.yml</a></li>
+<li class="toctree-l1"><a class="reference internal" href="keys_request.html">Available keys in request.yml</a></li>
+<li class="toctree-l1"><a class="reference internal" href="autosubmit_cheatsheet.html">Cheat Sheet for Autosubmit</a></li>
+<li class="toctree-l1"><a class="reference internal" href="technicalities.html">Technicalities</a></li>
+<li class="toctree-l1"><a class="reference internal" href="operators_guide.html">Operators guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="FAQ.html">FAQ</a></li>
+<li class="toctree-l1"><a class="reference internal" href="update_apps.html">Update apps</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">Climate DT Workflow</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">Create your own experiment</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="_sources/create_run.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="create-your-own-experiment">
+<h1>Create your own experiment<a class="headerlink" href="#create-your-own-experiment" title="Link to this heading"></a></h1>
+<section id="create-an-autosubmit-experiment-using-minimal-configurations">
+<h2>Create an Autosubmit experiment using minimal configurations<a class="headerlink" href="#create-an-autosubmit-experiment-using-minimal-configurations" title="Link to this heading"></a></h2>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>autosubmit<span class="w"> </span>expid<span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>--description<span class="w"> </span><span class="s2">&quot;A useful description&quot;</span><span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>--HPC<span class="w"> </span>&lt;TYPE_YOUR_PLATFORM_HERE&gt;<span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>--minimal_configuration<span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>--git_as_conf<span class="w"> </span>conf/bootstrap/<span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>--git_repo<span class="w"> </span>https://earth.bsc.es/gitlab/digital-twins/de_340/workflow<span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>--git_branch<span class="w"> </span>main
+</pre></div>
+</div>
+<div class="admonition warning">
+<p class="admonition-title">Warning</p>
+<p>you MUST change <code class="docutils literal notranslate"><span class="pre">&lt;TYPE_YOUR_PLATFORM_HERE&gt;</span></code> below with your platform, and add a description.
+For example: lumi or marenostrum5.
+Check the available platforms at <code class="docutils literal notranslate"><span class="pre">/appl/AS/DefaultConfigs/platforms.yml</span></code>
+or <code class="docutils literal notranslate"><span class="pre">~/platforms.yml</span></code> if you created this file in your home directory.</p>
+</div>
+<p>You will receive the following message: <code class="docutils literal notranslate"><span class="pre">Experiment</span> <span class="pre">&lt;expid&gt;</span> <span class="pre">created</span></code>, where <code class="docutils literal notranslate"><span class="pre">&lt;expid&gt;</span></code>
+is the identifier of your experiment. A directory will be created for your experiment
+at: <code class="docutils literal notranslate"><span class="pre">/appl/AS/AUTOSUBMIT_DATA/&lt;expid&gt;</span></code>.</p>
+<p>The command <code class="docutils literal notranslate"><span class="pre">autosubmit</span> <span class="pre">expid</span></code> above will create a <code class="docutils literal notranslate"><span class="pre">minimal.yml</span></code> file for you.
+Modify this file (e.g. <code class="docutils literal notranslate"><span class="pre">/appl/AS/AUTOSUBMIT_DATA/&lt;expid&gt;/conf/minimal.yml</span></code>) as needed.</p>
+<p>In the <code class="docutils literal notranslate"><span class="pre">GIT</span></code> section in the <code class="docutils literal notranslate"><span class="pre">minimal.yml</span></code>, you can use <code class="docutils literal notranslate"><span class="pre">PROJECT_SUBMODULES</span></code> to set
+the Git submodules for the models you want to run. For applications, submodules are only allowed in development branches.</p>
+<p>For a model workflow, you need:
+- <code class="docutils literal notranslate"><span class="pre">catalog</span></code> if you want to run AQUA.
+- <code class="docutils literal notranslate"><span class="pre">data-portfolio</span></code> in case you need the DQC profiles (DQC, TRANFER, WIPE tasks).
+- <code class="docutils literal notranslate"><span class="pre">dvc-cache-de340</span></code> if you want to use DVC inputs.</p>
+<p>Or leave it empty to select all the submodules. Autosubmit will clone
+them when you run <code class="docutils literal notranslate"><span class="pre">autosubmit</span> <span class="pre">create</span></code> (first run) or <code class="docutils literal notranslate"><span class="pre">autosubmit</span> <span class="pre">refresh</span></code>.</p>
+<div class="admonition warning">
+<p class="admonition-title">Warning</p>
+<p>You need to have access to the corresponding sources
+repository and your ssh keys must be uploaded there.</p>
+</div>
+<p>When running <code class="docutils literal notranslate"><span class="pre">autosubmit</span> <span class="pre">create</span> <span class="pre">&lt;expid&gt;</span></code>, two additional files will be created: <code class="docutils literal notranslate"><span class="pre">main.yml</span></code> and, if you are running an applications workflow, <code class="docutils literal notranslate"><span class="pre">request.yml</span></code>.
+The <code class="docutils literal notranslate"><span class="pre">main.yml</span></code> file is the main configuration file for your experiment. It will be copied from the examples that we have in the repository, depending on your needs.
+The examples can be found in <code class="docutils literal notranslate"><span class="pre">lib/request_examples</span></code> and <code class="docutils literal notranslate"><span class="pre">mains</span></code> in the workflow repository.
+The <code class="docutils literal notranslate"><span class="pre">request.yml</span></code> file is used to request data from the HPC (if you run applications).</p>
+<div class="admonition warning">
+<p class="admonition-title">Warning</p>
+<p>All the files that you create in the <code class="docutils literal notranslate"><span class="pre">conf</span></code> directory will be loaded by Autosubmit.
+If you need to keep backups or copies of your files, please store them somewhere else.</p>
+</div>
+</section>
+</section>
+<section id="customize-your-experiment">
+<h1>Customize your experiment<a class="headerlink" href="#customize-your-experiment" title="Link to this heading"></a></h1>
+<p>Examples for each workflow type in <code class="docutils literal notranslate"><span class="pre">main_example_endtoend.yml</span></code>, <code class="docutils literal notranslate"><span class="pre">main_example_model.yml</span></code>,
+or <code class="docutils literal notranslate"><span class="pre">main_example_apps.yml</span></code>. Information about what each key does can be found in the <cite>Available keys for main</cite> section.</p>
+<section id="how-to-switch-between-configurations-main-yml">
+<h2>How to switch between configurations: <code class="docutils literal notranslate"><span class="pre">main.yml</span></code><a class="headerlink" href="#how-to-switch-between-configurations-main-yml" title="Link to this heading"></a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">main.yml</span></code> is the main file that users will modify. The switches are located there, and depending on those keys, Autosubmit will load some files or others.
+In this file, one can also define any customized variable, because it will overwrite the ones loaded in the files.
+For example, if you need to frequently change the start date or the length of your simulation, you can uncomment these lines of <code class="docutils literal notranslate"><span class="pre">main.yml</span></code>, and fill them in, following the specified format:</p>
+<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">EXPERIMENT</span><span class="p">:</span>
+<span class="w">   </span><span class="nt">DATELIST</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">yyyymmddhh</span>
+<span class="w">   </span><span class="nt">CHUNKSIZEUNIT</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">day/month/year</span>
+<span class="w">   </span><span class="nt">CHUNKSIZE</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">nn</span>
+<span class="w">   </span><span class="nt">NUMCHUNKS</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">nn</span>
+<span class="w">   </span><span class="nt">SPLITSIZEUNIT</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">day</span><span class="w"> </span><span class="c1">#(for apps and end-to-end workflows)</span>
+</pre></div>
+</div>
+<p>If you need to change the wallclock of your job, add the following lines into your <code class="docutils literal notranslate"><span class="pre">main.yml</span></code>:</p>
+<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">JOBS</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">SIM</span><span class="p">:</span>
+<span class="w">        </span><span class="nt">WALLCLOCK</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;00:30&quot;</span><span class="w"> </span><span class="c1">#this is a 30 min wallclock.</span>
+</pre></div>
+</div>
+<p>Another case would be if you are frequently changing the number of nodes that you are using. We have defaults, that you can find in <code class="docutils literal notranslate"><span class="pre">/proj/git_project/conf/model/${model_name}</span></code>, but they can be overwritten in <code class="docutils literal notranslate"><span class="pre">main.yml</span></code>, adding the following lines (the ones that you consider):</p>
+<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">PLATFORMS</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">LUMI</span><span class="p">:</span>
+<span class="w">        </span><span class="nt">NODES</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">n</span>
+<span class="w">        </span><span class="nt">TASKS</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">nn</span>
+<span class="w">        </span><span class="nt">THREADS</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">n</span>
+</pre></div>
+</div>
+<p>In the case of IFS-NEMO, to modify the IO resources you should add:</p>
+<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">CONFIGURATION</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">IFS</span><span class="p">:</span>
+<span class="w">        </span><span class="nt">IO_NODES</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">n</span>
+<span class="nt">CONFIGURATION</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">NEMO</span><span class="p">:</span>
+<span class="w">        </span><span class="nt">IO_NODES</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">n</span>
+</pre></div>
+</div>
+<p>Or:</p>
+<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">CONFIGURATION</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">IFS</span><span class="p">:</span>
+<span class="w">        </span><span class="nt">IO_TASKS</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">n</span>
+<span class="nt">CONFIGURATION</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">NEMO</span><span class="p">:</span>
+<span class="w">        </span><span class="nt">IO_TASKS</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">n</span>
+</pre></div>
+</div>
+</section>
+<section id="how-to-add-wrappers-into-the-workflow">
+<h2>How to add wrappers into the workflow<a class="headerlink" href="#how-to-add-wrappers-into-the-workflow" title="Link to this heading"></a></h2>
+<p>The purpose of the wrappers is to submit multiple jobs in a single SLURM task. This increases the wallclock of the submitted task, but once this job enters, the jobs in the wrapper will run one after the other skipping the queueing time. For this workflow, you probably want to wrap multiple <code class="docutils literal notranslate"><span class="pre">SIM</span></code> jobs into one task.
+To configure them, add the following lines in your <code class="docutils literal notranslate"><span class="pre">main.yml</span></code>:</p>
+<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">WRAPPERS</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">WRAPPER_0</span><span class="p">:</span>
+<span class="w">        </span><span class="nt">TYPE</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;vertical&quot;</span>
+<span class="w">        </span><span class="nt">JOBS_IN_WRAPPER</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;SIM&quot;</span>
+
+<span class="nt">PLATFORMS</span><span class="p">:</span>
+<span class="w">       </span><span class="nt">LUMI</span><span class="p">:</span>
+<span class="w">            </span><span class="nt">PARTITION</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;small/standard&quot;</span><span class="w"> </span><span class="c1">#choose one</span>
+<span class="w">            </span><span class="nt">MAX_WALLCLOCK</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;72:00/48:00&quot;</span><span class="w"> </span><span class="c1">#this will be the wallclock of the wrapper</span>
+</pre></div>
+</div>
+<p>Autosubmit will fit as many <code class="docutils literal notranslate"><span class="pre">SIM</span></code> jobs as it can, by dividing the defined <code class="docutils literal notranslate"><span class="pre">MAX_WALLCLOCK</span></code> between the <code class="docutils literal notranslate"><span class="pre">WALLCLOCK</span></code> of your job. Once this is saved, you can preview the graph with:</p>
+<p><code class="docutils literal notranslate"><span class="pre">autosubmit</span> <span class="pre">inspect</span> <span class="pre">&lt;expid&gt;</span> <span class="pre">-cw</span> <span class="pre">-f</span> <span class="pre">#</span> <span class="pre">Visualize</span> <span class="pre">wrapper</span> <span class="pre">cmds</span></code></p>
+</section>
+<section id="how-to-run-the-additional-jobs">
+<h2>How to run the additional jobs<a class="headerlink" href="#how-to-run-the-additional-jobs" title="Link to this heading"></a></h2>
+<p>By default, most of the additional jobs are disabled. You can enable them adding this in your <code class="docutils literal notranslate"><span class="pre">main.yml</span></code> and setting the ones that you want to run to “True”.</p>
+<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">CONFIGURATION</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">ADDITIONAL_JOBS</span><span class="p">:</span>
+<span class="w">        </span><span class="nt">TRANSFER</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;False&quot;</span>
+<span class="w">        </span><span class="nt">BACKUP</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;True&quot;</span>
+<span class="w">        </span><span class="nt">MEMORY_CHECKER</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;False&quot;</span>
+<span class="w">        </span><span class="nt">DQC</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;False&quot;</span>
+<span class="w">        </span><span class="nt">WIPE</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;True&quot;</span>
+<span class="w">        </span><span class="nt">CLEAN</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;True&quot;</span>
+<span class="w">        </span><span class="nt">SCALING</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;False&quot;</span>
+<span class="w">        </span><span class="nt">AQUA</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;True&quot;</span>
+</pre></div>
+</div>
+</section>
+<section id="how-to-change-default-start-dates-chunk-size-and-the-number-of-chunks-recommended-option">
+<h2>How to change default start dates, chunk size, and the number of chunks (Recommended option)<a class="headerlink" href="#how-to-change-default-start-dates-chunk-size-and-the-number-of-chunks-recommended-option" title="Link to this heading"></a></h2>
+<p>If you will be frequently using a determined set of values and that set does not exist yet, you can create your own configuration. To do so, go into <code class="docutils literal notranslate"><span class="pre">/proj/git_project/conf/simulation</span></code> and copy one of the existing files. Then, modify it. You can use those configurations by placing the name of the file that you have just created in <code class="docutils literal notranslate"><span class="pre">main.yml</span></code>:</p>
+<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">MODEL</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">SIMULATION</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">file_name</span>
+</pre></div>
+</div>
+<p>In the case of IFS-NEMO, you can also modify your ICMCL file there. If you want to make those configurations available for everyone, you can push your new file to our GitLab.</p>
+<p>How to change grid-specific variables (number of nodes, processors…):
+If you will be frequently using a determined set of values and that set does not exist yet, you can create your own configuration. To do so, go into <code class="docutils literal notranslate"><span class="pre">/proj/git_project/conf/models/${model_name}</span></code> and copy one of the existing files. Then, modify it. You can use those configurations by placing the name of the file that you have just created in <code class="docutils literal notranslate"><span class="pre">main.yml</span></code>:</p>
+<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">MODEL</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">GRID_ATM</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">file_name</span>
+</pre></div>
+</div>
+<p>In the case of IFS-NEMO, you can also modify the number of IO nodes there. If you want to make those configurations available for everyone, you can push your new file to our GitLab.</p>
+</section>
+<section id="how-to-use-your-own-input-data-and-model-installation">
+<h2>How to use your own input data and model installation<a class="headerlink" href="#how-to-use-your-own-input-data-and-model-installation" title="Link to this heading"></a></h2>
+<p>We are willing to store model versions and inputs in a uniform way. In every platform, we have a defined path where we will store inputs and model versions (or have symbolic links pointing to the path where they are actually stored).
+- LUMI: <code class="docutils literal notranslate"><span class="pre">/projappl/project_465000454/models/${MODEL_NAME}</span></code>
+- MareNostrum5: <code class="docutils literal notranslate"><span class="pre">/gpfs/projects/ehpc01/models/${MODEL_NAME}</span></code></p>
+<p>Under these directories, you can find:
+- Different folders, containing the model version. The path to any installation should follow: <code class="docutils literal notranslate"><span class="pre">${MODEL_VERSION}/make/${PLATFORM}-${ENVIRONMENT}</span></code>.
+- <code class="docutils literal notranslate"><span class="pre">${MODEL_VERSION}/inidata:</span></code> points to the input directory.</p>
+<p>Then, you should specify the <code class="docutils literal notranslate"><span class="pre">MODEL_VERSION</span></code> and the <code class="docutils literal notranslate"><span class="pre">ENVIRONMENT</span></code> in <code class="docutils literal notranslate"><span class="pre">main.yml</span></code></p>
+<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">RUN</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">ENVIRONMENT</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;cray/intel/...&quot;</span>
+
+<span class="nt">MODEL</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">MODEL_VERSION</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;Name-of-the-model-version&quot;</span>
+</pre></div>
+</div>
+<p>If the version that you are specifying doesn’t exist, or is not correctly configured, the remote setup will fail.</p>
+<p>If you need a new one, you should specify the MODEL_VERSION in the same way, but also:</p>
+<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">CONFIGURATION</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">INSTALL</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;shared&quot;</span>
+</pre></div>
+</div>
+<p>A MODEL VERSION with the specified name will be created and used in your experiment. It will use the default inputs (<code class="docutils literal notranslate"><span class="pre">${MODEL_NAME}/inidata</span></code>).</p>
+<p>To choose the sources that you want to use, check them out in your model’s submodule (git fetch + git checkout BRANCH, COMMIT or TAG).</p>
+</section>
+<section id="ifs-nemo-dvc-inputs">
+<h2>IFS-NEMO: DVC inputs<a class="headerlink" href="#ifs-nemo-dvc-inputs" title="Link to this heading"></a></h2>
+<p>We also support the usage of inputs from the DVC repository. To use them, set:</p>
+<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">MODEL</span><span class="p">:</span>
+<span class="w">   </span><span class="nt">INPUTS</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;%HPCROOTDIR%/%PROJECT.PROJECT_DESTINATION%/dvc-cache-de340&quot;</span>
+<span class="w">   </span><span class="nt">DVC_INPUTS_BRANCH</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;dvc-inputs-tag-name&quot;</span>
+</pre></div>
+</div>
+</section>
+<section id="ifs-based-models-icmcl-files">
+<h2>IFS-based models: ICMCL files<a class="headerlink" href="#ifs-based-models-icmcl-files" title="Link to this heading"></a></h2>
+<p>Different ICMCL files can be used. To use them, set:</p>
+<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">CONFIGURATION</span><span class="p">:</span>
+<span class="w">           </span><span class="nt">ICMCL</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;name-of-the-icmcl-file&quot;</span>
+</pre></div>
+</div>
+<p>Options are:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">biweekly</span></code>: ICMCL_tcoXXXX_yyyymmdd</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">generic</span></code>: ICMCL_tcoXXXX_yyyymmdd_yyyymmdd #start and end date</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">monthly</span></code>: ICMCL_tcoXXXX_yyyymm</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">yearly</span></code>: ICMCL_tcoXXXX_yyyy</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">yearly_extra</span></code>: ICMCL_tcoXXXX_yyyy_extra</p></li>
+</ul>
+</section>
+<section id="how-to-manage-the-retrials">
+<h2>How to manage the Retrials<a class="headerlink" href="#how-to-manage-the-retrials" title="Link to this heading"></a></h2>
+<p>When a job fails, Autosubmit can automatically resubmit it. This is recommended if you are sure that your code is fine but the HPC that you are using is unstable.
+To add them, open your <code class="docutils literal notranslate"><span class="pre">$expid/conf/minimal.yml</span></code> and add a <code class="docutils literal notranslate"><span class="pre">RETRIALS</span></code> key under <code class="docutils literal notranslate"><span class="pre">CONFIG</span></code>:</p>
+<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">CONFIG</span><span class="p">:</span>
+<span class="w">    </span><span class="c1"># Current version of Autosubmit.</span>
+<span class="w">    </span><span class="nt">AUTOSUBMIT_VERSION</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;4.0.87&quot;</span>
+<span class="w">    </span><span class="c1"># Total number of jobs in the workflow.</span>
+<span class="w">    </span><span class="nt">TOTALJOBS</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">20</span>
+<span class="w">    </span><span class="c1"># Maximum number of jobs permitted in the waiting status.</span>
+<span class="w">    </span><span class="nt">MAXWAITINGJOBS</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">20</span>
+<span class="w">    </span><span class="nt">RETRIALS</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">5</span>
+</pre></div>
+</div>
+<p>This will be applied to all your jobs (and Wrappers).</p>
+<p>Keep in mind that if you use this option and your job fails because of some bug, you will be wasting resources.</p>
+</section>
+<section id="data-governance-fdb-management">
+<h2>Data governance, FDB management<a class="headerlink" href="#data-governance-fdb-management" title="Link to this heading"></a></h2>
+<p>There are four types of experiments: <code class="docutils literal notranslate"><span class="pre">test</span></code>, <code class="docutils literal notranslate"><span class="pre">pre-production</span></code>, <code class="docutils literal notranslate"><span class="pre">research</span></code> and <code class="docutils literal notranslate"><span class="pre">production</span></code>. To select the type of experiment, specify <code class="docutils literal notranslate"><span class="pre">RUN.TYPE</span></code>. This will load the corresponding subset of configurations:</p>
+<table class="docutils align-default" id="id3">
+<caption><span class="caption-text">Types of experiment</span><a class="headerlink" href="#id3" title="Link to this table"></a></caption>
+<colgroup>
+<col style="width: 20.0%" />
+<col style="width: 20.0%" />
+<col style="width: 20.0%" />
+<col style="width: 40.0%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p>KEY</p></th>
+<th class="head"><p>FDB</p></th>
+<th class="head"><p>EXPVER</p></th>
+<th class="head"><p>Purpose</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>PRODUCTION</p></td>
+<td><p>HPC-FDB</p></td>
+<td><p>0001</p></td>
+<td><p>5km real simulation s</p></td>
+</tr>
+<tr class="row-odd"><td><p>RESEARCH</p></td>
+<td><p>HPC-FDB</p></td>
+<td><p>Autosubmit expid</p></td>
+<td><p>Other research experiments</p></td>
+</tr>
+<tr class="row-even"><td><p>PRE-PRODUCTION</p></td>
+<td><p>Local</p></td>
+<td><p>0001</p></td>
+<td><p>5km test simulations</p></td>
+</tr>
+<tr class="row-odd"><td><p>TEST</p></td>
+<td><p>Local</p></td>
+<td><p>Autosubmit expid</p></td>
+<td><p>Small tests of workflow/model functionalities. Default behaviour.</p></td>
+</tr>
+</tbody>
+</table>
+<p>In the experiments that use local FDBs, a directory corresponding to each experiment is created in the scratch of the project, under <code class="docutils literal notranslate"><span class="pre">/experiments</span></code>. The data produced by the experiment will be stored there.
+In the experiments that use HPC-FDB, the official <code class="docutils literal notranslate"><span class="pre">FDB_HOME</span></code> provided by ECMWF is used.</p>
+</section>
+<section id="ensembles-ifs-nemo">
+<h2>Ensembles (IFS-NEMO)<a class="headerlink" href="#ensembles-ifs-nemo" title="Link to this heading"></a></h2>
+<p>To run an ensemble with several members:</p>
+<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">EXPERIMENT</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">MEMBERS</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;fc0</span><span class="nv"> </span><span class="s">fc1</span><span class="nv"> </span><span class="s">fc2&quot;</span>
+</pre></div>
+</div>
+<p>To activate the initial conditions perturbations,</p>
+<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">CONFIGURATION</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">OCE_INI_MEMBER_PERTURB</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;true&quot;</span>
+</pre></div>
+</div>
+</section>
+<section id="scaling-tests">
+<h2>Scaling tests<a class="headerlink" href="#scaling-tests" title="Link to this heading"></a></h2>
+<p>To run a scaling test, you should configure a <code class="docutils literal notranslate"><span class="pre">simless</span></code> joblist (<code class="docutils literal notranslate"><span class="pre">WORKFLOW:</span> <span class="pre">simless</span></code>) and set <code class="docutils literal notranslate"><span class="pre">SCALING:</span> <span class="pre">&quot;True&quot;</span></code> in the ADDITIONAL_JOBS section of your <code class="docutils literal notranslate"><span class="pre">main.yml</span></code>.
+This will take the configuration from conf/additional_jobs/scaling.yml. You can modify this file to set the number of nodes and tasks that you want to use for the scaling test.
+Inspect your experiment before launching it to check that the scaling experiment is correctly configured.</p>
+</section>
+<section id="namelist-modifications-ifs-nemo">
+<h2>Namelist modifications (IFS-NEMO)<a class="headerlink" href="#namelist-modifications-ifs-nemo" title="Link to this heading"></a></h2>
+<p>It is possible to modify the namelists of the models (<code class="docutils literal notranslate"><span class="pre">fort.4</span></code>, <code class="docutils literal notranslate"><span class="pre">namelist_cfg</span></code>, <code class="docutils literal notranslate"><span class="pre">namelist_ice_cfg</span></code>). This will create a <code class="docutils literal notranslate"><span class="pre">inipath</span></code> directory in your experiment (both if you use DVC or normal inputs).
+In that directory, all the files are symlinks to the real files. If a namelist is chosen to be modified, the symlink is replaced by the modified file.
+To modify the namelists, you should add the following lines in your <code class="docutils literal notranslate"><span class="pre">main.yml</span></code>:</p>
+<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">NAMELIST_PATCHES</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">FORT_4</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;name-of-the-path-to-the-fort.4&quot;</span>
+<span class="w">    </span><span class="nt">NAMELIST_CFG</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;name-of-the-path-to-the-namelist_cfg&quot;</span>
+<span class="w">    </span><span class="nt">NAMELIST_ICE_CFG</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;name-of-the-path-to-the-namelist_ice_cfg&quot;</span>
+</pre></div>
+</div>
+<p>The patches are located in the <code class="docutils literal notranslate"><span class="pre">conf/namelist_patches</span></code> directory. You can create your own patches and use them in your experiment. Create a merge request in order to share your patch, that might be used by other users.</p>
+</section>
+<section id="aqua-usage">
+<h2>AQUA usage<a class="headerlink" href="#aqua-usage" title="Link to this heading"></a></h2>
+<p>AQUA has been successfully integrated into the Climate DT workflow as an Additional Job, which allows the user to easily deploy and run AQUA in LUMI or MareNostrum5. In all the tasks, AQUA runs containerized.</p>
+<p>AQUA can be used to analyze your simulation. It is configured to run as an additional job, so to enable it, you need to have:</p>
+<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">CONFIGURATION</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">ADDITIONAL_JOBS</span><span class="p">:</span>
+<span class="w">        </span><span class="nt">AQUA</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;True&quot;</span>
+</pre></div>
+</div>
+<p>It can be:</p>
+<ul class="simple">
+<li><p>Coupled with a model-only or end-to-end workflow, where it monitors simulations in real time.</p></li>
+<li><p>Executed in <cite>simless</cite> mode, analyzing completed experiments offline. You need to specify the <code class="docutils literal notranslate"><span class="pre">RUN.TYPE</span></code> and the parameters under <code class="docutils literal notranslate"><span class="pre">REQUEST</span></code>.</p></li>
+</ul>
+<div class="admonition warning">
+<p class="admonition-title">Warning</p>
+<dl class="simple">
+<dt>In order to successfully run AQUA you need the following submodules:</dt><dd><ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">catalog</span></code>: to create the catalog entry for your experiment in the Remote Setup.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">data-portfolio</span></code>: to get the DQC profiles (DQC, TRANFER, WIPE tasks).</p></li>
+</ul>
+</dd>
+</dl>
+</div>
+<p>This will load the configuration under <code class="docutils literal notranslate"><span class="pre">conf/additional_jobs/aqua-True.yaml</span></code>.</p>
+<ul class="simple">
+<li><p>REMOTE SETUP: AQUA is installed within the experiment directory. An .aqua folder is created, storing all necessary configuration files. A catalog entry (YAML-based metadata file) is generated when AQUA runs alongside a model. This catalog entry contains essential information, including variable names, grid definitions, FDB home and keys, and dates. It also points to the <cite>fdb_info_file</cite>, a YAML file that is updated with the data of each simulation available in the FDB and the Data Bridge. The catalog generator takes the information from the <code class="docutils literal notranslate"><span class="pre">templates/AQUA/config_catgen.yaml</span></code> that is parsed by Autosubmit using the information from the experiment.</p></li>
+<li><p>LRA GENERATOR: Converts high-resolution outputs into a low-resolution archive (LRA). Allows users to configure specific variables for processing. It is configured by the YAML file <code class="docutils literal notranslate"><span class="pre">templates/AQUA/only_lra.yaml</span></code>, that is parsed by Autosubmit as additional script in the LRA task.</p></li>
+<li><p>AQUA ANALYSIS: Runs the AQUA analysis. The analysis is based on the LRA generated in the previous step. Executes selected diagnostic routines and generates analytical plots using the AQUA analysis wrapper.</p></li>
+<li><p>AQUA PUSH: Uploads results, including plots and catalog entries, to the designated repository or visualization platform. Runs on the Autosubmit Virtual Machine (VM).</p></li>
+</ul>
+<p>The frequency of those jobs can be tuned with the <code class="docutils literal notranslate"><span class="pre">FREQUENCY</span></code> parameter of each job. The variables used in the LRA can also be tuned with the <cite>VARS_*</cite> parameters.</p>
+<p>The output of the LRA and the AQUA analysis will be stored in the experiment folder, in a directory named <cite>out</cite>.</p>
+</section>
+<section id="run-without-io-ifs-nemo">
+<h2>Run without IO (IFS-NEMO):<a class="headerlink" href="#run-without-io-ifs-nemo" title="Link to this heading"></a></h2>
+<p>To disable the flags for IO, add the following lines in your <cite>main.yml</cite>:</p>
+<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">CONFIGURATION</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">IO_ON</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;False&quot;</span>
+</pre></div>
+</div>
+</section>
+<section id="set-application-versions">
+<h2>Set application versions:<a class="headerlink" href="#set-application-versions" title="Link to this heading"></a></h2>
+<p>The default version of the applications can be changed by using the following keys:</p>
+<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">SOME_APP</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">VERSION</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;x.x.x&quot;</span>
+</pre></div>
+</div>
+<p>The default values can be found under <cite>conf/applications/container_versions.yml</cite>.</p>
+</section>
+<section id="set-applications-request-details">
+<h2>Set applications request details:<a class="headerlink" href="#set-applications-request-details" title="Link to this heading"></a></h2>
+<p>The area, resolution and interpolation method of the data from the streaming (the input data to the applications) are defined by:</p>
+<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">SOME_APP</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">GRID</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">g</span><span class="w"> </span><span class="c1">#&quot;0.1/0.1&quot;</span>
+<span class="w">    </span><span class="nt">AREA</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">a</span><span class="w"> </span><span class="c1">#&quot;70/-12/48/31&quot;</span>
+<span class="w">    </span><span class="nt">METHOD</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">m</span><span class="w"> </span><span class="c1">#nn/con</span>
+</pre></div>
+</div>
+<p><a href="#id1"><span class="problematic" id="id2">`</span></a>Note: For more info check <a class="reference external" href="https://earth.bsc.es/gitlab/digital-twins/de_340-2/gsv_interface/-/blob/main/docs/source/gsv_request_syntax.rst">https://earth.bsc.es/gitlab/digital-twins/de_340-2/gsv_interface/-/blob/main/docs/source/gsv_request_syntax.rst</a> `</p>
+<p>The default values can be found under <cite>conf/applications/default_gsv_request.yml</cite>.</p>
+<p>The defaults can be overriden in <cite>main.yml</cite> as well.</p>
+</section>
+<section id="set-additional-application-specific-keys">
+<h2>Set additional application-specific keys:<a class="headerlink" href="#set-additional-application-specific-keys" title="Link to this heading"></a></h2>
+<p>There are a set of files that are meant to contain all the keys that are application-specific. They can be found in <cite>conf/applications/$some_app.yml</cite>.</p>
+<p>For <cite>data</cite> workflows, here is where the specifications of the data request are detailed (<cite>conf/applications/data.yml</cite>).</p>
+</section>
+</section>
+<section id="execute-the-workflow">
+<h1>Execute the workflow<a class="headerlink" href="#execute-the-workflow" title="Link to this heading"></a></h1>
+<p>Now you can <strong>create</strong> the workflow:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>autosubmit<span class="w"> </span>create<span class="w"> </span>&lt;expid&gt;
+</pre></div>
+</div>
+<p>And <strong>run</strong> it:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>autosubmit<span class="w"> </span>run<span class="w"> </span>&lt;expid&gt;
+</pre></div>
+</div>
+<p>If you want to update the git repository, <strong>refresh</strong> your experiment (equivalent to a git pull):</p>
+<div class="admonition warning">
+<p class="admonition-title">Warning</p>
+<p>BE CAREFUL! This command will overwrite any changes in the local project folder.
+Note that this is doing the same thing that the <code class="docutils literal notranslate"><span class="pre">autosubmit</span> <span class="pre">create</span></code> did in a previous
+step, but <code class="docutils literal notranslate"><span class="pre">autosubmit</span> <span class="pre">create</span></code> only refreshes the git repository the first time it is</p>
+</div>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>autosubmit<span class="w"> </span>refresh<span class="w"> </span>&lt;expid&gt;
+</pre></div>
+</div>
+<p>Then you need autosubmit to <strong>create</strong> the workflow again:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>autosubmit<span class="w"> </span>create<span class="w"> </span>&lt;expid&gt;<span class="w"> </span>-v<span class="w"> </span>-np
+</pre></div>
+</div>
+<p>This resets the status of all the jobs, so if you do not want to run everything from
+the beginning again, you can <strong>set the status</strong> of tasks, for example:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>autosubmit<span class="w"> </span>setstatus<span class="w"> </span>a002<span class="w"> </span>-fl<span class="w"> </span><span class="s2">&quot;a002_LOCAL_SETUP a002_SYNCHRONIZE a002_REMOTE_SETUP&quot;</span><span class="w"> </span>-t<span class="w"> </span>COMPLETED<span class="w"> </span>-s
+</pre></div>
+</div>
+<p><code class="docutils literal notranslate"><span class="pre">-fl</span></code> is for filter, so you filter them by job name now, <code class="docutils literal notranslate"><span class="pre">-t</span></code> is for target status(?)
+so, we set them to <code class="docutils literal notranslate"><span class="pre">COMPLETED</span></code> here. <code class="docutils literal notranslate"><span class="pre">-s</span></code> is for save, which is needed to save the
+results to disk.</p>
+<p>You can add a <code class="docutils literal notranslate"><span class="pre">-np</span></code> for “no plot” to most of the commands to not have the error with
+missing <code class="docutils literal notranslate"><span class="pre">xdg-open</span></code>, etc.</p>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="getting_started.html" class="btn btn-neutral float-left" title="Getting Started" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="auto_keys_main.html" class="btn btn-neutral float-right" title="WIP: Automatic generation of keys" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2025, A7.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>
