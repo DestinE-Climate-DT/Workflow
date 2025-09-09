@@ -1,0 +1,151 @@
+WILDFIRES_WISE:
+  1:
+    GSVREQUEST:
+      # From <expid>/conf/main.yml:
+      expver: "%REQUEST.EXPVER%"
+      # From user input <expid>/conf/request.yml:
+      activity: "%REQUEST.ACTIVITY%"
+      resolution: "%REQUEST.RESOLUTION%"
+      generation: "%REQUEST.GENERATION%"
+      realization: "%REQUEST.REALIZATION%"
+      experiment: "%REQUEST.EXPERIMENT%"
+      model: "%REQUEST.MODEL%"
+      # Hardcoded parameters:
+      dataset: climate-dt
+      class: d1
+      type: fc
+      stream: clte
+      levtype: "sfc"
+      date: "%SPLIT_START_DATE%"
+      time: "0000/to/2300/by/0100"
+      param: "2t"
+      grid: "%WILDFIRES_WISE.GRID%"
+      area: "%WILDFIRES_WISE.AREA%"
+      method: "%WILDFIRES_WISE.METHOD%"
+    OPAREQUEST:
+      # Hardcoded parameters
+      variable: "2t"
+      stat: "mean"
+      stat_freq: "hourly"
+      output_freq: "daily"
+      time_step: 60 # in minutes
+  2:
+    GSVREQUEST:
+      # From <expid>/conf/main.yml:
+      expver: "%REQUEST.EXPVER%"
+      # From user input <expid>/conf/request.yml:
+      activity: "%REQUEST.ACTIVITY%"
+      resolution: "%REQUEST.RESOLUTION%"
+      generation: "%REQUEST.GENERATION%"
+      realization: "%REQUEST.REALIZATION%"
+      experiment: "%REQUEST.EXPERIMENT%"
+      model: "%REQUEST.MODEL%"
+      # Hardcoded parameters:
+      dataset: climate-dt
+      class: d1
+      type: fc
+      stream: clte
+      levtype: "sfc"
+      date: "%SPLIT_START_DATE%"
+      time: "0000/to/2300/by/0100"
+      param: "2d"
+      grid: "%WILDFIRES_WISE.GRID%"
+      area: "%WILDFIRES_WISE.AREA%"
+      method: "%WILDFIRES_WISE.METHOD%"
+    OPAREQUEST:
+      # Hardcoded parameters
+      variable: "2d"
+      stat: "mean"
+      stat_freq: "hourly"
+      output_freq: "daily"
+      time_step: 60 # in minutes
+  3:
+    GSVREQUEST:
+      # From <expid>/conf/main.yml:
+      expver: "%REQUEST.EXPVER%"
+      # From user input <expid>/conf/request.yml:
+      activity: "%REQUEST.ACTIVITY%"
+      resolution: "%REQUEST.RESOLUTION%"
+      generation: "%REQUEST.GENERATION%"
+      realization: "%REQUEST.REALIZATION%"
+      experiment: "%REQUEST.EXPERIMENT%"
+      model: "%REQUEST.MODEL%"
+      # Hardcoded parameters:
+      dataset: climate-dt
+      class: d1
+      type: fc
+      stream: clte
+      levtype: "sfc"
+      date: "%SPLIT_START_DATE%"
+      time: "0000/to/2300/by/0100"
+      param: "10v"
+      grid: "%WILDFIRES_WISE.GRID%"
+      area: "%WILDFIRES_WISE.AREA%"
+      method: "%WILDFIRES_WISE.METHOD%"
+    OPAREQUEST:
+      # Hardcoded parameters
+      variable: "10v"
+      stat: "mean"
+      stat_freq: "hourly"
+      output_freq: "daily"
+      time_step: 60 # in minutes
+  4:
+    GSVREQUEST:
+      # From <expid>/conf/main.yml:
+      expver: "%REQUEST.EXPVER%"
+      # From user input <expid>/conf/request.yml:
+      activity: "%REQUEST.ACTIVITY%"
+      resolution: "%REQUEST.RESOLUTION%"
+      generation: "%REQUEST.GENERATION%"
+      realization: "%REQUEST.REALIZATION%"
+      experiment: "%REQUEST.EXPERIMENT%"
+      model: "%REQUEST.MODEL%"
+      # Hardcoded parameters:
+      dataset: climate-dt
+      class: d1
+      type: fc
+      stream: clte
+      levtype: "sfc"
+      date: "%SPLIT_START_DATE%"
+      time: "0000/to/2300/by/0100"
+      param: "10u"
+      grid: "%WILDFIRES_WISE.GRID%"
+      area: "%WILDFIRES_WISE.AREA%"
+      method: "%WILDFIRES_WISE.METHOD%"
+    OPAREQUEST:
+      # Hardcoded parameters
+      variable: "10u"
+      stat: "mean"
+      stat_freq: "hourly"
+      output_freq: "daily"
+      time_step: 60 # in minutes
+  5:
+    GSVREQUEST:
+      # From <expid>/conf/main.yml:
+      expver: "%REQUEST.EXPVER%"
+      # From user input <expid>/conf/request.yml:
+      activity: "%REQUEST.ACTIVITY%"
+      resolution: "%REQUEST.RESOLUTION%"
+      generation: "%REQUEST.GENERATION%"
+      realization: "%REQUEST.REALIZATION%"
+      experiment: "%REQUEST.EXPERIMENT%"
+      model: "%REQUEST.MODEL%"
+      # Hardcoded parameters:
+      dataset: climate-dt
+      class: d1
+      type: fc
+      stream: clte
+      levtype: "sfc"
+      date: "%SPLIT_START_DATE%"
+      time: "0000/to/2300/by/0100"
+      param: "avg_tprate"
+      grid: "%WILDFIRES_WISE.GRID%"
+      area: "%WILDFIRES_WISE.AREA%"
+      method: "%WILDFIRES_WISE.METHOD%"
+    OPAREQUEST:
+      # Hardcoded parameters
+      variable: "avg_tprate"
+      stat: "raw"
+      stat_freq: "hourly"
+      output_freq: "daily"
+      time_step: 60 # in minutes

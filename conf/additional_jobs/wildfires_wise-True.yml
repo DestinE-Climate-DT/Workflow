@@ -1,0 +1,54 @@
+JOBS:
+  APP_WILDFIRES_WISE:
+    FILE: templates/application.sh
+    RUNNING: chunk
+    WALLCLOCK: 00:20
+    PLATFORM: '%DEFAULT.HPCARCH%'
+    PARTITION: '%CURRENT_APP_PARTITION%'
+    NODES: 1
+    PROCESSORS: 1
+    TASKS: 1
+    THREADS: 1
+    CHECK: on_submission
+    NOTIFY_ON:
+      - FAILED
+    SPLITS: auto
+    DEPENDENCIES:
+      OPA_WILDFIRES_WISE:
+        SPLITS_FROM:
+          ALL:
+            SPLITS_TO: '[1:auto]*\1'
+      APP_WILDFIRES_WISE:
+        SPLITS_FROM:
+          ALL:
+            SPLITS_TO: previous
+      APP_WILDFIRES_WISE-1: {}
+    ADDITIONAL_FILES: []
+  OPA_WILDFIRES_WISE:
+    DEPENDENCIES:
+      DN:
+        SPLITS_FROM:
+          ALL:
+            SPLITS_TO: '[1:auto]*\1'
+      OPA_WILDFIRES_WISE:
+        SPLITS_FROM:
+          ALL:
+            SPLITS_TO: previous
+      OPA_WILDFIRES_WISE-1: {}
+    FILE: templates/opa.sh,conf/applications/request/request_WILDFIRES_WISE.yml
+    PLATFORM: '%DEFAULT.HPCARCH%'
+    PARTITION: '%CURRENT_APP_PARTITION%'
+    RUNNING: chunk
+    NODES: 1
+    PROCESSORS: '%CURRENT_OPA_PROCESSORS%'
+    TASKS: 1
+    THREADS: 1
+    CHECK: on_submission
+    CUSTOM_DIRECTIVES: '%CURRENT_OPA_CUSTOM_DIRECTIVES%'
+    EXCLUSIVE: '%CURRENT_OPA_EXCLUSIVE%'
+    RETRIALS: '1'
+    WALLCLOCK: 00:20
+    NOTIFY_ON:
+      - FAILED
+    SPLITS: auto
+    ADDITIONAL_FILES: []
