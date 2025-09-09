@@ -1,0 +1,55 @@
+{
+  "$id": "schema:workflow/model_ifs",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "IFS-based MODELS",
+  "description": "Schema for the MODEL section of the workflow for IFS-based models",
+  "type": "object",
+  "properties": {
+    "NAME": {
+      "type": "string",
+      "enum": ["ifs-fesom", "ifs-nemo"],
+      "decription": "Name of the model to run the simulation."
+    },
+    "ROOT_PATH": {
+      "description": "Path to the root of the model directory where the different models and there different versions are stored by default.",
+      "type": "string"
+    },
+    "PATH": {
+      "description": "Path to the model directory, where the version of the model that you will use is/will be stored.",
+      "type": "string"
+    },
+    "INPUTS": {
+      "description": "Path to the directory where the input files are stored.",
+      "type": "string"
+    },
+    "COMPILE": {
+      "description": "If the model will be compiled before running it.",
+      "type": "string",
+      "enum": ["False", "True"]
+    },
+    "GRID_ATM": {
+      "description": "Grid for the atmosphere model.",
+      "type": "string",
+      "enum": ["tco79l137", "tc0399l137", "tco1279l137", "tco2559l137"]
+    },
+    "GRID_OCE": {
+      "description": "Grid for the ocean model.",
+      "type": "string",
+      "enum": ["eORCA1_Z75", "eORCA12_Z75"]
+    },
+    "SIMULATION": {
+      "description": "Simulation to run.",
+      "type": "string",
+      "enum": ["control-ifs-nemo", "test-ifs-nemo", "ifs-fesom-projection-tco2559", "historical-ifs-nemo", "SSP370-ifs-nemo"]
+    },
+    "DVC_INPUTS_BRANCH": {
+      "description": "Branch of the DVC repository where the input files are stored.",
+      "type": "string"
+    },
+    "ICMCL_PATTERN": {
+      "description": "Pattern to search for the ICMCL files.",
+      "type": "string"
+    }
+  },
+  "required": ["NAME", "ROOT_PATH", "PATH", "INPUTS", "COMPILE", "GRID_ATM", "ICMCL_PATTERN", "SIMULATION"]
+}

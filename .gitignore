@@ -1,0 +1,39 @@
+# Sphinx
+docs/build
+
+# Bats
+coverage/
+
+# pytest
+.coverage
+tests/bats_tests/coverage.xml
+
+# setuptools
+*.egg-info
+build/
+
+# pycaches
+__pycache__/
+
+# venv
+venv/
+
+# schema tests
+tests/AS_expid
+tests/AS_folder
+tests/jsonschema
+tests/yq
+out
+
+# docs buils
+docs/build
+
+# dynamic joblists
+conf/jobs_end-to-end.yml
+conf/jobs_apps.yml
+
+# schema test output
+experiment_data_*
+
+# Pycharm configuration
+*.idea
