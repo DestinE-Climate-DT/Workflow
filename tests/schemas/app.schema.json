@@ -1,0 +1,59 @@
+{
+  "$id": "schema:workflow/app",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "title": "App",
+  "description": "Schema for the app section of the workflow",
+  "properties": {
+    "ENERGY_INDICATORS": {
+      "type": "string",
+      "enum": ["False", "True"],
+      "description": "If energy indicators enabled"
+    },
+    "ENERGY_OFFSHORE": {
+      "type": "string",
+      "enum": ["False", "True"],
+      "description": "If energy offshore enabled"
+    },
+    "HYDROLAND": {
+      "type": "string",
+      "enum": ["False", "True"],
+      "description": "If hydroland enabled"
+    },
+    "HYDROMET": {
+      "type": "string",
+      "enum": ["False", "True"],
+      "description": "If hydromet enabled"
+    },
+    "WILDFIRES_FWI": {
+      "type": "string",
+      "enum": ["False", "True"],
+      "description": "If wildfires FWI enabled"
+    },
+    "WILDFIRES_WISE": {
+      "type": "string",
+      "enum": ["False", "True"],
+      "description": "If wildfires WISE enabled"
+    },
+    "OBSALL": {
+      "type": "string",
+      "enum": ["False", "True"],
+      "description": "If OBSALL enabled"
+    },
+    "DATA": {
+      "type": "string",
+      "enum": ["False", "True"],
+      "description": "If data workflow enabled"
+    },
+    "OUTPATH": {
+      "type": "string",
+      "description": "Path to the output directory"
+    },
+    "READ_FROM_DATABRIDGE": {
+      "type": "string",
+      "enum": ["False", "True"],
+      "description": "If the data will be read from the databridge"
+    }
+  },
+  "required": ["OUTPATH"]
+}

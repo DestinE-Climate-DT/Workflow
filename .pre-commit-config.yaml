@@ -1,0 +1,52 @@
+repos:
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v3.2.0
+    hooks:
+      - id: trailing-whitespace
+        exclude: ^conf/jobs_apps.yml
+      - id: end-of-file-fixer
+        exclude: ^conf/jobs_apps.yml
+      - id: check-yaml
+        exclude: ^templates/aqua/only_lra\.yaml$
+      - id: check-added-large-files
+        exclude: ^conf/jobs_apps.yml
+  - repo: https://github.com/adrienverge/yamllint.git
+    rev: v1.35.1 # or higher tag
+    hooks:
+      - id: yamllint
+        args: [--format, parsable]
+  - repo: https://github.com/google/yamlfmt
+    rev: v0.10.0
+    hooks:
+      - id: yamlfmt
+        exclude: ^templates/aqua/only_lra\.yaml$
+  - repo: local
+    hooks:
+      - id: update_template_scripts
+        name: update_template_scripts
+        entry: utils/update_template_scripts.py
+        language: script
+        types: [shell]
+        pass_filenames: false
+        exclude: ^conf/jobs_apps.yml
+      - id: format_sh_ruff
+        name: format_sh_ruff
+        entry: utils/format_sh_ruff.sh
+        language: script
+        types: [shell]
+        pass_filenames: false
+        exclude: ^conf/jobs_apps.yml
+      - id: install_local_utils
+        name: install_local_utils
+        entry: pip install config_logger
+        language: system
+        pass_filenames: false
+        always_run: true
+      - id: templates_numeration
+        name: templates_numeration
+        entry: utils/templates_numeration.py --fix
+        language: script
+        types: [shell]
+        pass_filenames: false
+        exclude: ^conf/jobs_apps.yml
+exclude: runscripts/FDB/schema

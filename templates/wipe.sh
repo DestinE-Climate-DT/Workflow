@@ -1,0 +1,137 @@
+#!/bin/bash
+# Deletion part of the wipe
+
+# INTERFACE
+
+# HEADER
+
+CURRENT_ROOTDIR=${1:-%CURRENT_ROOTDIR%}
+CURRENT_ARCH=${2:-%CURRENT_ARCH%}
+CHUNK=${3:-%CHUNK%}
+START_DATE=${4:-%CHUNK_START_DATE%}
+SECOND_TO_LAST_DATE=${5:-%CHUNK_SECOND_TO_LAST_DATE%}
+MODEL_NAME=${6:-%MODEL.NAME%}
+DATABRIDGE_FDB_HOME=${7:-%CURRENT_DATABRIDGE_FDB_HOME%}
+EXPERIMENT=${8:-%REQUEST.EXPERIMENT%}
+ACTIVITY=${9:-%REQUEST.ACTIVITY%}
+GENERATION=${10:-%REQUEST.GENERATION%}
+DQC_PROFILE_PATH=${11:-%CONFIGURATION.DQC_PROFILE_PATH%}
+EXPVER=${12:-%REQUEST.EXPVER%}
+FDB_HOME=${13:-%REQUEST.FDB_HOME%}
+SCRATCH_DIR=${14:-%CURRENT_SCRATCH_DIR%}
+HPC_CONTAINER_DIR=${15:-%CONFIGURATION.CONTAINER_DIR%}
+GSV_VERSION=${16:-%GSV.VERSION%}
+LIBDIR=${17:-%CONFIGURATION.LIBDIR%}
+SCRIPTDIR=${18:-%CONFIGURATION.SCRIPTDIR%}
+WIPE_DOIT=${19:-%CONFIGURATION.WIPE.DOIT%}
+MEMBER=${20:-%MEMBER%}
+MEMBER_LIST=${21:-%EXPERIMENT.MEMBERS%}
+FDB_INFO_FILE_PATH=${22:-%REQUEST.INFO_FILE_PATH%}
+FDB_INFO_FILE_NAME=${23:-%REQUEST.INFO_FILE_NAME%}
+BASE_VERSION=${24:-%BASE.VERSION%}
+SPLIT_END_DATE=${25:-%SPLIT_END_DATE%}
+# Extra bindings needed for the container in hpc-fdb
+OPERATIONAL_PROJECT_SCRATCH=${26:-%CONFIGURATION.OPERATIONAL_PROJECT_SCRATCH%}
+DEVELOPMENT_PROJECT_SCRATCH=${27:-%CONFIGURATION.DEVELOPMENT_PROJECT_SCRATCH%}
+BRIDGE_EXPVER=${28:-%REQUEST.BRIDGE_EXPVER%}
+MODIFY_METADATA_TRANSFER=${29:-%CONFIGURATION.TRANSFER.MODIFY_METADATA%}
+MODIFY_METADATA_FIELDS=${30:-%CONFIGURATION.TRANSFER.MODIFY_METADATA_FIELDS%}
+LOCAL_DIR=${31:-%CURRENT_LOCAL_DIR%}
+HPC_PROJECT_ROOT=${32:-%CURRENT_HPC_PROJECT_ROOT%}
+WIPE_UNSAFE=${33:-%CONFIGURATION.WIPE.UNSAFE%}
+CHUNK_END_DATE=${34:-%CHUNK_END_DATE%}
+# END_HEADER
+
+set -xuve
+
+HPC=$(echo ${CURRENT_ARCH} | cut -d- -f1)
+ls -a ${LIBDIR}
+
+# LOAD FDB MODULES & FDB5 CONFIG FILE
+. "${LIBDIR}/${HPC}"/config.sh
+source "${LIBDIR}"/common/util.sh
+
+# lib/LUMI/config.sh (load_singularity) (auto generated comment)
+# lib/MARENOSTRUM5/config.sh (load_singularity) (auto generated comment)
+load_singularity
+
+WIPE_REQUESTS_PATH=${CURRENT_ROOTDIR}/wipe_requests
+mkdir -p ${WIPE_REQUESTS_PATH}
+cd ${WIPE_REQUESTS_PATH}
+
+# Call the function and assign the result to TRANSFER_MONTHLY
+# lib/common/util.sh (enable_process_monthly) (auto generated comment)
+WIPE_MONTHLY=$(enable_process_monthly "$START_DATE" "$SPLIT_END_DATE")
+
+# lib/common/util.sh (get_member_number) (auto generated comment)
+REALIZATION=$(get_member_number "${MEMBER_LIST}" ${MEMBER})
+
+export METKIT_PARAM_RAW=1
+
+GENERAL_REQUEST_CLTE="${SCRIPTDIR}/FDB/general_request_clte.yaml"
+GENERAL_REQUEST_CLMN="${SCRIPTDIR}/FDB/general_request_clmn.yaml"
+FLAT_REQ_NAME_CLTE="$(basename ${GENERAL_REQUEST_CLTE} | cut -d. -f1)_${CHUNK}_request.flat"
+FLAT_REQ_NAME_CLMN="$(basename ${GENERAL_REQUEST_CLMN} | cut -d. -f1)_${CHUNK}_request.flat"
+
+# lib/common/util.sh (check_expver_match) (auto generated comment)
+check_expver_match "$MODIFY_METADATA_TRANSFER" "$MODIFY_METADATA_FIELDS" "$BRIDGE_EXPVER" "$EXPVER"
+ADDITIONAL_BINDINGS=("$(realpath ${FDB_HOME})" "$(realpath ${WIPE_REQUESTS_PATH})")
+# lib/common/util.sh (setup_additional_binds) (auto generated comment)
+bindings=$(setup_additional_binds "${ADDITIONAL_BINDINGS[@]}")
+
+singularity exec --cleanenv --no-home \
+    --env "FDB_HOME=$(realpath ${FDB_HOME})" \
+    --env "SCRIPTDIR=${SCRIPTDIR}" \
+    --env "LIBDIR=${LIBDIR}" \
+    --env "GENERAL_REQUEST_CLTE=${GENERAL_REQUEST_CLTE}" \
+    --env "GENERAL_REQUEST_CLMN=${GENERAL_REQUEST_CLMN}" \
+    --env "EXPVER=${BRIDGE_EXPVER}" \
+    --env "START_DATE=${START_DATE}" \
+    --env "SECOND_TO_LAST_DATE=${SECOND_TO_LAST_DATE}" \
+    --env "EXPERIMENT=${EXPERIMENT}" \
+    --env "CHUNK=${CHUNK}" \
+    --env "MODEL_NAME=${MODEL_NAME}" \
+    --env "ACTIVITY=${ACTIVITY}" \
+    --env "GENERATION=${GENERATION}" \
+    --env "REALIZATION=${REALIZATION}" \
+    --env "FLAT_REQ_NAME_CLTE=${FLAT_REQ_NAME_CLTE}" \
+    --env "FLAT_REQ_NAME_CLMN=${FLAT_REQ_NAME_CLMN}" \
+    --env "WIPE_DOIT=${WIPE_DOIT}" \
+    --env "WIPE_MONTHLY=${WIPE_MONTHLY}" \
+    ${bindings} \
+    --env "WIPE_UNSAFE=${WIPE_UNSAFE}" \
+    "$HPC_CONTAINER_DIR"/gsv/gsv_${GSV_VERSION}.sif \
+    bash -c \
+    '
+    set -xuve
+    MINIMUM_KEYS=class,dataset,experiment,activity,expver,model,generation,realization,type,stream
+    source "${LIBDIR}"/common/util.sh
+    # Wipe clte data always
+    # lib/common/util.sh (exec_wipe) (auto generated comment)
+    exec_wipe "${WIPE_DOIT}" "${GENERAL_REQUEST_CLTE}" "${FLAT_REQ_NAME_CLTE}" "${MINIMUM_KEYS},date" "${WIPE_UNSAFE}"
+
+    # Wipe clmn data only if first day of month is in the date list
+    if [[ "${WIPE_MONTHLY}" == true ]]; then
+        # lib/common/util.sh (exec_wipe) (auto generated comment)
+        exec_wipe "${WIPE_DOIT}" "${GENERAL_REQUEST_CLMN}" "${FLAT_REQ_NAME_CLMN}" "${MINIMUM_KEYS},year,month" "${WIPE_UNSAFE}"
+    fi
+    '
+if [[ "${WIPE_DOIT,,}" == "false" ]]; then
+    echo "Wipe operation is set to not execute (WIPE_DOIT=${WIPE_DOIT})"
+    exit 1
+else
+    echo "Wipe operation executed successfully."
+fi
+
+singularity exec \
+    --env "SCRIPTDIR=${SCRIPTDIR}" \
+    --env "FDB_INFO_FILE_NAME=${FDB_INFO_FILE_NAME}" \
+    --env "CHUNK_END_DATE=${CHUNK_END_DATE}" \
+    ${bindings} \
+    "${HPC_CONTAINER_DIR}"/gsv/gsv_${GSV_VERSION}.sif \
+    bash -c \
+    '
+    set -xuve
+    python3 ${SCRIPTDIR}/FDB/update_fdb_info.py --file ${FDB_INFO_FILE_NAME} \
+    --data_start_date ${CHUNK_END_DATE}
+    '
