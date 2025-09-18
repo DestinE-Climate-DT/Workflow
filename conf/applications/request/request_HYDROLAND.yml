@@ -1,0 +1,73 @@
+HYDROLAND:
+  1:
+    GSVREQUEST: #raw data
+      # From <expid>/conf/main.yml:
+      expver: "%REQUEST.EXPVER%"
+      # From user input <expid>/conf/request.yml:
+      activity: "%REQUEST.ACTIVITY%"
+      resolution: "%REQUEST.RESOLUTION%"
+      generation: "%REQUEST.GENERATION%"
+      realization: "%REQUEST.REALIZATION%"
+      experiment: "%REQUEST.EXPERIMENT%"
+      model: "%REQUEST.MODEL%"
+      # Hardcoded parameters:
+      dataset: climate-dt
+      class: d1
+      type: fc
+      stream: clte
+      levtype: "sfc"
+      date: "%SPLIT_START_DATE%"
+      time: "0000/to/2300/by/0100"
+      param: "2t"
+      grid: "%HYDROLAND.GRID%"
+      method: "%HYDROLAND.METHOD%"
+      area: "%HYDROLAND.AREA%"
+    OPAREQUEST:
+      # Hardcoded parameters:
+      variable: "2t"
+      # raw for hourly | mean for daily
+      stat: "mean"
+      stat_freq: "daily"
+      output_freq: "daily"
+      time_step: 60 # in minutes
+      bias_adjust: "%BIAS_ADJUSTMENT.BIAS_ADJUST%"
+      ba_reference_dir: "%BIAS_ADJUSTMENT.REFERENCE_DIR%/cdfs_t2m/"
+      ba_future_start_date: "%BIAS_ADJUSTMENT.FUTURE_START_DATE%"
+      ba_agg_method: "mean"
+  2:
+    GSVREQUEST: #raw data
+      # From <expid>/conf/main.yml:
+      expver: "%REQUEST.EXPVER%"
+      # From user input <expid>/conf/request.yml:
+      activity: "%REQUEST.ACTIVITY%"
+      resolution: "%REQUEST.RESOLUTION%"
+      generation: "%REQUEST.GENERATION%"
+      realization: "%REQUEST.REALIZATION%"
+      experiment: "%REQUEST.EXPERIMENT%"
+      model: "%REQUEST.MODEL%"
+      # Hardcoded parameters:
+      dataset: climate-dt
+      class: d1
+      type: fc
+      stream: clte
+      levtype: "sfc"
+      date: "%SPLIT_START_DATE%"
+      time: "0000/to/2300/by/0100"
+      param: "avg_tprate"
+      grid: "%HYDROLAND.GRID%"
+      method: "%HYDROLAND.METHOD%"
+      area: "%HYDROLAND.AREA%"
+    OPAREQUEST:
+      # Hardcoded parameters:
+      variable: "avg_tprate"
+      # raw for hourly | mean for daily
+      stat: "mean"
+      stat_freq: "daily"
+      output_freq: "daily"
+      time_step: 60 # in minutes
+      bias_adjust: "%BIAS_ADJUSTMENT.BIAS_ADJUST%"
+      ba_reference_dir: "%BIAS_ADJUSTMENT.REFERENCE_DIR%/cdfs_precip"
+      ba_future_start_date: "%BIAS_ADJUSTMENT.FUTURE_START_DATE%"
+      ba_agg_method: "mean"
+      ba_non_negative: True
+      ba_lower_threshold: 0.001

@@ -1,0 +1,59 @@
+JOBS:
+  LOCAL_SETUP:
+    FILE: templates/local_setup.sh
+    PLATFORM: LOCAL
+    RUNNING: once
+    CHECK: on_submission
+    NOTIFY_ON: FAILED
+  SYNCHRONIZE:
+    FILE: templates/synchronize.sh
+    PLATFORM: LOCAL
+    DEPENDENCIES: LOCAL_SETUP
+    RUNNING: once
+    CHECK: on_submission
+    NOTIFY_ON: FAILED
+  REMOTE_SETUP:
+    FILE: templates/remote_setup.sh,templates/fdb/confignative.yaml,templates/fdb/configlatlon.yaml,templates/fdb/config.yaml
+    # Compilation needs to be done in the login node for being able to clone packages
+    PLATFORM: "%DEFAULT.HPCARCH%-login"
+    DEPENDENCIES: SYNCHRONIZE
+    RUNNING: date
+    WALLCLOCK: '02:00'
+    CHECK: on_submission
+    NOTIFY_ON: FAILED
+    TOTALJOBS: 1
+  INI:
+    FILE: templates/ini.sh
+    PLATFORM: "%DEFAULT.HPCARCH%-login"
+    DEPENDENCIES: REMOTE_SETUP
+    RUNNING: member
+    WALLCLOCK: '00:30'
+    CHECK: on_submission
+    NOTIFY_ON: FAILED
+    TOTALJOBS: 1
+  SIM:
+    FILE: templates/sim_%MODEL.NAME%.sh
+    PLATFORM: "%DEFAULT.HPCARCH%"
+    DEPENDENCIES: INI SIM-1 DQC_BASIC-10
+    running: chunk
+    WALLCLOCK: '02:00'
+    CHECK: on_submission
+    NOTIFY_ON: FAILED
+  DN:
+    FILE: "templates/dn.sh,conf/applications/request/request_ENERGY_INDICATORS.yml,conf/applications/request/request_ENERGY_OFFSHORE.yml,conf/applications/request/request_HYDROLAND.yml,conf/applications/request/request_HYDROMET.yml,conf/applications/request/request_WILDFIRES_FWI.yml,conf/applications/request/request_WILDFIRES_WISE.yml,conf/applications/request/request_OBSALL.yml,conf/applications/request/request_DATA.yml"
+    DEPENDENCIES:
+      SIM:
+        STATUS: "RUNNING"
+      DN:
+        SPLITS_FROM:
+          'all':
+            SPLITS_TO: 'previous'
+      DN-1:
+    RUNNING: chunk
+    WALLCLOCK: '02:00'
+    PLATFORM: "%DEFAULT.HPCARCH%-login"
+    SPLITS: "auto"
+    TOTALJOBS: 1
+    CHECK: on_submission
+    RETRIALS: 1
+    NOTIFY_ON: FAILED

@@ -1,0 +1,661 @@
+{
+  "$id": "schema:workflow/jobs",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Jobs",
+  "description": "Schema for the jobs section of the workflow",
+  "type": "object",
+  "properties": {
+    "INI": {
+      "type": "object",
+      "properties": {
+        "DEPENDENCIES": {
+          "type": "object",
+          "properties": {
+            "REMOTE_SETUP": {
+              "type": "object"
+            },
+            "FILE": {
+              "type": "string",
+              "default": "templates/ini.sh"
+            },
+            "PLATFORM": {
+              "type": "string",
+              "default": "%DEFAULT.HPCARCH%-login"
+            },
+            "RUNNING": {
+              "type": "string",
+              "enum": [
+                "member"
+              ]
+            },
+            "WALLCLOCK": {
+              "type": "string"
+            },
+            "CHECK": {
+              "type": "string",
+              "enum": [
+                "on_submission"
+              ]
+            },
+            "ADDITIONAL_FILES": {
+              "type": "array"
+            }
+          }
+        }
+      }
+    },
+    "LOCAL_SETUP": {
+      "type": "object",
+      "properties": {
+        "ADDITIONAL_FILES": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "CHECK": {
+          "type": "string",
+          "enum": [
+            "on_submission"
+          ]
+        },
+        "DEPENDENCIES": {
+          "type": "object"
+        },
+        "FILE": {
+          "type": "string",
+          "default": "templates/local_setup.sh"
+        },
+        "PLATFORM": {
+          "type": "string",
+          "enum": [
+            "LOCAL"
+          ]
+        },
+        "RUNNING": {
+          "type": "string",
+          "enum": [
+            "once"
+          ]
+        }
+      },
+      "required": [
+        "FILE",
+        "PLATFORM",
+        "RUNNING"
+      ]
+    },
+    "REMOTE_SETUP": {
+      "type": "object",
+      "properties": {
+        "ADDITIONAL_FILES": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "CHECK": {
+          "type": "string",
+          "enum": [
+            "on_submission"
+          ]
+        },
+        "DEPENDENCIES": {
+          "type": "object",
+          "properties": {
+            "SYNCHRONIZE": {
+              "type": "object"
+            }
+          }
+        },
+        "FILE": {
+          "type": "string",
+          "default": "templates/remote_setup.sh"
+        },
+        "PLATFORM": {
+          "type": "string"
+        },
+        "RUNNING": {
+          "type": "string",
+          "enum": [
+            "once"
+          ]
+        },
+        "WALLCLOCK": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "FILE",
+        "PLATFORM",
+        "RUNNING",
+        "WALLCLOCK"
+      ]
+    },
+    "SIM": {
+      "type": "object",
+      "properties": {
+        "DEPENDENCIES": {
+          "type": "object",
+          "properties": {
+            "INI": {
+              "type": "object"
+            },
+            "SIM-1": {
+              "type": "object"
+            },
+            "DQC_BASIC-10": {
+              "type": "object"
+            }
+          }
+        },
+        "FILE": {
+          "type": "string"
+        },
+        "PLATFORM": {
+          "type": "string"
+        },
+        "WALLCLOCK": {
+          "type": "string"
+        },
+        "RUNNING": {
+          "type": "string",
+          "enum": [
+            "chunk"
+          ]
+        },
+        "CHECK": {
+          "type": "string",
+          "enum": [
+            "on_submission"
+          ]
+        },
+        "ADDITIONAL_FILES": {
+          "type": "array"
+        }
+      }
+    },
+    "SYNCHRONIZE": {
+      "type": "object",
+      "properties": {
+        "ADDITIONAL_FILES": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "CHECK": {
+          "type": "string",
+          "enum": [
+            "on_submission"
+          ]
+        },
+        "DEPENDENCIES": {
+          "type": "object",
+          "properties": {
+            "LOCAL_SETUP": {
+              "type": "object"
+            }
+          }
+        },
+        "FILE": {
+          "type": "string"
+        },
+        "PLATFORM": {
+          "type": "string"
+        },
+        "RUNNING": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "FILE",
+        "PLATFORM",
+        "RUNNING"
+      ]
+    },
+    "CHECK_MEM": {
+      "type": "object",
+      "properties": {
+        "FILE": {
+          "type": "string",
+          "default": "templates/performance/check_mem.sh"
+        },
+        "PLATFORM": {
+          "type": "string",
+          "default": "%DEFAULT.HPCARCH%-login"
+        },
+        "DEPENDENCIES": {
+          "type": "object",
+          "properties": {
+            "SIM": {
+              "type": "object",
+              "properties": {
+                "STATUS": {
+                  "type": "string",
+                  "enum": ["RUNNING"]
+                },
+                "ANY_FINAL_STATUS_IS_VALID": {
+                  "type": "string",
+                  "enum": ["True", "False"]
+                }
+              }
+            }
+          }
+        },
+        "RUNNING": {
+          "type": "string",
+          "enum": ["chunk"]
+        },
+        "WALLCLOCK": {
+          "type": "string"
+        },
+        "CHECK": {
+          "type": "string",
+          "default": "on_submission"
+        },
+        "ADDITIONAL_FILES": {
+          "type": "array"
+        }
+      }
+    },
+    "DQC_BASIC": {
+      "type": "object",
+      "properties": {
+        "FILE": {
+          "type": "string",
+          "default": "templates/dqc.sh"
+        },
+        "WALLCLOCK": {
+          "type": "string"
+        },
+        "NODES": {
+          "type": "integer"
+        },
+        "PARTITION": {
+          "type": "string",
+          "default": "%CURRENT_APP_PARTITION%"
+        },
+        "PLATFORM": {
+          "type": "string"
+        },
+        "PROCESSORS": {
+          "type": "integer"
+        },
+        "TASKS": {
+          "type": "integer"
+        },
+        "THREADS": {
+          "type": "integer"
+        },
+        "RUNNING": {
+          "type": "string",
+          "enum": [
+            "chunk"
+          ]
+        },
+        "CHECK": {
+          "type": "string",
+          "enum": [
+            "on_submission"
+          ]
+        },
+        "NAME": {
+          "type": "string"
+        },
+        "DEPENDENCIES": {
+          "type": "object",
+          "properties": {
+            "SIM": {
+              "type": "object"
+            }
+          }
+        },
+        "CHECK_STANDARD_COMPLIANCE": {
+          "type": "string",
+          "enum": [
+            "True",
+            "False"
+          ]
+        },
+        "CHECK_SPATIAL_COMPLETENESS": {
+          "type": "string",
+          "enum": [
+            "True",
+            "False"
+          ]
+        },
+        "CHECK_SPATIAL_CONSISTENCY": {
+          "type": "string",
+          "enum": [
+            "True",
+            "False"
+          ]
+        },
+        "CHECK_PHYSICAL_PLAUSIBILITY": {
+          "type": "string",
+          "enum": [
+            "True",
+            "False"
+          ]
+        },
+        "ADDITIONAL_FILES": {
+          "type": "array"
+        }
+      }
+    },
+    "DQC_FULL": {
+      "type": "object",
+      "properties": {
+        "FILE": {
+          "type": "string",
+          "default": "templates/dqc.sh"
+        },
+        "WALLCLOCK": {
+          "type": "string"
+        },
+        "NODES": {
+          "type": "integer"
+        },
+        "PARTITION": {
+          "type": "string",
+          "default": "%CURRENT_APP_PARTITION%"
+        },
+        "PLATFORM": {
+          "type": "string"
+        },
+        "PROCESSORS": {
+          "type": "integer"
+        },
+        "TASKS": {
+          "type": "integer"
+        },
+        "THREADS": {
+          "type": "integer"
+        },
+        "RUNNING": {
+          "type": "string",
+          "enum": [
+            "chunk"
+          ]
+        },
+        "CHECK": {
+          "type": "string",
+          "enum": [
+            "on_submission"
+          ]
+        },
+        "NAME": {
+          "type": "string"
+        },
+        "DEPENDENCIES": {
+          "type": "object",
+          "properties": {
+            "DQC_BASIC": {
+              "type": "object"
+            }
+          }
+        },
+        "CHECK_STANDARD_COMPLIANCE": {
+          "type": "string",
+          "enum": [
+            "True",
+            "False"
+          ]
+        },
+        "CHECK_SPATIAL_COMPLETENESS": {
+          "type": "string",
+          "enum": [
+            "True",
+            "False"
+          ]
+        },
+        "CHECK_SPATIAL_CONSISTENCY": {
+          "type": "string",
+          "enum": [
+            "True",
+            "False"
+          ]
+        },
+        "CHECK_PHYSICAL_PLAUSIBILITY": {
+          "type": "string",
+          "enum": [
+            "True",
+            "False"
+          ]
+        },
+        "ADDITIONAL_FILES": {
+          "type": "array"
+        }
+      }
+    },
+    "LRA_GENERATOR": {
+      "DEPENDENCIES": {
+        "type": "object",
+        "properties": {
+          "SIM": {
+            "type": "object"
+          },
+          "DQC_BASIC": {
+            "type": "object"
+          }
+        }
+      },
+      "FILE": {
+        "type": "string",
+        "default": "templates/aqua/lra_generator.sh"
+      },
+      "NODES": {
+        "type": "integer",
+        "default": 1
+      },
+      "PROCESSORS": {
+        "type": "string",
+        "default": "%CURRENT_PROCESSORS_PER_NODE%"
+      },
+      "PARTITION": {
+        "type": "string",
+        "default": "%CURRENT_APP_PARTITION%"
+      },
+      "TASKS": {
+        "type": "integer",
+        "default": 0
+      },
+      "THREADS": {
+        "type": "integer",
+        "default": 1
+      },
+      "PLATFORM": {
+        "type": "string",
+        "enum": ["LUMI", "MARENOSTRUM5"]
+      },
+      "EXCLUSIVE": {
+        "type": "string",
+        "enum": ["True", "False"]
+      },
+      "RUNNING": {
+        "type": "string",
+        "default": "chunk"
+      },
+      "WALLCLOCK": {
+        "type": "string"
+      },
+      "FREQUENCY": {
+        "type": "integer",
+        "default": 1
+      },
+      "CHECK": {
+        "type": "string",
+        "default": "on_submission"
+      },
+      "ADDITIONAL_FILES": {
+        "type": "array",
+        "default": ["templates/aqua/only_lra.yaml"]
+      }
+    },
+    "AQUA_ANALYSIS": {
+      "type": "object",
+      "properties": {
+        "DEPENDENCIES": {
+          "type": "object",
+          "properties": {
+            "LRA_GENERATOR": {
+              "type": "object"
+            }
+          }
+        },
+        "FILE": {
+          "type": "string",
+          "default": "templates/aqua/aqua_analysis.sh"
+        },
+        "NODES": {
+          "type": "integer",
+          "default": 1
+        },
+        "PROCESSORS": {
+          "type": "string",
+          "default": "%CURRENT_PROCESSORS_PER_NODE%"
+        },
+        "TASKS": {
+          "type": "integer",
+          "default": 0
+        },
+        "THREADS": {
+          "type": "integer",
+          "default": 1
+        },
+        "PARTITION": {
+          "type": "string",
+          "default": "%CURRENT_APP_PARTITION%"
+        },
+        "PLATFORM": {
+          "type": "string",
+          "enum": ["LUMI", "MARENOSTRUM5"]
+        },
+        "EXCLUSIVE": {
+          "type": "string",
+          "enum": ["True", "False"]
+        },
+        "RUNNING": {
+          "type": "string",
+          "default": "chunk"
+        },
+        "WALLCLOCK": {
+          "type": "string"
+        },
+        "FREQUENCY": {
+          "type": "integer",
+          "default": 1
+        },
+        "CHECK": {
+          "type": "string",
+          "default": "on_submission"
+        },
+        "ADDITIONAL_FILES": {
+          "type": "array"
+        }
+      }
+    },
+    "AQUA_PUSH": {
+      "type": "object",
+      "properties": {
+        "DEPENDENCIES": {
+          "type": "object",
+          "properties": {
+            "AQUA_ANALYSIS": {
+              "type": "object"
+            }
+          }
+        },
+        "FILE": {
+          "type": "string",
+          "default": "templates/aqua/aqua_push.sh"
+        },
+        "PLATFORM": {
+          "type": "string",
+          "default": "local"
+        },
+        "RUNNING": {
+          "type": "string",
+          "default": "chunk"
+        },
+        "WALLCLOCK": {
+          "type": "string"
+        },
+        "FREQUENCY": {
+          "type": "integer",
+          "default": 1
+        },
+        "ADDITIONAL_FILES": {
+          "type": "array"
+        }
+      }
+    },
+    "CLEAN": {
+      "type": "object",
+      "properties": {
+        "FILE": {
+          "type": "string",
+          "default": "templates/clean.sh"
+        },
+        "WALLCLOCK": {
+          "type": "string"
+        },
+        "NODES": {
+          "type": "integer"
+        },
+        "PLATFORM": {
+          "type": "string"
+        },
+        "TASKS": {
+          "type": "integer"
+        },
+        "THREADS": {
+          "type": "integer"
+        },
+        "RUNNING": {
+          "type": "string",
+          "enum": [
+            "chunk"
+          ]
+        },
+        "CHECK": {
+          "type": "string",
+          "enum": [
+            "on_submission"
+          ]
+        },
+        "ADDITIONAL_FILES": {
+          "type": "array"
+        },
+        "DEPENDENCIES": {
+          "type": "object",
+          "properties": {
+            "SIM": {
+              "type": "object"
+            }
+          }
+        }
+      }
+    },
+    "APP_DATA": {
+      "type": "object",
+      "properties": {
+        "PLATFORM": {
+          "type": "string",
+          "default": "%DEFAULT.HPCARCH%-login"
+        },
+        "DEPENDENCIES": {
+          "type": "object"
+        },
+        "FILE": {
+          "type": "string"
+        },
+        "ADDITIONAL_FILES": {
+          "type": "array"
+        }
+      }
+    }
+  },
+  "required": ["LOCAL_SETUP", "REMOTE_SETUP", "SYNCHRONIZE"]
+}
