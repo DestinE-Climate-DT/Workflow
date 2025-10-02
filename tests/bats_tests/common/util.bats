@@ -1,0 +1,206 @@
+# Tests for common/util.sh
+
+## setup
+
+setup() {
+	bats_load_library bats-support
+	bats_load_library bats-assert
+
+	# get the containing directory of this file
+	# use $BATS_TEST_FILENAME instead of ${BASH_SOURCE[0]} or $0,
+	# as those will point to the bats executable's location or the preprocessed file respectively
+	DIR="$(cd "$(dirname "$BATS_TEST_FILENAME")" >/dev/null 2>&1 && pwd)"
+	# source file under test
+	source "${DIR}/../../../lib/common/util.sh"
+
+	export KEEP_EVERY=12
+	export KEEP_LAST=3
+
+}
+
+## pre-configuration-ifs
+
+@test "by default pre-configuration-ifs returns true" {
+	run pre-configuration-ifs
+	assert_success
+}
+
+## pre-configuration-icon
+
+@test "by default pre-configuration-icon returns true" {
+	run pre-configuration-icon
+	assert_success
+}
+
+## load_variables_ifs
+
+@test "load_variables_ifs exported values" {
+	assert [ -z "${nodes}" ]
+	assert [ -z "${mpi}" ]
+	assert [ -z "${omp}" ]
+	assert [ -z "${jobid}" ]
+	assert [ -z "${jobname}" ]
+	SLURM_JOB_NUM_NODES="1"
+	SLURM_NPROCS="2"
+	SLURM_CPUS_PER_TASK="3"
+	SLURM_JOB_ID="4"
+	SLURM_JOB_NAME="job.4"
+	load_variables_ifs
+	assert_equal "${nodes}" "1"
+	assert_equal "${mpi}" "2"
+	assert_equal "${omp}" "3"
+	assert_equal "${jobid}" "4"
+	assert_equal "${jobname}" "job.4"
+}
+
+
+@test "get_member_number returns the member number" {
+	MEMBER_LIST="fc0 fc1 fc2"
+	MEMBER="fc1"
+	MEMBER_NUMBER=$(get_member_number "${MEMBER_LIST}" ${MEMBER})
+	assert_equal "${MEMBER_NUMBER}" "2"
+}
+
+@test "get_arch_compilation_flags returns the compilation flags in CPU case" {
+	PU="cpu"
+	ARCH_CPU="cpu/default"
+	ARCH_GPU="gpu/default"
+	ADDITIONAL_COMPILATION_FLAGS_CPU="--cpu-flag"
+	ADDITIONAL_COMPILATION_FLAGS_GPU="--gpu-flag"
+	get_arch_compilation_flags $PU $ARCH_CPU $ARCH_GPU $ADDITIONAL_COMPILATION_FLAGS_CPU $ADDITIONAL_COMPILATION_FLAGS_GPU
+	assert_equal "${add_flags}" "${ADDITIONAL_COMPILATION_FLAGS_CPU}"
+	assert_equal "${arch}" "${ARCH_CPU}"
+}
+
+@test "get_arch_compilation_flags returns the compilation flags in GPU case" {
+	PU="gpu"
+	ARCH_CPU="cpu/default"
+	ARCH_GPU="gpu/default"
+	ADDITIONAL_COMPILATION_FLAGS_CPU="--cpu-flag"
+	ADDITIONAL_COMPILATION_FLAGS_GPU="--gpu-flag"
+	get_arch_compilation_flags $PU $ARCH_CPU $ARCH_GPU $ADDITIONAL_COMPILATION_FLAGS_CPU $ADDITIONAL_COMPILATION_FLAGS_GPU
+	assert_equal "${add_flags}" "${ADDITIONAL_COMPILATION_FLAGS_GPU}"
+	assert_equal "${arch}" "${ARCH_GPU}"
+}
+
+@test "enable_process_monthly returns true if the first day of the month is in the chunk" {
+	START_DATE="20230101"
+	SPLIT_END_DATE="20230131"
+	RESULT=$(enable_process_monthly "$START_DATE" "$SPLIT_END_DATE")
+	assert_equal "${RESULT}" "true"
+}
+
+@test "enable_process_monthly returns false if the first day of the month is not in the chunk" {
+	START_DATE="20230102"
+	SPLIT_END_DATE="20230131"
+	RESULT=$(enable_process_monthly "$START_DATE" "$SPLIT_END_DATE")
+	assert_equal "${RESULT}" "false"
+}
+
+@test "matching experimentversionnumber and BRIDGE_EXPVER succeeds" {
+    run check_expver_match "true" "experimentversionnumber=0001" "0001" "a001"
+    assert_success
+    assert_output --partial "experimentversionnumber matches BRIDGE_EXPVER"
+}
+
+@test "non-matching experimentversionnumber and BRIDGE_EXPVER fails" {
+    run check_expver_match "true" "experimentversionnumber=0001" "a001" "a001"
+    assert_failure
+    assert_output --partial "Mismatch: experimentversionnumber=0001, BRIDGE_EXPVER=a001"
+}
+
+@test "missing experimentversionnumber fails" {
+    run check_expver_match "true" "subcenter=23" "0001" "a001"
+    assert_failure
+    assert_output --partial "experimentversionnumber field is not modified and BRIDGE_EXPVER does not match EXPVER."
+}
+
+@test "missing experimentversionnumber with matching expvers succeds" {
+    run check_expver_match "true" "subcenter=23" "a001" "a001"
+    assert_success
+    assert_output --partial "The transfer job is modifing the metadata, but the experimentversionnumber field is not present."
+}
+
+@test "modify metadata in transfer not true and BRIDGE_EXPVER matches EXPVER succeeds" {
+    run check_expver_match "false" "experimentversionnumber=0001" "a001" "a001"
+    assert_success
+    assert_output --partial "MODIFY_METADATA_TRANSFER is not true, but the BRIDGE_EXPVER matches the experiment EXPVER"
+}
+
+@test "modify metadata in  transfer not true and BRIDGE_EXPVER does not match EXPVER fails" {
+    run check_expver_match "false" "experimentversionnumber=0001" "0001" "a001"
+    assert_failure
+    assert_output --partial "MODIFY_METADATA_TRANSFER is not true, but the BRIDGE_EXPVER does not match the experiment EXPVER."
+}
+
+@test test_setup_additional_binds {
+    CLEAN_DIR="${ROOTDIR}/clean_requests/"
+    mkdir -p ${CLEAN_DIR}
+    ADDITIONAL_BINDINGS=("${CLEAN_DIR}")
+
+    expected_output="  --bind ${CLEAN_DIR}"
+    output=$(setup_additional_binds "${ADDITIONAL_BINDINGS[@]}")
+    assert_output "$expected_output"
+}
+
+@test "determine_should_backup CHUNK is 1" {
+    export CHUNK=1
+    run determine_should_backup
+    assert_success "true"
+}
+
+@test "determine_should_backup CHUNK is 13" {
+    export CHUNK=13
+    export KEEP_EVERY=12
+    run determine_should_backup
+    assert_success "true"
+}
+
+@test "determine_should_backup CHUNK is 5" {
+    export CHUNK=5
+    export KEEP_EVERY=12
+    run determine_should_backup
+    assert_success "false"
+}
+
+@test "determine_should_backup KEEP_EVERY unset" {
+    export CHUNK=5
+    unset KEEP_EVERY
+    run determine_should_backup
+    assert_success "false"
+}
+
+@test "test_delete_restarts nothing to delete" {
+    export KEEP_EVERY=12
+    RESTART_DIR="${ROOTDIR}/restarts"
+    RESTARTS="1 2 3 4"
+
+    for dir in $RESTARTS; do
+        mkdir -p "$RESTART_DIR/$dir"
+    done
+
+    run delete_restarts
+    assert_success "Not enough restarts to delete anything."
+}
+
+@test "test_delete_restarts more numbers" {
+    export KEEP_EVERY=12
+    RESTART_DIR="${ROOTDIR}/restarts"
+    # should keep the 1st and multiples of 12 + 1
+    RESTARTS="1 13 25 35 37"
+    mkdir -p "$RESTART_DIR"
+
+    for dir in $RESTARTS; do
+        mkdir -p "$RESTART_DIR/$dir"
+    done
+
+    run delete_restarts
+    assert_output --partial "Deleting restart 35."
+
+    # assert 27 was deleted and the rest were kept
+    [ ! -d "$RESTART_DIR/35" ]
+    [ -d "$RESTART_DIR/1" ]
+    [ -d "$RESTART_DIR/13" ]
+    [ -d "$RESTART_DIR/25" ]
+    [ -d "$RESTART_DIR/37" ]
+}

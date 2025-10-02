@@ -1,0 +1,30 @@
+DATA:
+  1:
+    GSVREQUEST:
+      # From <expid>/conf/main.yml:
+      expver: "%REQUEST.EXPVER%"
+      # From user input <expid>/conf/request.yml:
+      activity: "%REQUEST.ACTIVITY%"
+      resolution: "%REQUEST.RESOLUTION%"
+      generation: "%REQUEST.GENERATION%"
+      realization: "%REQUEST.REALIZATION%"
+      experiment: "%REQUEST.EXPERIMENT%"
+      model: "%REQUEST.MODEL%"
+      # Hardcoded parameters:
+      dataset: climate-dt
+      class: d1
+      type: fc
+      stream: clte
+      levtype: "%DATA_1.GSVREQUEST.LEVTYPE%" # please fill this
+      date: "%SPLIT_START_DATE%"
+      time: "%DATA_1.GSVREQUEST.TIME%" # please fill this
+      param: "%DATA_1.GSVREQUEST.PARAM%" # please fill this
+      grid: "%DATA.GRID%" #fill this if needed. 0.05 is 5km
+      method: "%DATA.METHOD%"
+    OPAREQUEST:
+      # Hardcoded parameters
+      variable: "%DATA_1.GSVREQUEST.PARAM%" # please fill this
+      stat: "%DATA_1.OPAREQUEST.STAT%" # please fill this
+      stat_freq: "%DATA_1.OPAREQUEST.STAT_FREQ%" # please fill this
+      output_freq: "%DATA_1.OPAREQUEST.OUTPUT_FREQ%" # please fill this
+      time_step: "%DATA_1.OPAREQUEST.TIME_STEP%" # please fill this

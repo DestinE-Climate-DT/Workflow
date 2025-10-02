@@ -1,0 +1,20 @@
+RUN:
+  WORKFLOW: model
+  ENVIRONMENT: intel
+  PROCESSOR_UNIT: cpu
+  TYPE: production
+MODEL:
+  NAME: ifs-nemo
+  SIMULATION: SSP370-ifs-nemo
+  GRID_ATM: tco2559l137
+  GRID_OCE: eORCA1_Z75
+  VERSION: ''
+CONFIGURATION:
+  ADDITIONAL_JOBS:
+    TRANSFER: "True"
+    BACKUP: "True"
+    WIPE: "True"
+    MEMORY_CHECKER: "True"
+    DQC: "True"
+    CLEAN: "True"
+    AQUA: "True"

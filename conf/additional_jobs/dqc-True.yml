@@ -1,0 +1,24 @@
+JOBS:
+  DQC:
+    FILE: templates/dqc.sh
+    FOR:
+      NAME: ["BASIC", "FULL"]
+      DEPENDENCIES: ["REMOTE_SETUP SIM FIX_CONSTANT_VARIABLES", "DQC_BASIC"]
+      # Activates/deactivates checkers
+      CHECK_STANDARD_COMPLIANCE: ["False", "True"]
+      CHECK_SPATIAL_COMPLETENESS: ["True", "True"]
+      CHECK_SPATIAL_CONSISTENCY: ["True", "True"]
+      CHECK_PHYSICAL_PLAUSIBILITY: ["True", "True"]
+      CHECK_NEGATIVE_SPACE: ["False", "True"]
+    WALLCLOCK: "%CONFIGURATION.DQC_WALLCLOCK%"
+    NODES: 1
+    PARTITION: '%CURRENT_APP_PARTITION%'
+    PLATFORM: '%DEFAULT.HPCARCH%'
+    PROCESSORS: 1
+    TASKS: 1
+    THREADS: 16
+    RUNNING: chunk
+    CHECK: on_submission
+    NOTIFY_ON: FAILED
+CONFIGURATION:
+  GENERATE_PROFILES: "True"

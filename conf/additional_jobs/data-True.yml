@@ -1,0 +1,29 @@
+JOBS:
+  OPA_DATA:
+    DEPENDENCIES:
+      DN:
+        SPLITS_FROM:
+          ALL:
+            SPLITS_TO: '[1:auto]*\1'
+      OPA_DATA:
+        SPLITS_FROM:
+          ALL:
+            SPLITS_TO: previous
+      OPA_DATA-1: {}
+    FILE: "templates/opa.sh,conf/applications/request/request_DATA.yml"
+    PLATFORM: '%DEFAULT.HPCARCH%'
+    PARTITION: '%CURRENT_APP_PARTITION%'
+    RUNNING: chunk
+    NODES: 1
+    PROCESSORS: '%CURRENT_OPA_PROCESSORS%'
+    TASKS: 1
+    THREADS: 1
+    CHECK: on_submission
+    CUSTOM_DIRECTIVES: '%CURRENT_OPA_CUSTOM_DIRECTIVES%'
+    EXCLUSIVE: '%CURRENT_OPA_EXCLUSIVE%'
+    RETRIALS: '0'
+    WALLCLOCK: 00:30
+    NOTIFY_ON:
+      - FAILED
+    SPLITS: auto
+    ADDITIONAL_FILES: []

@@ -1,0 +1,65 @@
+repos:
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v4.6.0
+    hooks:
+      - id: trailing-whitespace
+        exclude: ^conf/jobs_apps.yml
+      - id: end-of-file-fixer
+        exclude: ^conf/jobs_apps.yml
+      - id: check-yaml
+        exclude: ^templates/aqua/only_lra\.yaml$
+      - id: check-added-large-files
+        exclude: ^conf/jobs_apps.yml
+  - repo: https://github.com/adrienverge/yamllint.git
+    rev: v1.37.1
+    hooks:
+      - id: yamllint
+        args: [-c, .yamllint]
+  - repo: https://github.com/google/yamlfmt
+    rev: v0.17.0
+    hooks:
+      - id: yamlfmt
+        exclude: ^templates/aqua/only_lra\.yaml$
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: v0.13.0
+    hooks:
+      - id: ruff
+        args: [--fix, lib, utils, runscripts]
+      - id: ruff-format
+        args: [lib, utils, runscripts]
+  - repo: local
+    hooks:
+      - id: update_template_scripts
+        name: update_template_scripts
+        entry: utils/update_template_scripts.py
+        language: script
+        types: [shell]
+        pass_filenames: false
+        exclude: ^conf/jobs_apps.yml
+      - id: install_local_utils
+        name: install_local_utils
+        entry: pip install config_logger
+        language: system
+        pass_filenames: false
+        always_run: true
+      - id: templates_numeration
+        name: templates_numeration
+        entry: utils/templates_numeration.py --fix
+        language: script
+        types: [shell]
+        pass_filenames: false
+        exclude: ^conf/jobs_apps.yml
+      - id: shellcheck
+        name: shellcheck
+        entry: shellcheck
+        language: system
+        types: [shell]
+        args: [--severity, error]
+      - id: shfmt
+        name: shfmt
+        entry: shfmt
+        language: system
+        types: [shell]
+        args: [-i, "4", -d]
+        exclude: \.bats$
+exclude: runscripts/FDB/schema
