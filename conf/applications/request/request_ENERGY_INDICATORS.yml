@@ -1,0 +1,265 @@
+ENERGY_INDICATORS:
+  1:
+    GSVREQUEST: #raw data
+      # From <expid>/conf/main.yml:
+      expver: "%REQUEST.EXPVER%"
+      # From user input <expid>/conf/request.yml:
+      activity: "%REQUEST.ACTIVITY%"
+      resolution: "%REQUEST.RESOLUTION%"
+      generation: "%REQUEST.GENERATION%"
+      realization: "%REQUEST.REALIZATION%"
+      experiment: "%REQUEST.EXPERIMENT%"
+      model: "%REQUEST.MODEL%"
+      # Hardcoded parameters:
+      dataset: climate-dt
+      class: d1
+      type: fc
+      stream: clte
+      levtype: "hl"
+      levelist: 100
+      date: "%SPLIT_START_DATE%"
+      time: "0000/to/2300/by/0100"
+      param: "v"
+      grid: "%ENERGY_INDICATORS.GRID%"
+      method: "%ENERGY_INDICATORS.METHOD%"
+    OPAREQUEST:
+      # Hardcoded parameters
+      variable: "v"
+      stat: "raw"
+      stat_freq: "hourly"
+      output_freq: "daily"
+      time_step: 60 # in minutes
+  2:
+    GSVREQUEST: #raw data
+      # From <expid>/conf/main.yml:
+      expver: "%REQUEST.EXPVER%"
+      # From user input <expid>/conf/request.yml:
+      activity: "%REQUEST.ACTIVITY%"
+      resolution: "%REQUEST.RESOLUTION%"
+      generation: "%REQUEST.GENERATION%"
+      realization: "%REQUEST.REALIZATION%"
+      experiment: "%REQUEST.EXPERIMENT%"
+      model: "%REQUEST.MODEL%"
+      # Hardcoded parameters:
+      dataset: climate-dt
+      class: d1
+      type: fc
+      stream: clte
+      levtype: "hl"
+      levelist: 100
+      date: "%SPLIT_START_DATE%"
+      time: "0000/to/2300/by/0100"
+      param: "u"
+      grid: "%ENERGY_INDICATORS.GRID%"
+      method: "%ENERGY_INDICATORS.METHOD%"
+    OPAREQUEST:
+      # Hardcoded parameters
+      variable: "u"
+      stat: "raw"
+      stat_freq: "hourly"
+      output_freq: "daily"
+      time_step: 60 # in minutes
+  3:
+    GSVREQUEST: #raw data
+      # From <expid>/conf/main.yml:
+      expver: "%REQUEST.EXPVER%"
+      # From user input <expid>/conf/request.yml:
+      activity: "%REQUEST.ACTIVITY%"
+      resolution: "%REQUEST.RESOLUTION%"
+      generation: "%REQUEST.GENERATION%"
+      realization: "%REQUEST.REALIZATION%"
+      experiment: "%REQUEST.EXPERIMENT%"
+      model: "%REQUEST.MODEL%"
+      # Hardcoded parameters:
+      dataset: climate-dt
+      class: d1
+      type: fc
+      stream: clte
+      levtype: "sfc"
+      date: "%SPLIT_START_DATE%"
+      time: "0000/to/2300/by/0100"
+      param: "2t"
+      grid: "%ENERGY_INDICATORS.GRID%"
+      method: "%ENERGY_INDICATORS.METHOD%"
+    OPAREQUEST:
+      # Hardcoded parameters
+      variable: "2t"
+      stat: "min"
+      stat_freq: "daily"
+      output_freq: "daily"
+      time_step: 60 # in minutes
+  4:
+    GSVREQUEST:
+      # From <expid>/conf/main.yml:
+      expver: "%REQUEST.EXPVER%"
+      # From user input <expid>/conf/request.yml:
+      activity: "%REQUEST.ACTIVITY%"
+      resolution: "%REQUEST.RESOLUTION%"
+      generation: "%REQUEST.GENERATION%"
+      realization: "%REQUEST.REALIZATION%"
+      experiment: "%REQUEST.EXPERIMENT%"
+      model: "%REQUEST.MODEL%"
+      # Hardcoded parameters:
+      dataset: climate-dt
+      class: d1
+      type: fc
+      stream: clte
+      levtype: "sfc"
+      date: "%SPLIT_START_DATE%"
+      time: "0000/to/2300/by/0100"
+      param: "2t"
+      grid: "%ENERGY_INDICATORS.GRID%"
+      method: "%ENERGY_INDICATORS.METHOD%"
+    OPAREQUEST:
+      # Hardcoded parameters
+      variable: "2t"
+      stat: "max"
+      stat_freq: "daily"
+      output_freq: "daily"
+      time_step: 60 # in minutes
+  5:
+    GSVREQUEST:
+      # From <expid>/conf/main.yml:
+      expver: "%REQUEST.EXPVER%"
+      # From user input <expid>/conf/request.yml:
+      activity: "%REQUEST.ACTIVITY%"
+      resolution: "%REQUEST.RESOLUTION%"
+      generation: "%REQUEST.GENERATION%"
+      realization: "%REQUEST.REALIZATION%"
+      experiment: "%REQUEST.EXPERIMENT%"
+      model: "%REQUEST.MODEL%"
+      # Hardcoded parameters:
+      dataset: climate-dt
+      class: d1
+      type: fc
+      stream: clte
+      levtype: "sfc"
+      date: "%SPLIT_START_DATE%"
+      time: "0000/to/2300/by/0100"
+      param: "2t"
+      grid: "%ENERGY_INDICATORS.GRID%"
+      method: "%ENERGY_INDICATORS.METHOD%"
+    OPAREQUEST:
+      # Hardcoded parameters
+      variable: "2t"
+      stat: "raw"
+      stat_freq: "daily"
+      output_freq: "daily"
+      time_step: 60 # in minutes
+  6:
+    GSVREQUEST:
+      # From <expid>/conf/main.yml:
+      expver: "%REQUEST.EXPVER%"
+      # From user input <expid>/conf/request.yml:
+      activity: "%REQUEST.ACTIVITY%"
+      resolution: "%REQUEST.RESOLUTION%"
+      generation: "%REQUEST.GENERATION%"
+      realization: "%REQUEST.REALIZATION%"
+      experiment: "%REQUEST.EXPERIMENT%"
+      model: "%REQUEST.MODEL%"
+      # Hardcoded parameters:
+      dataset: climate-dt
+      class: d1
+      type: fc
+      stream: clte
+      levtype: "sfc"
+      date: "%SPLIT_START_DATE%"
+      time: "0000/to/2300/by/0100"
+      param: "2t"
+      grid: "%ENERGY_INDICATORS.GRID%"
+      method: "%ENERGY_INDICATORS.METHOD%"
+    OPAREQUEST:
+      # Hardcoded parameters
+      variable: "2t"
+      stat: "mean"
+      stat_freq: "daily"
+      output_freq: "daily"
+      time_step: 60 # in minutes
+  7:
+    GSVREQUEST:
+      # From <expid>/conf/main.yml:
+      expver: "%REQUEST.EXPVER%"
+      # From user input <expid>/conf/request.yml:
+      activity: "%REQUEST.ACTIVITY%"
+      resolution: "%REQUEST.RESOLUTION%"
+      generation: "%REQUEST.GENERATION%"
+      realization: "%REQUEST.REALIZATION%"
+      experiment: "%REQUEST.EXPERIMENT%"
+      model: "%REQUEST.MODEL%"
+      # Hardcoded parameters:
+      dataset: climate-dt
+      class: d1
+      type: fc
+      stream: clte
+      levtype: "hl"
+      levelist: 100
+      date: "%SPLIT_START_DATE%"
+      time: "0000/to/2300/by/0100"
+      param: "ws"
+      grid: "%ENERGY_INDICATORS.GRID%"
+      method: "%ENERGY_INDICATORS.METHOD%"
+    OPAREQUEST:
+      # Hardcoded parameters
+      variable: "ws"
+      stat: "max"
+      stat_freq: "daily"
+      output_freq: "monthly"
+      time_step: 60 # in minutes
+  8:
+    GSVREQUEST:
+      # From <expid>/conf/main.yml:
+      expver: "%REQUEST.EXPVER%"
+      # From user input <expid>/conf/request.yml:
+      activity: "%REQUEST.ACTIVITY%"
+      resolution: "%REQUEST.RESOLUTION%"
+      generation: "%REQUEST.GENERATION%"
+      realization: "%REQUEST.REALIZATION%"
+      experiment: "%REQUEST.EXPERIMENT%"
+      model: "%REQUEST.MODEL%"
+      # Hardcoded parameters:
+      dataset: climate-dt
+      class: d1
+      type: fc
+      stream: clte
+      levtype: "sfc"
+      date: "%SPLIT_START_DATE%"
+      time: "0000/to/2300/by/0100"
+      param: "avg_sdswrf"
+      grid: "%ENERGY_INDICATORS.GRID%"
+      method: "%ENERGY_INDICATORS.METHOD%"
+    OPAREQUEST:
+      # Hardcoded parameters
+      variable: "avg_sdswrf"
+      stat: "raw"
+      stat_freq: "daily"
+      output_freq: "daily"
+      time_step: 60 # in minutes
+  9:
+    GSVREQUEST:
+      # From <expid>/conf/main.yml:
+      expver: "%REQUEST.EXPVER%"
+      # From user input <expid>/conf/request.yml:
+      activity: "%REQUEST.ACTIVITY%"
+      resolution: "%REQUEST.RESOLUTION%"
+      generation: "%REQUEST.GENERATION%"
+      realization: "%REQUEST.REALIZATION%"
+      experiment: "%REQUEST.EXPERIMENT%"
+      model: "%REQUEST.MODEL%"
+      # Hardcoded parameters:
+      dataset: climate-dt
+      class: d1
+      type: fc
+      stream: clte
+      levtype: "sfc"
+      date: "%SPLIT_START_DATE%"
+      time: "0000/to/2300/by/0100"
+      param: "10si"
+      grid: "%ENERGY_INDICATORS.GRID%"
+      method: "%ENERGY_INDICATORS.METHOD%"
+    OPAREQUEST:
+      # Hardcoded parameters
+      variable: "10si"
+      stat: "raw"
+      stat_freq: "daily"
+      output_freq: "daily"
+      time_step: 60 # in minutes

@@ -1,0 +1,14 @@
+JOBS:
+  CLEAN:
+    FILE: templates/clean.sh
+    PLATFORM: "%DEFAULT.HPCARCH%"
+    DEPENDENCIES: REMOTE_SETUP SIM
+    RUNNING: chunk
+    WALLCLOCK: '00:30'
+    TASKS: 1
+    THREADS: 1
+    NODES: 1
+    CHECK: on_submission
+    NOTIFY_ON: FAILED
+CONFIGURATION:
+  GENERATE_PROFILES: "True"
