@@ -1,0 +1,15 @@
+[submodule "dvc-cache-de340"]
+	path = dvc-cache-de340
+	url = https://earth.bsc.es/gitlab/kkeller/dvc-cache-de340.git
+[submodule "ifs-nemo"]
+	path = ifs-nemo
+	url = ssh://git@git.ecmwf.int/de/ifs-bundle.git
+[submodule "catalog"]
+	path = catalog
+	url = git@github.com:DestinE-Climate-DT/Climate-DT-catalog.git
+[submodule "nemo"]
+	path = nemo
+	url = https://earth.bsc.es/gitlab/ces/hpc-for-es-team/nemo-build.git
+[submodule "data-portfolio"]
+	path = data-portfolio
+	url = https://earth.bsc.es/gitlab/digital-twins/de_340-2/data-portfolio.git

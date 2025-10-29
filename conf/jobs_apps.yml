@@ -1,0 +1,40 @@
+JOBS:
+  LOCAL_SETUP:
+    FILE: templates/local_setup.sh
+    PLATFORM: LOCAL
+    RUNNING: once
+    CHECK: on_submission
+    NOTIFY_ON: FAILED
+  SYNCHRONIZE:
+    FILE: templates/synchronize.sh
+    PLATFORM: LOCAL
+    DEPENDENCIES: LOCAL_SETUP
+    RUNNING: once
+    CHECK: on_submission
+    NOTIFY_ON: FAILED
+  REMOTE_SETUP:
+    FILE: templates/remote_setup.sh,templates/fdb/confignative.yaml,templates/fdb/configlatlon.yaml,templates/fdb/config.yaml
+    # Compilation needs to be done in the login node for being able to clone packages
+    PLATFORM: "%DEFAULT.HPCARCH%-login"
+    DEPENDENCIES: SYNCHRONIZE
+    RUNNING: once
+    WALLCLOCK: '02:00'
+    CHECK: on_submission
+    NOTIFY_ON: FAILED
+  DN:
+    FILE: "templates/dn.sh,conf/applications/request/request_energy_indicators.yml,conf/applications/request/request_energy_offshore.yml,conf/applications/request/request_hydroland.yml,conf/applications/request/request_hydromet.yml,conf/applications/request/request_wildfires_fwi.yml,conf/applications/request/request_wildfires_wise.yml,conf/applications/request/request_obsall.yml,conf/applications/request/request_data.yml"
+    DEPENDENCIES:
+      REMOTE_SETUP:
+      DN:
+        SPLITS_FROM:
+          'all':
+            SPLITS_TO: 'previous'
+      DN-1:
+    RUNNING: chunk
+    WALLCLOCK: '02:00'
+    PLATFORM: "%DEFAULT.HPCARCH%-login"
+    SPLITS: "auto"
+    TOTALJOBS: 1
+    CHECK: on_submission
+    RETRIALS: 1
+    NOTIFY_ON: FAILED
