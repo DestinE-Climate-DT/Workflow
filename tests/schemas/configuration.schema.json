@@ -1,0 +1,72 @@
+{
+  "$id": "schema:workflow/configuration",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "title": "Configuration section",
+  "description": "Schema for the configuration section of the workflow",
+  "properties": {
+    "ADDITIONAL_JOBS": {
+      "type": "object",
+      "properties": {
+          "BACKUP": {
+              "type": "string",
+              "enum": ["False", "True"],
+              "decription": "Activate the backup job",
+              "$comment": "has to be string -.-"
+          },
+          "CLEAN": {
+              "type": "string",
+              "enum": ["False", "True"],
+              "decription": "Activate the clean job",
+              "$comment": "has to be string -.-"
+          },
+          "DQC": {
+              "type": "string",
+              "enum": ["False", "True"],
+              "decription": "Activate the Data Quality Checker job",
+              "$comment": "has to be string -.-"
+          },
+          "MEMORY_CHECKER": {
+              "type": "string",
+              "enum": ["False", "True"],
+              "decription": "Activate the Memory Checker job",
+              "$comment": "has to be string -.-"
+          },
+          "TRANSFER": {
+              "type": "string",
+              "enum": ["False", "True"],
+              "decription": "Activate the transfer job",
+              "$comment": "has to be string -.-"
+          },
+          "WIPE": {
+              "type": "string",
+              "enum": ["False", "True"],
+              "decription": "Activate the wipe job",
+              "$comment": "has to be string -.-"
+            },
+           "AQUA": {
+              "type": "string",
+              "enum": ["False", "True"],
+              "decription": "Activate the AQUA job",
+              "$comment": "has to be string -.-"
+          }
+       }
+    },
+    "CONTAINER_DIR": {
+      "type": "string",
+      "description": "Path to the directory where the containers are stored."
+    },
+    "PROJECT_SCRATCH": {
+      "type": "string",
+      "description": "Path to the directory where the project's scratch is stored."
+    },
+    "LIBDIR": {
+      "type": "string",
+      "description": "Path to the directory where the lib directory is, inside the repo."
+    },
+    "SCRIPTDIR": {
+      "type": "string",
+      "description": "Path to the directory where the runscripts are stored."
+    }
+  }
+}

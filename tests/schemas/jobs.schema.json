@@ -1,0 +1,94 @@
+{
+  "$id": "schema:workflow/jobs",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Jobs",
+  "description": "Schema for the jobs section of the workflow",
+  "type": "object",
+  "properties": {
+    "LOCAL_SETUP": {
+      "type": "object",
+      "properties": {
+        "ADDITIONAL_FILES": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "CHECK": {
+          "type": "string"
+        },
+        "DEPENDENCIES": {
+          "type": "object"
+        },
+        "FILE": {
+          "type": "string"
+        },
+        "PLATFORM": {
+          "type": "string"
+        },
+        "RUNNING": {
+          "type": "string"
+        }
+      },
+      "required": ["FILE", "PLATFORM", "RUNNING"]
+    },
+    "REMOTE_SETUP": {
+      "type": "object",
+      "properties": {
+        "ADDITIONAL_FILES": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "CHECK": {
+          "type": "string"
+        },
+        "DEPENDENCIES": {
+          "type": "object"
+        },
+        "FILE": {
+          "type": "string"
+        },
+        "PLATFORM": {
+          "type": "string"
+        },
+        "RUNNING": {
+          "type": "string"
+        },
+        "WALLCLOCK": {
+          "type": "string"
+        }
+      },
+      "required": ["FILE", "PLATFORM", "RUNNING", "WALLCLOCK"]
+    },
+    "SYNCHRONIZE": {
+      "type": "object",
+      "properties": {
+        "ADDITIONAL_FILES": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "CHECK": {
+          "type": "string"
+        },
+        "DEPENDENCIES": {
+          "type": "object"
+        },
+        "FILE": {
+          "type": "string"
+        },
+        "PLATFORM": {
+          "type": "string"
+        },
+        "RUNNING": {
+          "type": "string"
+        }
+      },
+      "required": ["FILE", "PLATFORM", "RUNNING"]
+    }
+  },
+  "required": ["LOCAL_SETUP", "REMOTE_SETUP", "SYNCHRONIZE"]
+}

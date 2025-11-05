@@ -1,0 +1,15 @@
+JOBS:
+  POSTPROC_ENERGY_ONSHORE:
+    DEPENDENCIES:
+      APP_ENERGY_ONSHORE:
+        SPLITS_FROM:
+          '0':
+            SPLITS_TO: '%JOBS.DN.SPLITS%'
+    RUNNING: chunk
+    PLATFORM: '%DEFAULT.HPCARCH%-login'
+    CHECK: on_submission
+    WALLCLOCK: 02:00
+    FILE: templates/postproc_app.sh
+    TASKS: 1
+    THREADS: 1
+    NODES: 1

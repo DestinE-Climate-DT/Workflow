@@ -1,0 +1,14 @@
+REQUEST:
+  MODEL: ICON
+# Env configuration for the ICON model
+PLATFORMS:
+  LUMI:
+    HDF5_USE_FILE_LOCKING: "FALSE"
+    FI_CXI_OPTIMIZED_MRS: "false"
+    FI_CXI_RX_MATCH_MODE: "hybrid"
+    FI_MR_CACHE_MONITOR: "memhooks"
+    MPICH_ALLREDUCE_NO_SMP: 1
+    MPICH_COLL_OPT_OFF: 1
+    PMI_SIGNAL_STARTUP_COMPLETION: 1
+    # Needed for the ICON cce16 version
+    MPICH_SMP_SINGLE_COPY_MODE: NONE

@@ -1,0 +1,14 @@
+EXP1:
+  CREATE:
+    DESCRIPTION: Testing ifs-nemo-dqc-simless
+    HPC: marenostrum5
+    GIT_AS_CONF: conf/bootstrap/
+    GIT_REPO: https://earth.bsc.es/gitlab/digital-twins/de_340/workflow
+    GIT_BRANCH: mock
+EXP2:
+  CREATE:
+    DESCRIPTION: Testing ifs-nemo-dqc-simless
+    HPC: lumi
+    GIT_AS_CONF: conf/bootstrap/
+    GIT_REPO: https://earth.bsc.es/gitlab/digital-twins/de_340/workflow
+    GIT_BRANCH: mock

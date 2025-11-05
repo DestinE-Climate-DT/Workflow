@@ -1,0 +1,83 @@
+JOBS:
+  APP:
+    CHECK: on_submission
+    DEPENDENCIES: OPA
+    FILE: templates/application.sh,templates/applications/aqua/only_lra.yaml
+    FOR:
+      DEPENDENCIES:
+        APP_URBAN:
+          SPLITS_FROM:
+            all:
+              SPLITS_TO: previous
+        OPA_URBAN_1:
+          SPLITS_FROM:
+            all:
+              SPLITS_TO: all
+      NAME: '%RUN.APP_NAMES%'
+      SPLITS: '1'
+    NODES: 1
+    PARTITION: '%CURRENT_APP_PARTITION%'
+    PLATFORM: '%DEFAULT.HPCARCH%'
+    PROCESSORS: 1
+    RUNNING: chunk
+    TASKS: 1
+    THREADS: 1
+    WALLCLOCK: 00:05
+  DN:
+    CHECK: on_submission
+    DEPENDENCIES:
+      DN:
+        SPLITS_FROM:
+          all:
+            SPLITS_TO: previous
+      SIM:
+        STATUS: RUNNING
+    FILE: templates/dn.sh,conf/mother_request.yml
+    PLATFORM: '%DEFAULT.HPCARCH%-login'
+    RUNNING: chunk
+    SPLITS: 31
+    TOTALJOBS: 1
+    WALLCLOCK: 08:00
+  LOCAL_SETUP:
+    FILE: templates/local_setup.sh
+    PLATFORM: LOCAL
+    RUNNING: once
+  OPA:
+    CHECK: on_submission
+    DEPENDENCIES: null
+    FILE: templates/opa.sh
+    FOR:
+      DEPENDENCIES:
+        - DN:
+          SPLITS_FROM:
+            all:
+              SPLITS_TO: "[1:%JOBS.DN.SPLITS%]*\\1"
+        - OPA_URBAN_1:
+          SPLITS_FROM:
+            all:
+              SPLITS_TO: previous
+      NAME: '%RUN.OPA_NAMES%'
+      SPLITS: '[31]'
+    NODES: 1
+    PARTITION: '%CURRENT_APP_PARTITION%'
+    PLATFORM: '%DEFAULT.HPCARCH%'
+    PROCESSORS: 1
+    RUNNING: chunk
+    TASKS: 1
+    THREADS: 1
+  REMOTE_SETUP:
+    DEPENDENCIES: SYNCHRONIZE
+    FILE: templates/remote_setup.sh,templates/fdb/confignative.yaml,templates/fdb/configregularll.yaml,templates/fdb/confighealpix.yaml
+    PLATFORM: '%DEFAULT.HPCARCH%-login'
+    RUNNING: once
+    WALLCLOCK: 02:00
+  SYNCHRONIZE:
+    DEPENDENCIES: LOCAL_SETUP
+    FILE: templates/synchronize.sh
+    PLATFORM: LOCAL
+    RUNNING: once
+RUN:
+  APP_NAMES:
+    - URBAN
+  OPA_NAMES:
+    - urban_1
