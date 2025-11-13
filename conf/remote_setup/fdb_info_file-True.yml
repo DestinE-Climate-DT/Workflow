@@ -1,0 +1,10 @@
+JOBS:
+  FDB_INFO_FILE:
+    DEPENDENCIES: REMOTE_SETUP
+    FILE: templates/remote_setup/fdb_info_file.sh
+    PLATFORM: '%DEFAULT.HPCARCH%-login'
+    RUNNING: date
+    WALLCLOCK: 00:05
+    CHECK: on_submission
+    NOTIFY_ON: FAILED
+    TOTALJOBS: 1

@@ -1,0 +1,19 @@
+RUN:
+  WORKFLOW: model
+  ENVIRONMENT: intel
+  PROCESSOR_UNIT: cpu
+  TYPE: test
+MODEL:
+  NAME: ifs-fesom
+  SIMULATION: ifs-fesom-hist-tco79
+  GRID_ATM: tco79l137
+  VERSION: 'ansible_DE_CY48R1.0_climateDT_20240723-cpu'
+CONFIGURATION:
+  ADDITIONAL_JOBS:
+    TRANSFER: "False"
+    BACKUP: "False"
+    WIPE: "False"
+    MEMORY_CHECKER: "False"
+    DQC: "True"
+    CLEAN: "False"
+    AQUA: "True"
