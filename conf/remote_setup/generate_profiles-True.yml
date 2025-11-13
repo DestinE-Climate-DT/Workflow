@@ -1,0 +1,10 @@
+JOBS:
+  GENERATE_PROFILES:
+    DEPENDENCIES: REMOTE_SETUP
+    FILE: templates/remote_setup/generate_profiles.sh
+    PLATFORM: '%DEFAULT.HPCARCH%-login'
+    RUNNING: date
+    WALLCLOCK: 00:05
+    CHECK: on_submission
+    NOTIFY_ON: FAILED
+    TOTALJOBS: 1

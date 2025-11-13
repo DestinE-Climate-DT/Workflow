@@ -1,0 +1,23 @@
+# Options for different HPCs here
+PLATFORMS:
+  LUMI:
+    OPA_CUSTOM_DIRECTIVES: '#SBATCH --mem=224G'
+    OPA_EXCLUSIVE: False
+    OPA_MAX_PROC: 3
+    OPA_MPI_PROC: 1
+    OPA_PROCESSORS: "%PLATFORMS.LUMI.OPA_MAX_PROC%"
+  MARENOSTRUM5:
+    OPA_CUSTOM_DIRECTIVES: ''
+    OPA_EXCLUSIVE: False
+    # We can not set the exclusive flag to true due to a bug in AS (4.1.11)
+    OPA_PROCESSORS: 112
+    # OPA_processors =! max paral_proc because we need an exclusive node in mn5 and the way we have is to request all cores in the node.
+    OPA_MAX_PROC: 3
+    OPA_MPI_PROC: 1
+APP:
+  OUTPATH: "%HPCROOTDIR%/output/"
+# set opa retrials
+# TODO: Gather these into an OPA: section
+OPA_MPI_STATS: "histogram percentile"
+OPA_RETRIALS: 0
+OPA_WALLCLOCK: '00:20'
