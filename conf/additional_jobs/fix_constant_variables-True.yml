@@ -1,0 +1,10 @@
+JOBS:
+  FIX_CONSTANT_VARIABLES:
+    DEPENDENCIES: SIM
+    RUNNING: chunk
+    PLATFORM: '%DEFAULT.HPCARCH%'
+    CHECK: on_submission
+    FILE: templates/fix_constant_variables.sh
+    TASKS: 1
+    THREADS: 1
+    NODES: 1

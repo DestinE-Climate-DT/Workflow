@@ -1,0 +1,20 @@
+date-format: date
+mars-keys:
+  class: d1
+  dataset: climate-dt
+  activity: baseline # To be overwritten by workflow
+  experiment: hist # To be overwritten by workflow
+  generation: 2 # To be overwritten by workflow
+  model: IFS-NEMO # To be overwritten by workflow
+  realization: 1 # To be overwritten by workflow
+  expver: a0fe # To be overwritten by workflow
+  stream: clte
+  date: 19900101 # To be overwritten by workflow
+  type: fc
+  time: 0000/to/2300/by/0100
+  levtype: hl
+  levelist:
+    - 100
+  param:
+    - 131 # u
+    - 132 # v

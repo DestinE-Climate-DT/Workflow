@@ -1,0 +1,10 @@
+JOBS:
+  CREATE_FDB:
+    DEPENDENCIES: REMOTE_SETUP
+    FILE: templates/remote_setup/create_fdb.sh,templates/fdb/confignative.yaml,templates/fdb/configlatlon.yaml,templates/fdb/config.yaml
+    PLATFORM: '%DEFAULT.HPCARCH%-login'
+    RUNNING: date
+    WALLCLOCK: 00:05
+    CHECK: on_submission
+    NOTIFY_ON: FAILED
+    TOTALJOBS: 1

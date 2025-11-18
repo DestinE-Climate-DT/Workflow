@@ -1,0 +1,7 @@
+# Minimal portfolio
+CONFIGURATION:
+  MULTIO_PLANS: "-minimal"
+  IFS:
+    MULTIO_PLANS: "-minimal"
+  NEMO:
+    MULTIO_PLANS: "-minimal"
