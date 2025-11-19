@@ -1,0 +1,8 @@
+# Full portfolio
+CONFIGURATION:
+  # full MULTIO plan files don't have a -full suffix
+  MULTIO_PLANS: ""
+  IFS:
+    MULTIO_PLANS: ""
+  NEMO:
+    MULTIO_PLANS: ""
