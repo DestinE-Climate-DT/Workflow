@@ -1,0 +1,35 @@
+## In this file we define the configurations used in the CONTROL runs
+EXPERIMENT:
+  DATELIST: 19900101
+  MEMBERS: fc0
+  CALENDAR: standard
+# TODO: does it makes sense to keep the retrial here?
+JOBS:
+  SIM:
+    RETRIALS: 1
+    WALLCLOCK: "%WALLCLOCKS.MONTHLY%"
+CONFIGURATION:
+  DATA_PORTFOLIO: "full"
+  IFS:
+    START_DATE: "19880101"
+  RAPS:
+    FORCING_SSP: "SSP370"
+    FIXYEAR: 1990
+MODEL:
+  RAPS:
+    # ------------------------
+    # --- Scientific flags ---
+    # ------------------------
+    # --teos10 : activate the TEOS10 instead of EOS80
+    # --sicoupl="fractional" : using fractional seaice coupling (old --sicoupl=1)
+    # --no-ozone : turn ozone handling off
+    # --inproot-namelists : using user defined input files/namelists instad of <model/RAPS/inputs>
+    USER_SIM_SCI_FLAGS: ''
+RUN:
+  RESTARTED_RUN: "true"
+  RESTART_FROM: "fill-me"
+REQUEST:
+  EXPERIMENT: "cont"
+  ACTIVITY: "baseline"
+  GENERATION: 2
+  REALIZATION: 1

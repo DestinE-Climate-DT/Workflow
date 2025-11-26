@@ -1,0 +1,146 @@
+WILDFIRES_FWI:
+  1:
+    GSVREQUEST: #raw data
+      # From <expid>/conf/main.yml:
+      expver: "%REQUEST.EXPVER%"
+      # From user input <expid>/conf/request.yml:
+      activity: "%REQUEST.ACTIVITY%"
+      resolution: "%REQUEST.RESOLUTION%"
+      generation: "%REQUEST.GENERATION%"
+      realization: "%REQUEST.REALIZATION%"
+      experiment: "%REQUEST.EXPERIMENT%"
+      model: "%REQUEST.MODEL%"
+      # Hardcoded parameters:
+      dataset: climate-dt
+      class: d1
+      type: fc
+      stream: clte
+      levtype: "sfc"
+      date: "%SPLIT_START_DATE%"
+      time: "1200"
+      param: "10u"
+      grid: "%WILDFIRES_FWI.GRID%"
+      method: "%WILDFIRES_FWI.METHOD%"
+    OPAREQUEST:
+      # Hardcoded parameters:
+      variable: "10u"
+      stat: "raw"
+      stat_freq: "daily_noon"
+      output_freq: "daily"
+      time_step: 60 # in minutes
+  2:
+    GSVREQUEST: #raw data
+      # From <expid>/conf/main.yml:
+      expver: "%REQUEST.EXPVER%"
+      # From user input <expid>/conf/request.yml:
+      activity: "%REQUEST.ACTIVITY%"
+      resolution: "%REQUEST.RESOLUTION%"
+      generation: "%REQUEST.GENERATION%"
+      realization: "%REQUEST.REALIZATION%"
+      experiment: "%REQUEST.EXPERIMENT%"
+      model: "%REQUEST.MODEL%"
+      # Hardcoded parameters:
+      dataset: climate-dt
+      class: d1
+      type: fc
+      stream: clte
+      levtype: "sfc"
+      date: "%SPLIT_START_DATE%"
+      time: "1200"
+      param: "10v"
+      grid: "%WILDFIRES_FWI.GRID%"
+      method: "%WILDFIRES_FWI.METHOD%"
+    OPAREQUEST:
+      # Hardcoded parameters:
+      variable: "10v"
+      stat: "raw"
+      stat_freq: "daily_noon"
+      output_freq: "daily"
+      time_step: 60 # in minutes
+  3:
+    GSVREQUEST: #raw data
+      # From <expid>/conf/main.yml:
+      expver: "%REQUEST.EXPVER%"
+      # From user input <expid>/conf/request.yml:
+      activity: "%REQUEST.ACTIVITY%"
+      resolution: "%REQUEST.RESOLUTION%"
+      generation: "%REQUEST.GENERATION%"
+      realization: "%REQUEST.REALIZATION%"
+      experiment: "%REQUEST.EXPERIMENT%"
+      model: "%REQUEST.MODEL%"
+      # Hardcoded parameters:
+      dataset: climate-dt
+      class: d1
+      type: fc
+      stream: clte
+      levtype: "sfc"
+      date: "%SPLIT_START_DATE%"
+      time: "1200"
+      param: "2d"
+      grid: "%WILDFIRES_FWI.GRID%"
+      method: "%WILDFIRES_FWI.METHOD%"
+    OPAREQUEST:
+      # Hardcoded parameters:
+      variable: "2d"
+      stat: "raw"
+      stat_freq: "daily_noon"
+      output_freq: "daily"
+      time_step: 60 # in minutes
+  4:
+    GSVREQUEST: #raw data
+      # From <expid>/conf/main.yml:
+      expver: "%REQUEST.EXPVER%"
+      # From user input <expid>/conf/request.yml:
+      activity: "%REQUEST.ACTIVITY%"
+      resolution: "%REQUEST.RESOLUTION%"
+      generation: "%REQUEST.GENERATION%"
+      realization: "%REQUEST.REALIZATION%"
+      experiment: "%REQUEST.EXPERIMENT%"
+      model: "%REQUEST.MODEL%"
+      # Hardcoded parameters:
+      dataset: climate-dt
+      class: d1
+      type: fc
+      stream: clte
+      levtype: "sfc"
+      date: "%SPLIT_START_DATE%"
+      time: "0000/to/2300/by/0100"
+      param: "avg_tprate"
+      grid: "%WILDFIRES_FWI.GRID%"
+      method: "%WILDFIRES_FWI.METHOD%"
+    OPAREQUEST:
+      # Hardcoded parameters:
+      variable: "avg_tprate"
+      stat: "mean"
+      stat_freq: "daily_noon"
+      output_freq: "daily_noon"
+      time_step: 60 # in minutes
+  5:
+    GSVREQUEST:
+      # From <expid>/conf/main.yml:
+      expver: "%REQUEST.EXPVER%"
+      # From user input <expid>/conf/request.yml:
+      activity: "%REQUEST.ACTIVITY%"
+      resolution: "%REQUEST.RESOLUTION%"
+      generation: "%REQUEST.GENERATION%"
+      realization: "%REQUEST.REALIZATION%"
+      experiment: "%REQUEST.EXPERIMENT%"
+      model: "%REQUEST.MODEL%"
+      # Hardcoded parameters:
+      dataset: climate-dt
+      class: d1
+      type: fc
+      stream: clte
+      levtype: "sfc"
+      date: "%SPLIT_START_DATE%"
+      time: "1200"
+      param: "2t"
+      grid: "%WILDFIRES_FWI.GRID%"
+      method: "%WILDFIRES_FWI.METHOD%"
+    OPAREQUEST:
+      # Hardcoded parameters:
+      variable: "2t"
+      stat: "raw"
+      stat_freq: "daily_noon"
+      output_freq: "daily"
+      time_step: 60 # in minutes

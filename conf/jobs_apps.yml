@@ -1,0 +1,43 @@
+JOBS:
+  LOCAL_SETUP:
+    FILE: templates/local_setup.sh
+    PLATFORM: LOCAL
+    RUNNING: once
+    CHECK: on_submission
+    NOTIFY_ON: FAILED
+  SYNCHRONIZE:
+    FILE: templates/synchronize.sh
+    PLATFORM: LOCAL
+    DEPENDENCIES: LOCAL_SETUP
+    RUNNING: once
+    CHECK: on_submission
+    NOTIFY_ON: FAILED
+  REMOTE_SETUP:
+    FILE: templates/remote_setup/remote_setup.sh
+    # Compilation needs to be done in the login node for being able to clone packages
+    PLATFORM: "%DEFAULT.HPCARCH%-login"
+    DEPENDENCIES: SYNCHRONIZE
+    RUNNING: once
+    WALLCLOCK: '02:00'
+    CHECK: on_submission
+    NOTIFY_ON: FAILED
+  DN:
+    FILE: "templates/dn.sh,conf/applications/request/request_ENERGY_INDICATORS.yml,conf/applications/request/request_ENERGY_OFFSHORE.yml,conf/applications/request/request_HYDROLAND.yml,conf/applications/request/request_HYDROMET.yml,conf/applications/request/request_WILDFIRES_FWI.yml,conf/applications/request/request_WILDFIRES_WISE.yml,conf/applications/request/request_OBSALL.yml,conf/applications/request/request_DATA.yml"
+    DEPENDENCIES:
+      REMOTE_SETUP:
+      DN:
+        SPLITS_FROM:
+          'all':
+            SPLITS_TO: 'previous'
+      DN-1:
+    RUNNING: chunk
+    WALLCLOCK: '02:00'
+    PLATFORM: "%DEFAULT.HPCARCH%-readdatabridge"
+    SPLITS: "auto"
+    TOTALJOBS: 1
+    CHECK: on_submission
+    RETRIALS: 1
+    NOTIFY_ON: FAILED
+PLATFORMS:
+  MARENOSTRUM5:
+    SYNC_DATAMOVER: "True"

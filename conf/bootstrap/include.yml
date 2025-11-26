@@ -1,0 +1,74 @@
+# This file is the entry point for this workflow configuration.
+# You must point the as_conf directory to the directory of this
+# file, and define the other files to be loaded here via
+# CUSTOM_CONFIG.{PRE|POST}.
+DEFAULT:
+  CUSTOM_CONFIG:
+    PRE:
+      # Remote Setup (variables from the main.yml, defaults don't work)
+      - "%PROJDIR%/conf/remote_setup/compile-%MODEL.COMPILE%.yml"
+      # Basic configuration: platforms, jobs and defaults
+      - "%PROJDIR%/conf/platforms.yml"
+      # Load run type configuration right after platforms
+      # so that the type configurations are used when the rest is loaded
+      - "%PROJDIR%/conf/run_types/%RUN.TYPE%.yml"
+      - "%PROJDIR%/conf/run_types/suites/%RUN.SUITE%.yml"
+      - "%PROJDIR%/conf/jobs_%RUN.WORKFLOW%.yml"
+      - "%PROJDIR%/conf/defaults/defaults_%RUN.WORKFLOW%.yml"
+      - "%PROJDIR%/conf/gsv.yml"
+      - "%PROJDIR%/conf/general.yml"
+      - "%PROJDIR%/conf/output_portfolios/%CONFIGURATION.DATA_PORTFOLIO%.yml"
+      # Model configuration
+      - "%PROJDIR%/conf/simulation/%MODEL.SIMULATION%.yml"
+      - "%PROJDIR%/conf/model/%MODEL.NAME%/%MODEL.NAME%.yml"
+      - "%PROJDIR%/conf/model/%MODEL.NAME%/%MODEL.GRID_ATM%-%RUN.PROCESSOR_UNIT%.yml"
+      - "%PROJDIR%/conf/model/%MODEL.NAME%/%MODEL.GRID_ATM%-%MODEL.GRID_OCE%-%RUN.PROCESSOR_UNIT%.yml"
+      - "%PROJDIR%/conf/model/%MODEL.NAME%/ICMCL-%CONFIGURATION.ICMCL%.yml"
+      - "%PROJDIR%/conf/model/%MODEL.NAME%/%MODEL.GRID_OCE%.yml"
+      # Additional jobs
+      - "%PROJDIR%/conf/additional_jobs/transfer-%CONFIGURATION.ADDITIONAL_JOBS.TRANSFER%.yml"
+      - "%PROJDIR%/conf/additional_jobs/backup-%CONFIGURATION.ADDITIONAL_JOBS.BACKUP%.yml"
+      - "%PROJDIR%/conf/additional_jobs/memory_checker-%CONFIGURATION.ADDITIONAL_JOBS.MEMORY_CHECKER%.yml"
+      - "%PROJDIR%/conf/additional_jobs/dqc-%CONFIGURATION.ADDITIONAL_JOBS.DQC%.yml"
+      - "%PROJDIR%/conf/additional_jobs/wipe-%CONFIGURATION.ADDITIONAL_JOBS.WIPE%.yml"
+      - "%PROJDIR%/conf/additional_jobs/aqua-%CONFIGURATION.ADDITIONAL_JOBS.AQUA%.yml"
+      - "%PROJDIR%/conf/additional_jobs/clean-%CONFIGURATION.ADDITIONAL_JOBS.CLEAN%.yml"
+      - "%PROJDIR%/conf/additional_jobs/scaling-%CONFIGURATION.ADDITIONAL_JOBS.SCALING%.yml"
+      - "%PROJDIR%/conf/additional_jobs/size_check-%CONFIGURATION.ADDITIONAL_JOBS.SIZE_CHECK%.yml"
+      - "%PROJDIR%/conf/additional_jobs/postproc_ENERGY_INDICATORS-%CONFIGURATION.ADDITIONAL_JOBS.POSTPROC_ENERGY_INDICATORS%.yml"
+      - "%PROJDIR%/conf/additional_jobs/postproc_hydroland-%CONFIGURATION.ADDITIONAL_JOBS.POSTPROC_HYDROLAND%.yml"
+      - "%PROJDIR%/conf/additional_jobs/wildfires_fwi-%APP.WILDFIRES_FWI%.yml"
+      - "%PROJDIR%/conf/additional_jobs/wildfires_wise-%APP.WILDFIRES_WISE%.yml"
+      - "%PROJDIR%/conf/additional_jobs/energy_indicators-%APP.ENERGY_INDICATORS%.yml"
+      - "%PROJDIR%/conf/additional_jobs/energy_offshore-%APP.ENERGY_OFFSHORE%.yml"
+      - "%PROJDIR%/conf/additional_jobs/obsall-%APP.OBSALL%.yml"
+      - "%PROJDIR%/conf/additional_jobs/hydroland-%APP.HYDROLAND%.yml"
+      - "%PROJDIR%/conf/additional_jobs/hydromet-%APP.HYDROMET%.yml"
+      - "%PROJDIR%/conf/additional_jobs/data-%APP.DATA%.yml"
+      - "%PROJDIR%/conf/additional_jobs/fix_constant_variables-%CONFIGURATION.ADDITIONAL_JOBS.FIX_CONSTANT_VARIABLES%.yml"
+      - "%PROJDIR%/conf/additional_jobs/dataflow-%CONFIGURATION.ADDITIONAL_JOBS.DATAFLOW%.yml"
+      - "%PROJDIR%/conf/additional_jobs/clean_restarts-%CONFIGURATION.ADDITIONAL_JOBS.CLEAN_RESTARTS%.yml"
+      - "%PROJDIR%/conf/additional_jobs/download_data-%CONFIGURATION.ADDITIONAL_JOBS.DOWNLOAD_DATA%.yml"
+      - "%PROJDIR%/conf/additional_jobs/sync_lra-%CONFIGURATION.ADDITIONAL_JOBS.SYNC_LRA%.yml"
+      # Remote Setup (variables from defaults, main values don't work for the job list)
+      - "%PROJDIR%/conf/remote_setup/dvc_setup-%MODEL.USE_DVC%.yml"
+      - "%PROJDIR%/conf/remote_setup/generate_profiles-%CONFIGURATION.GENERATE_PROFILES%.yml"
+      - "%PROJDIR%/conf/remote_setup/fdb_info_file-%CONFIGURATION.CREATE_FDB_INFO_FILE%.yml"
+      - "%PROJDIR%/conf/remote_setup/create_fdb-%CONFIGURATION.CREATE_FDB%.yml"
+      # Applications
+      - "%PROJDIR%/conf/applications/"
+      - "%PROJDIR%/conf/applications/request/request_HYDROLAND.yml" #this should be replaced by a parameter parting, not from the request itself.
+      - "%PROJDIR%/conf/applications/opa/opa.yml"
+      - "%PROJDIR%/conf/applications/energy_indicators/"
+      - "%PROJDIR%/conf/applications/energy_offshore/"
+      - "%PROJDIR%/conf/applications/hydroland/"
+      - "%PROJDIR%/conf/applications/hydromet/"
+      - "%PROJDIR%/conf/applications/obsall/"
+      - "%PROJDIR%/conf/applications/wildfires_fwi/"
+      - "%PROJDIR%/conf/applications/wildfires_wise/"
+      - "%PROJDIR%/conf/applications/data/data.yml"
+      # Data configuration
+      - "%PROJDIR%/conf/run_types/%RUN.TYPE%.yml"
+    POST:
+      - "~/platforms.yml"
+      - "%AS_ENV_PLATFORMS_PATH%"

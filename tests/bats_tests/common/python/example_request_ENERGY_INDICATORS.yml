@@ -1,0 +1,298 @@
+ENERGY_INDICATORS:
+  1:
+    GSVREQUEST: #raw data
+      # From <expid>/conf/main.yml:
+      expver: t001
+      # From user input <expid>/conf/request.yml:
+      activity: baseline
+      resolution: standard
+      generation: 2
+      realization: 1
+      experiment: cont
+      model: ifs-nemo
+      # Hardcoded parameters:
+      dataset: climate-dt
+      class: d1
+      type: fc
+      stream: clte
+      levtype: "hl"
+      levelist: 100
+      date: 19900101
+      time: "0000/to/2300/by/0100"
+      param: "v"
+      grid: 1.0/1.0
+      method: nn
+    OPAREQUEST:
+      # Hardcoded parameters
+      variable: "v"
+      stat: "raw"
+      stat_freq: "hourly"
+      output_freq: "daily"
+      time_step: 60 # in minutes
+  2:
+    GSVREQUEST: #raw data
+      # From <expid>/conf/main.yml:
+      expver: t001
+      # From user input <expid>/conf/request.yml:
+      activity: baseline
+      resolution: standard
+      generation: 2
+      realization: 1
+      experiment: cont
+      model: ifs-nemo
+      # Hardcoded parameters:
+      dataset: climate-dt
+      class: d1
+      type: fc
+      stream: clte
+      levtype: "hl"
+      levelist: 100
+      date: 19900101
+      time: "0000/to/2300/by/0100"
+      param: "u"
+      grid: 1.0/1.0
+      method: nn
+    OPAREQUEST:
+      # Hardcoded parameters
+      variable: "u"
+      stat: "raw"
+      stat_freq: "hourly"
+      output_freq: "daily"
+      time_step: 60 # in minutes
+  3:
+    GSVREQUEST: #raw data
+      # From <expid>/conf/main.yml:
+      expver: t001
+      # From user input <expid>/conf/request.yml:
+      activity: baseline
+      resolution: standard
+      generation: 2
+      realization: 1
+      experiment: cont
+      model: ifs-nemo
+      # Hardcoded parameters:
+      dataset: climate-dt
+      class: d1
+      type: fc
+      stream: clte
+      levtype: "sfc"
+      date: 19900101
+      time: "0000/to/2300/by/0100"
+      param: "2t"
+      grid: 1.0/1.0
+      method: nn
+    OPAREQUEST:
+      # Hardcoded parameters
+      variable: "2t"
+      stat: "min"
+      stat_freq: "daily"
+      output_freq: "daily"
+      time_step: 60 # in minutes
+  4:
+    GSVREQUEST:
+      # From <expid>/conf/main.yml:
+      expver: t001
+      # From user input <expid>/conf/request.yml:
+      activity: baseline
+      resolution: standard
+      generation: 2
+      realization: 1
+      experiment: cont
+      model: ifs-nemo
+      # Hardcoded parameters:
+      dataset: climate-dt
+      class: d1
+      type: fc
+      stream: clte
+      levtype: "sfc"
+      date: 19900101
+      time: "0000/to/2300/by/0100"
+      param: "2t"
+      grid: 1.0/1.0
+      method: nn
+    OPAREQUEST:
+      # Hardcoded parameters
+      variable: "2t"
+      stat: "max"
+      stat_freq: "daily"
+      output_freq: "daily"
+      time_step: 60 # in minutes
+  5:
+    GSVREQUEST:
+      # From <expid>/conf/main.yml:
+      expver: t001
+      # From user input <expid>/conf/request.yml:
+      activity: baseline
+      resolution: standard
+      generation: 2
+      realization: 1
+      experiment: cont
+      model: ifs-nemo
+      # Hardcoded parameters:
+      dataset: climate-dt
+      class: d1
+      type: fc
+      stream: clte
+      levtype: "sfc"
+      date: 19900101
+      time: "0000/to/2300/by/0100"
+      param: "2t"
+      grid: 1.0/1.0
+      method: nn
+    OPAREQUEST:
+      # Hardcoded parameters
+      variable: "2t"
+      stat: "mean"
+      stat_freq: "daily"
+      output_freq: "daily"
+      time_step: 60 # in minutes
+      #6:
+      # GSVREQUEST:
+      ## From <expid>/conf/main.yml:
+      #expver: t001
+      ## From user input <expid>/conf/request.yml:
+      #activity: baseline
+      #resolution: standard
+      #generation: 2
+      #realization: 1
+      #experiment: cont
+      #model: ifs-nemo
+      ## Hardcoded parameters:
+      #dataset: climate-dt
+      #class: d1
+      #type: fc
+      #stream: clte
+      #levtype: "hl"
+      #levelist: 100
+      #date: 19900101
+      #time: "0000/to/2300/by/0100"
+      #param: "ws"
+      #grid: 1.0/1.0
+      #method: nn
+      #OPAREQUEST:
+      ## Hardcoded parameters
+      #variable: "ws"
+      #stat: "percentile"
+      #percentile_list: [0.99]
+      #stat_freq: "monthly"
+      #output_freq: "monthly"
+      ##time_step: 60 # in minutes
+  6:
+    GSVREQUEST:
+      # From <expid>/conf/main.yml:
+      expver: t001
+      # From user input <expid>/conf/request.yml:
+      activity: baseline
+      resolution: standard
+      generation: 2
+      realization: 1
+      experiment: cont
+      model: ifs-nemo
+      # Hardcoded parameters:
+      dataset: climate-dt
+      class: d1
+      type: fc
+      stream: clte
+      levtype: "hl"
+      levelist: 100
+      date: 19900101
+      time: "0000/to/2300/by/0100"
+      param: "ws"
+      grid: 1.0/1.0
+      method: nn
+    OPAREQUEST:
+      # Hardcoded parameters
+      variable: "ws"
+      stat: "max"
+      stat_freq: "daily"
+      output_freq: "monthly"
+      time_step: 60 # in minutes
+      #  8:
+      #    GSVREQUEST:
+      ## From <expid>/conf/main.yml:
+      #expver: t001
+      ## From user input <expid>/conf/request.yml:
+      #activity: baseline
+      #resolution: standard
+      #generation: 2
+      #realization: 1
+      #experiment: cont
+      #model: ifs-nemo
+      ## Hardcoded parameters:
+      #dataset: climate-dt
+      #class: d1
+      #type: fc
+      #stream: clte
+      #levtype: "hl"
+      #levelist: 100
+      #date: 19900101
+      #time: "0000/to/2300/by/0100"
+      #param: "ws"
+      #grid: 1.0/1.0
+      #method: nn
+      # OPAREQUEST:
+      ## Hardcoded parameters
+      #variable: "ws"
+      #stat: "histogram"
+      #bins: 30
+      #stat_freq: "monthly"
+      #output_freq: "monthly"
+      #time_step: 60 # in minutes
+  7:
+    GSVREQUEST:
+      # From <expid>/conf/main.yml:
+      expver: t001
+      # From user input <expid>/conf/request.yml:
+      activity: baseline
+      resolution: standard
+      generation: 2
+      realization: 1
+      experiment: cont
+      model: ifs-nemo
+      # Hardcoded parameters:
+      dataset: climate-dt
+      class: d1
+      type: fc
+      stream: clte
+      levtype: "sfc"
+      date: 19900101
+      time: "0000/to/2300/by/0100"
+      param: "avg_sdswrf"
+      grid: 1.0/1.0
+      method: nn
+    OPAREQUEST:
+      # Hardcoded parameters
+      variable: "avg_sdswrf"
+      stat: "raw"
+      stat_freq: "daily"
+      output_freq: "daily"
+      time_step: 60 # in minutes
+  8:
+    GSVREQUEST:
+      # From <expid>/conf/main.yml:
+      expver: t001
+      # From user input <expid>/conf/request.yml:
+      activity: baseline
+      resolution: standard
+      generation: 2
+      realization: 1
+      experiment: cont
+      model: ifs-nemo
+      # Hardcoded parameters:
+      dataset: climate-dt
+      class: d1
+      type: fc
+      stream: clte
+      levtype: "sfc"
+      date: 19900101
+      time: "0000/to/2300/by/0100"
+      param: "10si"
+      grid: 1.0/1.0
+      method: nn
+    OPAREQUEST:
+      # Hardcoded parameters
+      variable: "10si"
+      stat: "raw"
+      stat_freq: "daily"
+      output_freq: "daily"
+      time_step: 60 # in minutes
