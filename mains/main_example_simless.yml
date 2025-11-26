@@ -1,0 +1,34 @@
+RUN:
+  WORKFLOW: simless
+  ENVIRONMENT: cray
+  PROCESSOR_UNIT: cpu
+  TYPE: production
+MODEL:
+  NAME: IFS-NEMO
+EXPERIMENT:
+  DATELIST: 19900101 #Startdate
+  MEMBERS: fc0
+  CHUNKSIZEUNIT: month
+  CHUNKSIZE: 1
+  NUMCHUNKS: 2
+  CALENDAR: standard
+# Configure the ADDITIONAL_JOBS that you want to run
+# By default, all ADDITIONAL_JOBS are deactivated
+# To activate an ADDITIONAL_JOB, set the value to "True"
+CONFIGURATION:
+  ADDITIONAL_JOBS:
+    TRANSFER: "True"
+    BACKUP: "True"
+    WIPE: "True"
+    MEMORY_CHECKER: "True"
+    DQC: "True"
+    CLEAN: "True"
+    AQUA: "False"
+# Configure what will be read
+REQUEST:
+  MODEL: IFS-NEMO
+  EXPERIMENT: "cont"
+  ACTIVITY: "baseline"
+  GENERATION: 2
+  REALIZATION: 1
+  EXPVER: "0001"

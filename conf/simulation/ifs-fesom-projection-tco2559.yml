@@ -1,0 +1,20 @@
+experiment:
+  DATELIST: 20200101
+  MEMBERS: fc0
+  CHUNKSIZEUNIT: day
+  CHUNKSIZE: 15
+  NUMCHUNKS: 24
+  CALENDAR: standard
+CONFIGURATION:
+  DQC_PROFILE: production
+  DATA_PORTFOLIO: production
+  ICMCL: "biweekly"
+  RAPS_EXPERIMENT: "SSP370"
+  RAPS_USER_FLAGS: "--cbmf_reduced --no-ozone --drhook --hugepages --runoff-mapper --sicoupl=thermodynamical"
+  IFS:
+    EXPVER: i9t5
+REQUEST:
+  ACTIVITY: projections
+  EXPERIMENT: SSP3-7.0
+  GENERATION: 2
+  REALIZATION: 1

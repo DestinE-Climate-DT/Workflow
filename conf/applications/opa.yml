@@ -1,0 +1,33 @@
+# Options for different HPCs here
+PLATFORMS:
+  LUMI:
+    OPA_CUSTOM_DIRECTIVES: '#SBATCH --mem=224G'
+    OPA_EXCLUSIVE: False
+    OPA_MAX_PROC: 6
+    OPA_PROCESSORS: "%PLATFORMS.LUMI.OPA_MAX_PROC%"
+  MARENOSTRUM5:
+    OPA_CUSTOM_DIRECTIVES: ''
+    OPA_EXCLUSIVE: FALSE
+    # We can not set the exclusive flag to true due to a bug in AS (4.1.11)
+    OPA_PROCESSORS: 112
+    # OPA_processors =! max paral_proc because we need an exclusive node in mn5 and the way we have is to request all cores in the node.
+    OPA_MAX_PROC: 5
+
+APP:
+  OUTPATH: "%HPCROOTDIR%/output/"
+
+# set opa retrials
+OPA_RETRIALS: 1
+OPA_WALLCLOCK: '00:20'
+
+
+# Variables used in mother request. Also built in "OPA_OUTPATH" in
+# templates/opa.sh, which must match with one of the following
+OUT_HYDROLAND: "%APP.OUTPATH%/hydroland/opa/"
+OUT_HYDROMET: "%APP.OUTPATH%/hydromet/opa/"
+OUT_ENERGY_ONSHORE: "%APP.OUTPATH%/energy_onshore/opa/"
+OUT_ENERGY_OFFSHORE: "%APP.OUTPATH%/energy_offshore/opa/"
+OUT_WILDFIRES_FWI: "%APP.OUTPATH%/wildfires_fwi/opa/"
+OUT_WILDFIRES_WISE: "%APP.OUTPATH%/wildfires_wise/opa/"
+OUT_OBSALL: "%APP.OUTPATH%/obsall/opa/"
+OUT_DATA: "%APP.OUTPATH%/data/opa/"

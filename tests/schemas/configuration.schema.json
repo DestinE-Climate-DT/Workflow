@@ -1,0 +1,152 @@
+{
+  "$id": "schema:workflow/configuration",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "title": "Configuration section",
+  "description": "Schema for the configuration section of the workflow",
+  "properties": {
+    "ADDITIONAL_JOBS": {
+      "type": "object",
+      "properties": {
+          "BACKUP": {
+              "type": "string",
+              "enum": ["False", "True"],
+              "description": "Activate the backup job."
+          },
+          "CLEAN": {
+              "type": "string",
+              "enum": ["False", "True"],
+              "description": "Activate the clean job."
+          },
+          "DQC": {
+              "type": "string",
+              "enum": ["False", "True"],
+              "description": "Activate the Data Quality Checker job."
+          },
+          "MEMORY_CHECKER": {
+              "type": "string",
+              "enum": ["False", "True"],
+              "description": "Activate the Memory Checker job."
+          },
+          "TRANSFER": {
+              "type": "string",
+              "enum": ["False", "True"],
+              "description": "Activate the transfer job."
+          },
+          "WIPE": {
+              "type": "string",
+              "enum": ["False", "True"],
+              "description": "Activate the wipe job."
+            },
+           "AQUA": {
+              "type": "string",
+              "enum": ["False", "True"],
+              "description": "Activate the AQUA jobs."
+          }
+       }
+    },
+    "CONTAINER_DIR": {
+      "type": "string",
+      "description": "Path to the directory where the containers are stored.",
+      "default": "%CURRENT_HPC_PROJECT_ROOT%/%CURRENT_PROJECT%/containers"
+    },
+    "PROJECT_SCRATCH": {
+      "type": "string",
+      "description": "Path to the directory where the project's scratch is stored.",
+      "default": "%CURRENT_SCRATCH_DIR%/%CURRENT_PROJECT%"
+    },
+    "LIBDIR": {
+      "type": "string",
+      "description": "Path to the directory where the lib directory is, inside the repo.",
+      "default": "%HPCROOTDIR%/%PROJECT.PROJECT_DESTINATION%/lib"
+    },
+    "SCRIPTDIR": {
+      "type": "string",
+      "description": "Path to the directory where the runscripts are stored.",
+      "default": "%HPCROOTDIR%/git_project/runscripts"
+    },
+    "HPC_PROJECT_DIR": {
+      "type": "string",
+      "description": "Path to the directory under `projects` (not scratch) of the HPC project in use.",
+      "default": "%CURRENT_HPC_PROJECT_ROOT%/%CURRENT_PROJECT%"
+    },
+    "FDB_DIR": {
+      "type": "string",
+      "description": "Path to the experiments folder of the project. It is used by `research` and `test` experiments.",
+      "default": "%CURRENT_SCRATCH_DIR%/%CURRENT_PROJECT%/experiments"
+    },
+    "IO_ON": {
+      "type": "string",
+      "enum": ["False", "True"],
+      "description": "False will disable the flags for IO in order to run without output in IFS-NEMO experiments."
+    },
+    "RAPS_EXPERIMENT": {
+      "type": "string",
+      "enum": ["control", "hist", "SSP370", "Tplus2.0K"],
+      "description": "Specifies which experiment to run and RAPS associates the corresponding ACTIVITY."
+    },
+    "RAPS_USER_FLAGS": {
+      "type": "string",
+      "description": "Flags for RAPS."
+    },
+    "ICMCL": {
+      "type": "string",
+      "description": "Chunking of the ICMCL (surface conditions for IFS) to be loaded in IFS-based models",
+      "enum": ["biweekly", "monthly", "yearly", "yearly_extra", "generic"]
+    },
+    "DQC_PROFILE": {
+      "type": "string",
+      "enum": ["develop", "production", "lowres"],
+      "description": "Profile to be used for the data quality checker."
+    },
+    "DQC_PROFILE_ROOT": {
+      "type": "string",
+      "description": "Path to the profiles directory, generated in the REMOTE_SETUP, and used in the DQC, TRANSFER, WIPE and CLEAN.",
+      "default": "%HPCROOTDIR%/profiles"
+    },
+    "DQC_PROFILE_PATH": {
+      "type": "string",
+      "description": "Path to the specific DQC profile to be used."
+    },
+    "DATA_PORTFOLIO": {
+      "type": "string",
+      "enum": ["production", "reduced"],
+      "description": "Used to determine the set of variables in the data portfolio."
+    },
+    "IFS": {
+      "type": "object",
+      "properties": {
+        "GTYPE": {
+          "type": "string",
+          "const": "tco",
+          "description": "Sets the grid type. Only tco is available at this time."
+        },
+        "RESOL": {
+          "type": "integer",
+          "enum": [79, 399, 1279, 2559],
+          "description": "Sets the resolution (grid) of the atmosphere."
+        },
+        "LEVELS": {
+          "type": "integer",
+          "const": 137,
+          "description": "Sets the pressure levels for the atmosphere. Only 137 is available at this time."
+        },
+        "EXPVER": {
+          "type": "string",
+          "description": "The experiment ID of the inputs given by ECMWF, generated with an IFS-only experiment run with ec-Flow."
+        },
+        "LABEL": {
+          "type": "string",
+          "const": "LWDA",
+          "description": "The atmosphere label. Only LWDA is available at this time."
+        },
+        "IO_NODES": {
+          "description": "The number of IO nodes to use for the atmosphere simulation.",
+          "$comment": "TODO: Make platform dependent for IFS-NEMO like in IFS-FESOM."
+        }
+      },
+      "required": ["GTYPE", "RESOL", "LEVELS", "EXPVER", "LABEL", "IO_NODES"]
+    }
+  },
+  "required": ["ADDITIONAL_JOBS"]
+}

@@ -1,0 +1,108 @@
+#!/bin/bash
+
+main_path="../../conf/main.yml"
+request_path="../../conf/request.yml"
+
+echo "executing githook"
+
+# One or more environment variables are not set.
+if [[ -z "$WF_TYPE_ENV" || -z "$WF_MODEL_ENV" || -z "$WF_TEMPLATE_PATH_ENV" ]]; then
+    export WF_TYPE_ENV=""
+    export WF_MODEL_ENV=""
+    export WF_TEMPLATE_PATH_ENV=""
+    # Allows us to read user input below, assigns stdin to keyboard # https://stackoverflow.com/questions/3417896/how-do-i-prompt-the-user-from-within-a-commit-msg-hook
+    exec < /dev/tty
+fi
+
+
+# Check if main exists
+if [ ! -f "$main_path" ]; then
+    echo "The main.yml file does not exist."
+
+    # Check if WF_TYPE_ENV is set
+    if [ -n "$WF_TYPE_ENV" ]; then
+        choice="$WF_TYPE_ENV"
+    else
+        # Prompt the user to choose a workflow
+        echo "Choose a workflow:"
+        echo "1. model"
+        echo "2. end_to_end"
+        echo "3. app"
+        echo "4. simless"
+
+        read -p "Enter your choice (1/2/3/4): " choice
+    fi
+
+    case $choice in
+        1)
+        # Check if WF_MODEL_ENV is set
+        if [ -n "$WF_MODEL_ENV" ]; then
+            model_choice="$WF_MODEL_ENV"
+        else
+            echo "Choose a model:"
+            echo "1. ifs-nemo"
+            echo "2. ifs-fesom"
+            echo "3. icon"
+            echo "4. nemo"
+            read -p "Enter your choice (1/2/3/4): " model_choice
+        fi
+
+        case $model_choice in
+            1)
+                template="main_example_model_ifs-nemo.yml"
+                ;;
+            2)
+                template="main_example_model_ifs-fesom.yml"
+                ;;
+            3)
+                template="main_example_model_icon.yml"
+                ;;
+            4)
+                template="main_example_model_nemo.yml"
+                ;;
+            *)
+                echo "Invalid choice. Exiting."
+                exit 1
+                ;;
+        esac
+        ;;
+        2)
+            template="main_example_end_to_end.yml"
+            run_create_jobs="true"
+            ;;
+        3)
+	    template="main_example_app.yml"
+            run_create_jobs="true"
+            ;;
+        4)
+            template="main_example_simless.yml"
+            ;;
+        *)
+            echo "Invalid choice. Exiting."
+            exit 1
+            ;;
+    esac
+
+    # Copy the selected template to main.yml
+    cp "mains/$template" "$main_path"
+
+    echo "Template '$template' copied to '$main_path'. Opening for editing..."
+
+    if [ -n "$WF_TEMPLATE_PATH_ENV" ]; then
+        touch "$main_path"
+        cp "$WF_TEMPLATE_PATH_ENV" "$main_path"
+    else
+        # Open the file for editing
+        ${EDITOR:-vi} "$main_path"
+    fi
+
+fi
+
+cd conf
+# Run the script and redirect all output to githook log.
+if python3 create_jobs_from_mother_request.py --path-to-conf . --main "../${main_path}" --output-path . > ../../../tmp/githook.log 2>&1; then
+    echo "App jobs created successfully"
+else
+    echo "App jobs were not created. (see expid/tmp/githook.log) for more details."
+fi
+cd ..

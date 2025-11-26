@@ -1,0 +1,14 @@
+#JOBS:
+#  APP_DATA:
+#    PLATFORM: "%DEFAULT.HPCARCH%-login"
+DATA_1:
+  GSVREQUEST:
+    LEVTYPE: "sfc"
+    TIME: "0000/to/2300/by/0100"
+    PARAM: "2t"
+  OPAREQUEST:
+    VARIABLE: "2t"
+    STAT: mean
+    STAT_FREQ: daily
+    OUTPUT_FREQ: daily
+    TIME_STEP: 60 # this is related to TIME step in the gsvrequest
