@@ -1,0 +1,17 @@
+RUN:
+  CYCLE: "E-25.1"
+PLATFORMS:
+  MARENOSTRUM5:
+    HPCARCH_short: "MN5-e25.1"
+    CATALOG_NAME: "climatedt-e25.1"
+  MARENOSTRUM5-login:
+    HPCARCH_short: "MN5-e25.1"
+    CATALOG_NAME: "climatedt-e25.1"
+  LUMI:
+    HPCARCH_short: "lumi-e25.1"
+    CATALOG_NAME: "climatedt-e25.1"
+  LUMI-login:
+    HPCARCH_short: "lumi-e25.1"
+    CATALOG_NAME: "climatedt-e25.1"
+REQUEST:
+  EXPVER: "%DEFAULT.EXPID%"

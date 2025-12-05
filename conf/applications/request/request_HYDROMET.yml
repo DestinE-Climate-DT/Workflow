@@ -1,0 +1,61 @@
+HYDROMET:
+  1:
+    GSVREQUEST:
+      # From <expid>/conf/main.yml:
+      expver: "%REQUEST.EXPVER%"
+      # From user input <expid>/conf/request.yml:
+      activity: "%REQUEST.ACTIVITY%"
+      resolution: "%REQUEST.RESOLUTION%"
+      generation: "%REQUEST.GENERATION%"
+      realization: "%REQUEST.REALIZATION%"
+      experiment: "%REQUEST.EXPERIMENT%"
+      model: "%REQUEST.MODEL%"
+      # Hardcoded parameters:
+      dataset: climate-dt
+      class: d1
+      type: fc
+      stream: clte
+      levtype: "sfc"
+      date: "%SPLIT_START_DATE%"
+      time: "0000/to/2300/by/0100"
+      param: "avg_tprate"
+      grid: "%HYDROMET.GRID%"
+      area: "%HYDROMET.AREA%"
+      method: "%HYDROMET.METHOD%"
+    OPAREQUEST:
+      # Hardcoded parameters
+      variable: "avg_tprate"
+      stat: "iams"
+      stat_freq: "yearly"
+      output_freq: "yearly"
+      time_step: 60 # in minutes
+  2:
+    GSVREQUEST:
+      # From <expid>/conf/main.yml:
+      expver: "%REQUEST.EXPVER%"
+      # From user input <expid>/conf/request.yml:
+      activity: "%REQUEST.ACTIVITY%"
+      resolution: "%REQUEST.RESOLUTION%"
+      generation: "%REQUEST.GENERATION%"
+      realization: "%REQUEST.REALIZATION%"
+      experiment: "%REQUEST.EXPERIMENT%"
+      model: "%REQUEST.MODEL%"
+      # Hardcoded parameters:
+      dataset: climate-dt
+      class: d1
+      type: fc
+      stream: clte
+      levtype: "sfc"
+      date: "%SPLIT_START_DATE%"
+      time: "0000/to/2300/by/0100"
+      param: "avg_tprate"
+      grid: "%HYDROMET.GRID%"
+      area: "%HYDROMET.AREA%"
+      method: "%HYDROMET.METHOD%"
+    OPAREQUEST:
+      # Hardcoded parameters
+      variable: "avg_tprate"
+      stat: "raw"
+      stat_freq: "hourly"
+      output_freq: "monthly" # Achtung this does not apply for "raw" stat
+      time_step: 60 # in minutes

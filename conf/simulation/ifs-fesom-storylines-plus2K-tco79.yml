@@ -1,0 +1,21 @@
+experiment:
+  DATELIST: 20170101
+  MEMBERS: fc0
+  CHUNKSIZEUNIT: month
+  CHUNKSIZE: 1
+  NUMCHUNKS: 2
+  CALENDAR: standard
+CONFIGURATION:
+  DATA_PORTFOLIO: full
+  DQC_PROFILE: lowres
+  RAPS_FORCING_SSP: SSP245
+  RAPS_USER_FLAGS: "--destine-enable-nudging --destine-nudging-nrlxsmax=60 --destine-nudging-xrlxdi=1.0 --fixyear=2050 --no-ozone --drhook --runoff-mapper --sicoupl=fractional"
+  FESOM_PERTURB: "true"
+  FESOM_PERTURBATION_SEED_BASE: "50000"
+  IFS:
+    EXPVER: asp2
+REQUEST:
+  ACTIVITY: story-nudging
+  EXPERIMENT: Tplus2.0K
+  GENERATION: 2
+  REALIZATION: 1
