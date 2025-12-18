@@ -1,0 +1,262 @@
+Platforms:
+  marenostrum5:
+    TYPE: slurm
+    HOST: mn5-cluster1
+    # This needs that a ~/.ssh/config exists with the following:
+    # the login node in glogin4 allows internet access
+    # Host mn5-cluster1
+    #     Hostname glogin4.bsc.es
+    #     IdentifyFile ~/.ssh/<your_sshkey>
+    #     User <bsc user>
+    PROJECT: ehpc01
+    DEVELOPMENT_PROJECT: ehpc01
+    OPERATIONAL_PROJECT: ehpc123
+    HPC_PROJECT_ROOT: /gpfs/projects
+    HPC_EARTHKIT_REGRID_CACHE_DIR: /gpfs/scratch/pred1/.cache/earthkit-regrid
+    USER: <to-be-overloaded-in-user-conf>
+    QUEUE: gp_ehpc
+    MAX_WALLCLOCK: '72:00'
+    MAX_PROCESSORS: 15
+    SCRATCH_DIR: /gpfs/scratch
+    # All production data stored in fixed project directory
+    # To change the production data directory, change the FDB_PROD variable
+    # in main.yml
+    FDB_PROD: /gpfs/projects/ehpc01/dte/fdb
+    DATABRIDGE_FDB_HOME: "/gpfs/projects/ehpc01/dte/fdb"
+    DATA_DIR: /gpfs/projects/ehpc01/
+    ADD_PROJECT_TO_HOST: False
+    TEMP_DIR: ''
+    PROCESSORS_PER_NODE: 112
+    APP_PARTITION: gp_bsces
+    EXCLUSIVE: "True"
+    CUSTOM_DIRECTIVES: "['#SBATCH --export=ALL', '#SBATCH --hint=nomultithread']"
+    HPCARCH_short: "MN5"
+    HPCARCH_lowercase: "marenostrum5"
+    CATALOG_NAME: mn5-phase2
+    # Some HPCs might require to source a file to be able to use their module system.
+    # This parameter allows you to provide the module profile path via the conf files.
+    MODULES_PROFILE_PATH:
+    TEST_APP_AUX_IN_DATA_DIR: "/gpfs/projects/ehpc01/applications/"
+    PROD_APP_AUX_IN_DATA_DIR: "/gpfs/scratch/ehpc01/input_data/applications/"
+    CONTAINER_COMMAND: "singularity"
+    CONTAINER_DIR: "%CONFIGURATION.CONTAINER_DIR_DEV%"
+  marenostrum5-login:
+    TYPE: ps
+    HOST: mn5-cluster1
+    # This needs that a ~/.ssh/config exists with the following:
+    # the login node in glogin4 allows internet access
+    # Host mn5-cluster1
+    #     Hostname glogin4.bsc.es
+    #     IdentifyFile ~/.ssh/<your_sshkey>
+    #     User <bsc user>
+    PROJECT: "%PLATFORMS.MARENOSTRUM5.PROJECT%"
+    DEVELOPMENT_PROJECT: "%PLATFORMS.MARENOSTRUM5.DEVELOPMENT_PROJECT%"
+    OPERATIONAL_PROJECT: "%PLATFORMS.MARENOSTRUM5.OPERATIONAL_PROJECT%"
+    HPC_PROJECT_ROOT: /gpfs/projects
+    FDB_PROD: "%PLATFORMS.MARENOSTRUM5.FDB_PROD%"
+    USER: <to-be-overloaded-in-user-conf>
+    SCRATCH_DIR: /gpfs/scratch
+    ADD_PROJECT_TO_HOST: False
+    QUEUE: gp_interactive
+    PROCESSORS: 4
+    MAX_WALLCLOCK: '48:00'
+    HPCARCH_short: "%PLATFORMS.MARENOSTRUM5.HPCARCH_short%"
+    HPCARCH_lowercase: "%PLATFORMS.MARENOSTRUM5.HPCARCH_lowercase%"
+    # Some HPCs might require to source a file to be able to use their module system.
+    # This parameter allows you to provide the module profile path via the conf files.
+    MODULES_PROFILE_PATH: "%PLATFORMS.MARENOSTRUM5.MODULES_PROFILE_PATH%"
+    CONTAINER_COMMAND: "%PLATFORMS.MARENOSTRUM5.CONTAINER_COMMAND%"
+    CONTAINER_DIR: "%CONFIGURATION.CONTAINER_DIR_DEV%"
+  marenostrum5-transfer:
+    TYPE: ps
+    HOST: mn5-prod-client1
+    # This needs that a ~/.ssh/config exists with the following:
+    # the login node in glogin4 allows internet access
+    # Host mn5-cluster1
+    #     Hostname glogin4.bsc.es
+    #     IdentifyFile ~/.ssh/<your_sshkey>
+    #     User <bsc user>
+    PROJECT: "%PLATFORMS.MARENOSTRUM5.PROJECT%"
+    DEVELOPMENT_PROJECT: "%PLATFORMS.MARENOSTRUM5.DEVELOPMENT_PROJECT%"
+    OPERATIONAL_PROJECT: "%PLATFORMS.MARENOSTRUM5.DEVELOPMENT_PROJECT%"
+    HPC_PROJECT_ROOT: "%PLATFORMS.MARENOSTRUM5-TRANSFER.SCRATCH_DIR%"
+    USER: datamover
+    SCRATCH_DIR: /staging
+    ADD_PROJECT_TO_HOST: False
+    TEMP_DIR: ''
+    FDB_PROD: "/home/service/gateway"
+    EXECUTABLE: "/bin/bash --login"
+    DATABRIDGE_FDB_HOME: "/home/service/databridge"
+    GATEWAY_FDB_HOME: "/home/service/gateway"
+    BIN_DIR: "/opt/ecmwf/mars-client-cpp/bin"
+    FDB_COPY_BIN: "/opt/ecmwf/mars-client-cpp/bin/fdb-copy"
+    FDB_LIST_BIN: "/opt/ecmwf/mars-client-cpp/bin/fdb-list"
+    MAX_WALLCLOCK: "24:00"
+    # Some HPCs might require to source a file to be able to use their module system.
+    # This parameter allows you to provide the module profile path via the conf files.
+    MODULES_PROFILE_PATH: "%PLATFORMS.MARENOSTRUM5.MODULES_PROFILE_PATH%"
+    CONTAINER_COMMAND: "/home/datamover/apptainer-install-dir/bin/apptainer"
+    MARS_BINARY: "/usr/bin/"
+    DATABRIDGE_DATABASE: "databridge"
+    CONTAINER_DIR: "%CONFIGURATION.CONTAINER_DIR_DEV%"
+  marenostrum5-readdatabridge:
+    TYPE: ps
+    HOST: mn5-prod-client1
+    # This needs that a ~/.ssh/config exists with the following:
+    # the login node in glogin4 allows internet access
+    # Host mn5-cluster1
+    #     Hostname glogin4.bsc.es
+    #     IdentifyFile ~/.ssh/<your_sshkey>
+    #     User <bsc user>
+    PROJECT: "%PLATFORMS.MARENOSTRUM5.PROJECT%"
+    DEVELOPMENT_PROJECT: "%PLATFORMS.MARENOSTRUM5.DEVELOPMENT_PROJECT%"
+    OPERATIONAL_PROJECT: "%PLATFORMS.MARENOSTRUM5.DEVELOPMENT_PROJECT%"
+    HPC_PROJECT_ROOT: "%PLATFORMS.MARENOSTRUM5-TRANSFER.SCRATCH_DIR%"
+    USER: datamover
+    SCRATCH_DIR: /staging
+    ADD_PROJECT_TO_HOST: False
+    TEMP_DIR: ''
+    FDB_PROD: "/home/service/gateway"
+    EXECUTABLE: "/bin/bash --login"
+    DATABRIDGE_FDB_HOME: "/home/service/databridge"
+    GATEWAY_FDB_HOME: "/home/service/gateway"
+    BIN_DIR: "/opt/ecmwf/mars-client-cpp/bin"
+    FDB_COPY_BIN: "/opt/ecmwf/mars-client-cpp/bin/fdb-copy"
+    FDB_LIST_BIN: "/opt/ecmwf/mars-client-cpp/bin/fdb-list"
+    MAX_WALLCLOCK: "24:00"
+    # Some HPCs might require to source a file to be able to use their module system.
+    # This parameter allows you to provide the module profile path via the conf files.
+    MODULES_PROFILE_PATH: "%PLATFORMS.MARENOSTRUM5.MODULES_PROFILE_PATH%"
+    CONTAINER_COMMAND: "/home/datamover/apptainer-install-dir/bin/apptainer"
+    MARS_BINARY: "/usr/bin/"
+    DATABRIDGE_DATABASE: "databridge"
+    CONTAINER_DIR: "%CONFIGURATION.CONTAINER_DIR_DEV%"
+  lumi-login:
+    TYPE: ps
+    HOST: lumi-cluster
+    # This needs that a ~/.ssh/config exists with the following:
+    # Host lumi-cluster
+    #     Hostname lumi.csc.fi
+    #     IdentifyFile ~/.ssh/<your_sshkey>
+    #     User <lumi user>
+    PROJECT: "%PLATFORMS.LUMI.PROJECT%"
+    DEVELOPMENT_PROJECT: "%PLATFORMS.LUMI.DEVELOPMENT_PROJECT%"
+    OPERATIONAL_PROJECT: "%PLATFORMS.LUMI.OPERATIONAL_PROJECT%"
+    HPC_PROJECT_ROOT: "%PLATFORMS.LUMI.HPC_PROJECT_ROOT%"
+    FDB_PROD: "%PLATFORMS.LUMI.FDB_PROD%"
+    USER: <to-be-overloaded-in-user-conf>
+    SCRATCH_DIR: "%PLATFORMS.LUMI.SCRATCH_DIR%"
+    MAX_WALLCLOCK: "04:00"
+    ADD_PROJECT_TO_HOST: False
+    TEMP_DIR: ''
+    DATABRIDGE_FDB_HOME: "%PLATFORMS.LUMI.DATABRIDGE_FDB_HOME%"
+    HPCARCH_short: "lumi"
+    HPCARCH_lowercase: "lumi"
+    # Some HPCs might require to source a file to be able to use their module system.
+    # This parameter allows you to provide the module profile path via the conf files.
+    MODULES_PROFILE_PATH: "%PLATFORMS.LUMI.MODULES_PROFILE_PATH%"
+    CONTAINER_COMMAND: "singularity"
+    CONTAINER_DIR: "%CONFIGURATION.CONTAINER_DIR_DEV%"
+  lumi:
+    TYPE: slurm
+    HOST: lumi-cluster #lumi.csc.fi
+    # This needs that a ~/.ssh/config exists with the following:
+    # Host lumi-cluster
+    #     Hostname lumi.csc.fi
+    #     IdentifyFile ~/.ssh/<your_sshkey>
+    #     User <lumi user>
+    PROJECT: project_465000454
+    DEVELOPMENT_PROJECT: project_465000454
+    OPERATIONAL_PROJECT: project_465001542
+    HPC_PROJECT_ROOT: /projappl
+    USER: <to-be-overloaded-in-user-conf>
+    SCRATCH_DIR: /scratch
+    LOCAL_DIR: /appl/local
+    ADD_PROJECT_TO_HOST: False
+    TEMP_DIR: ''
+    # Currently BUDGET is not supported by Autosubmit (Autosubmit #1365)
+    BUDGET: "%PLATFORMS.LUMI.PROJECT%"
+    EXECUTABLE: "/bin/bash --login"
+    DATABRIDGE_FDB_HOME: "/appl/local/destine/databridge"
+    EXCLUSIVE: "True"
+    MEMORY: "224G" # Default for LUMI-C
+    CUSTOM_DIRECTIVES: "['#SBATCH --export=ALL', '#SBATCH --hint=nomultithread']"
+    APP_PARTITION: standard
+    PARTITION: standard
+    FDB_PROD: "/appl/local/destine/fdb"
+    DATA_DIR: "/appl/local/climatedt/data"
+    MAX_PROCESSORS: 99999
+    MAX_WALLCLOCK: "48:00"
+    HPCARCH_short: "lumi"
+    HPCARCH_lowercase: "lumi"
+    CATALOG_NAME: "lumi-phase2"
+    MARS_BINARY: "%PLATFORMS.LUMI-TRANSFER.MARS_BINARY%"
+    # Some HPCs might require to source a file to be able to use their module system.
+    # This parameter allows you to provide the module profile path via the conf files.
+    MODULES_PROFILE_PATH:
+    TEST_APP_AUX_IN_DATA_DIR: "/project/project_465000454/applications/"
+    PROD_APP_AUX_IN_DATA_DIR: "/appl/local/climatedt/input_data/applications/"
+    CONTAINER_COMMAND: "singularity"
+    DATABRIDGE_DATABASE: "databridge-fdb"
+    CONTAINER_DIR: "%CONFIGURATION.CONTAINER_DIR_DEV%"
+  lumi-transfer:
+    TYPE: slurm
+    HOST: lumi-cluster #lumi.csc.fi
+    # This needs that a ~/.ssh/config exists with the following:
+    # Host lumi-cluster
+    #     Hostname lumi.csc.fi
+    #     IdentifyFile ~/.ssh/<your_sshkey>
+    #     User <lumi user>
+    PROJECT: "%PLATFORMS.LUMI.PROJECT%"
+    DEVELOPMENT_PROJECT: "%PLATFORMS.LUMI.DEVELOPMENT_PROJECT%"
+    OPERATIONAL_PROJECT: "%PLATFORMS.LUMI.OPERATIONAL_PROJECT%"
+    HPC_PROJECT_ROOT: "%PLATFORMS.LUMI.HPC_PROJECT_ROOT%"
+    USER: <to-be-overloaded-in-user-conf>
+    SCRATCH_DIR: "%PLATFORMS.LUMI.SCRATCH_DIR%"
+    ADD_PROJECT_TO_HOST: False
+    TEMP_DIR: ''
+    BUDGET: "%PLATFORMS.LUMI.PROJECT%"
+    APP_PARTITION: "%PLATFORMS.LUMI.APP_PARTITION%"
+    EXECUTABLE: "/bin/bash --login"
+    DATABRIDGE_FDB_HOME: "%PLATFORMS.LUMI.DATABRIDGE_FDB_HOME%"
+    EXCLUSIVE: "False"
+    CUSTOM_DIRECTIVES: "['#SBATCH --export=ALL']"
+    FDB_PROD: "%PLATFORMS.LUMI.FDB_PROD%"
+    MAX_WALLCLOCK: "05:00"
+    PARTITION: small
+    MAX_PROCESSORS: 1024
+    PROCESSORS_PER_NODE: 128
+    TOTALJOBS: 1
+    # Some HPCs might require to source a file to be able to use their module system.
+    # This parameter allows you to provide the module profile path via the conf files.
+    MODULES_PROFILE_PATH: "%PLATFORMS.LUMI.MODULES_PROFILE_PATH%"
+    CONTAINER_COMMAND: "singularity"
+    MARS_BINARY: "/appl/local/destine/bin"
+    DATABRIDGE_DATABASE: "%PLATFORMS.LUMI.DATABRIDGE_DATABASE%"
+    CONTAINER_DIR: "%CONFIGURATION.CONTAINER_DIR_DEV%"
+  lumi-readdatabridge:
+    TYPE: ps
+    HOST: lumi-cluster
+    # This needs that a ~/.ssh/config exists with the following:
+    # Host lumi-cluster
+    #     Hostname lumi.csc.fi
+    #     IdentifyFile ~/.ssh/<your_sshkey>
+    #     User <lumi user>
+    PROJECT: "%PLATFORMS.LUMI.PROJECT%"
+    DEVELOPMENT_PROJECT: "%PLATFORMS.LUMI.DEVELOPMENT_PROJECT%"
+    OPERATIONAL_PROJECT: "%PLATFORMS.LUMI.OPERATIONAL_PROJECT%"
+    HPC_PROJECT_ROOT: "%PLATFORMS.LUMI.HPC_PROJECT_ROOT%"
+    FDB_PROD: "%PLATFORMS.LUMI.FDB_PROD%"
+    USER: <to-be-overloaded-in-user-conf>
+    SCRATCH_DIR: "%PLATFORMS.LUMI.SCRATCH_DIR%"
+    MAX_WALLCLOCK: "04:00"
+    ADD_PROJECT_TO_HOST: False
+    TEMP_DIR: ''
+    DATABRIDGE_FDB_HOME: "%PLATFORMS.LUMI.DATABRIDGE_FDB_HOME%"
+    HPCARCH_short: "lumi"
+    HPCARCH_lowercase: "lumi"
+    # Some HPCs might require to source a file to be able to use their module system.
+    # This parameter allows you to provide the module profile path via the conf files.
+    MODULES_PROFILE_PATH: "%PLATFORMS.LUMI.MODULES_PROFILE_PATH%"
+    CONTAINER_COMMAND: "singularity"
+    CONTAINER_DIR: "%CONFIGURATION.CONTAINER_DIR_DEV%"

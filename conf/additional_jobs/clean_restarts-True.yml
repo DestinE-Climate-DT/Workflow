@@ -1,0 +1,12 @@
+JOBS:
+  CLEAN_RESTARTS:
+    DEPENDENCIES: SIM+3 DQC_FULL BACKUP
+    FILE: templates/clean_restarts.sh
+    PLATFORM: '%DEFAULT.HPCARCH%'
+    running: chunk
+    CHECK: on_submission
+    NOTIFY_ON: FAILED
+CONFIGURATION:
+  RESTARTS:
+    KEEP_EVERY: 12
+    ARCHIVE: False

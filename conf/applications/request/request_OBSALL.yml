@@ -1,0 +1,416 @@
+OBSALL:
+  1:
+    GSVREQUEST: #raw data (2t at sfc-level  from IFS model) for SYNOP Part of OBSALL Apps
+      # From <expid>/conf/main.yml:
+      expver: "%REQUEST.EXPVER%"
+      # From user input <expid>/conf/request.yml:
+      activity: "%REQUEST.ACTIVITY%"
+      resolution: "%REQUEST.RESOLUTION%"
+      generation: "%REQUEST.GENERATION%"
+      realization: "%REQUEST.REALIZATION%"
+      experiment: "%REQUEST.EXPERIMENT%"
+      model: "%REQUEST.MODEL%"
+      # Hardcoded parameters:
+      dataset: climate-dt
+      class: d1
+      type: fc
+      stream: clte
+      levtype: "sfc" # please fill this
+      date: "%SPLIT_START_DATE%"
+      time: "0000/to/2300/by/0100"
+      param: "2t" # 2t - air temperature at 2 m (167)
+      grid: "%OBSALL.GRID%" #fill this if needed. 0.05 is 5km
+      method: "%OBSALL.METHOD%"
+    OPAREQUEST:
+      # Hardcoded parameters
+      variable: "2t" # 2t - air temperature at 2 m (167)
+      stat: "raw" # please fill this
+      stat_freq: "hourly" # please fill this
+      output_freq: "daily" # please fill this
+      time_step: 60 # in minutes, 60*timestep length in hours TODO: do that automatically
+      save: True
+      checkpoint: True
+      # From <expid>/conf/main.yml:
+      checkpoint_filepath: "%OUT_OBSALL%"
+      save_filepath: "%OUT_OBSALL%"
+  2:
+    GSVREQUEST: #raw data (t at 850 hPa from IFS model) for RADSOUND Part of OBSALL Apps
+      # From <expid>/conf/main.yml:
+      expver: "%REQUEST.EXPVER%"
+      # From user input <expid>/conf/request.yml:
+      activity: "%REQUEST.ACTIVITY%"
+      resolution: "%REQUEST.RESOLUTION%"
+      generation: "%REQUEST.GENERATION%"
+      realization: "%REQUEST.REALIZATION%"
+      experiment: "%REQUEST.EXPERIMENT%"
+      model: "%REQUEST.MODEL%"
+      # Hardcoded parameters:
+      dataset: climate-dt
+      class: d1
+      type: fc
+      stream: clte
+      levtype: "pl" # please fill this
+      levelist: [850]
+      date: "%SPLIT_START_DATE%"
+      time: "0000/to/2300/by/1200"
+      param: "t" #  t - air temperature (130) at 850 hPa
+      grid: "%OBSALL.GRID%" #fill this if needed. 0.05 is 5km
+      method: "%OBSALL.METHOD%"
+    OPAREQUEST:
+      # Hardcoded parameters
+      variable: "t" # t - air temperature (130) at 850 hPa
+      stat: "raw" # please fill this
+      stat_freq: "hourly" # please fill this
+      output_freq: "daily" # please fill this
+      time_step: 720 # in minutes, 60*timestep length in hours TODO: do that automatically
+      save: True
+      checkpoint: True
+      # From <expid>/conf/main.yml:
+      checkpoint_filepath: "%OUT_OBSALL%"
+      save_filepath: "%OUT_OBSALL%"
+  3:
+    GSVREQUEST: #raw data (2t at sfc-level from IFS model) for RADSOUND Part of OBSALL Apps
+      # From <expid>/conf/main.yml:
+      expver: "%REQUEST.EXPVER%"
+      # From user input <expid>/conf/request.yml:
+      activity: "%REQUEST.ACTIVITY%"
+      resolution: "%REQUEST.RESOLUTION%"
+      generation: "%REQUEST.GENERATION%"
+      realization: "%REQUEST.REALIZATION%"
+      experiment: "%REQUEST.EXPERIMENT%"
+      model: "%REQUEST.MODEL%"
+      # Hardcoded parameters:
+      dataset: climate-dt
+      class: d1
+      type: fc
+      stream: clte
+      levtype: "sfc" # please fill this
+      date: "%SPLIT_START_DATE%"
+      time: "0000/to/2300/by/1200"
+      param: "2t" # 2t - air temperature at 2 m (167)
+      grid: "%OBSALL.GRID%" #fill this if needed. 0.05 is 5km
+      method: "%OBSALL.METHOD%"
+    OPAREQUEST:
+      # Hardcoded parameters
+      variable: "2t" # 2t - air temperature at 2 m (167)
+      stat: "raw" # please fill this
+      stat_freq: "hourly" # please fill this
+      output_freq: "daily" # please fill this
+      time_step: 720 # in minutes, 60*timestep length in hours TODO: do that automatically
+      save: True
+      checkpoint: True
+      # From <expid>/conf/main.yml:
+      checkpoint_filepath: "%OUT_OBSALL%"
+      save_filepath: "%OUT_OBSALL%"
+  4:
+    GSVREQUEST: #raw data (2d at sfc-level from IFS model) for SATELLITE Part of OBSALL Apps
+      # From <expid>/conf/main.yml:
+      expver: "%REQUEST.EXPVER%"
+      # From user input <expid>/conf/request.yml:
+      activity: "%REQUEST.ACTIVITY%"
+      resolution: "%REQUEST.RESOLUTION%"
+      generation: "%REQUEST.GENERATION%"
+      realization: "%REQUEST.REALIZATION%"
+      experiment: "%REQUEST.EXPERIMENT%"
+      model: "%REQUEST.MODEL%"
+      # Hardcoded parameters:
+      dataset: climate-dt
+      class: d1
+      type: fc
+      stream: clte
+      levtype: "sfc" # please fill this
+      date: "%SPLIT_START_DATE%"
+      time: "0000/to/2300/by/0100"
+      param: "2d" # 2d - dewpoint temperature at 2 m (168)
+      grid: "%OBSALL.GRID%" #fill this if needed. 0.05 is 5km
+      method: "%OBSALL.METHOD%"
+    OPAREQUEST:
+      # Hardcoded parameters
+      variable: "2d" # 2d - dewpoint temperature at 2 m (168)
+      stat: "raw" # please fill this
+      stat_freq: "hourly" # please fill this
+      output_freq: "daily" # please fill this
+      time_step: 60 # in minutes, 60*timestep length in hours TODO: do that automatically
+      save: True
+      checkpoint: True
+      # From <expid>/conf/main.yml:
+      checkpoint_filepath: "%OUT_OBSALL%"
+      save_filepath: "%OUT_OBSALL%"
+  5:
+    GSVREQUEST: #raw data (10u at sfc-level from IFS model) for SATELLITE Part of OBSALL Apps
+      # From <expid>/conf/main.yml:
+      expver: "%REQUEST.EXPVER%"
+      # From user input <expid>/conf/request.yml:
+      activity: "%REQUEST.ACTIVITY%"
+      resolution: "%REQUEST.RESOLUTION%"
+      generation: "%REQUEST.GENERATION%"
+      realization: "%REQUEST.REALIZATION%"
+      experiment: "%REQUEST.EXPERIMENT%"
+      model: "%REQUEST.MODEL%"
+      # Hardcoded parameters:
+      dataset: climate-dt
+      class: d1
+      type: fc
+      stream: clte
+      levtype: "sfc" # please fill this
+      date: "%SPLIT_START_DATE%"
+      time: "0000/to/2300/by/0100"
+      param: "10u" # 10u - U component of wind speed at 10 m (165)
+      grid: "%OBSALL.GRID%" #fill this if needed. 0.05 is 5km
+      method: "%OBSALL.METHOD%"
+    OPAREQUEST:
+      # Hardcoded parameters
+      variable: "10u" # 10u - U component of wind speed at 10 m (165)
+      stat: "raw" # please fill this
+      stat_freq: "hourly" # please fill this
+      output_freq: "daily" # please fill this
+      time_step: 60 # in minutes, 60*timestep length in hours TODO: do that automatically
+      save: True
+      checkpoint: True
+      # From <expid>/conf/main.yml:
+      checkpoint_filepath: "%OUT_OBSALL%"
+      save_filepath: "%OUT_OBSALL%"
+  6:
+    GSVREQUEST: #raw data (10v at sfc-level from IFS model) for SATELLITE Part of OBSALL Apps
+      # From <expid>/conf/main.yml:
+      expver: "%REQUEST.EXPVER%"
+      # From user input <expid>/conf/request.yml:
+      activity: "%REQUEST.ACTIVITY%"
+      resolution: "%REQUEST.RESOLUTION%"
+      generation: "%REQUEST.GENERATION%"
+      realization: "%REQUEST.REALIZATION%"
+      experiment: "%REQUEST.EXPERIMENT%"
+      model: "%REQUEST.MODEL%"
+      # Hardcoded parameters:
+      dataset: climate-dt
+      class: d1
+      type: fc
+      stream: clte
+      levtype: "sfc" # please fill this
+      date: "%SPLIT_START_DATE%"
+      time: "0000/to/2300/by/0100"
+      param: "10v" # 10v - V component of wind speed at 10 m (166)
+      grid: "%OBSALL.GRID%" #fill this if needed. 0.05 is 5km
+      method: "%OBSALL.METHOD%"
+    OPAREQUEST:
+      # Hardcoded parameters
+      variable: "10v" # 10v - V component of wind speed at 10 m (166)
+      stat: "raw" # please fill this
+      stat_freq: "hourly" # please fill this
+      output_freq: "daily" # please fill this
+      time_step: 60 # in minutes, 60*timestep length in hours TODO: do that automatically
+      save: True
+      checkpoint: True
+      # From <expid>/conf/main.yml:
+      checkpoint_filepath: "%OUT_OBSALL%"
+      save_filepath: "%OUT_OBSALL%"
+  7:
+    GSVREQUEST: #raw data (sp at sfc-level from IFS model) for SATELLITE Part of OBSALL Apps
+      # From <expid>/conf/main.yml:
+      expver: "%REQUEST.EXPVER%"
+      # From user input <expid>/conf/request.yml:
+      activity: "%REQUEST.ACTIVITY%"
+      resolution: "%REQUEST.RESOLUTION%"
+      generation: "%REQUEST.GENERATION%"
+      realization: "%REQUEST.REALIZATION%"
+      experiment: "%REQUEST.EXPERIMENT%"
+      model: "%REQUEST.MODEL%"
+      # Hardcoded parameters:
+      dataset: climate-dt
+      class: d1
+      type: fc
+      stream: clte
+      levtype: "sfc" # please fill this
+      date: "%SPLIT_START_DATE%"
+      time: "0000/to/2300/by/0100"
+      param: "sp" # sp - surface pressure (134)
+      grid: "%OBSALL.GRID%" #fill this if needed. 0.05 is 5km
+      method: "%OBSALL.METHOD%"
+    OPAREQUEST:
+      # Hardcoded parameters
+      variable: "sp" # sp - surface pressure (134)
+      stat: "raw" # please fill this
+      stat_freq: "hourly" # please fill this
+      output_freq: "daily" # please fill this
+      time_step: 60 # in minutes, 60*timestep length in hours TODO: do that automatically
+      save: True
+      checkpoint: True
+      # From <expid>/conf/main.yml:
+      checkpoint_filepath: "%OUT_OBSALL%"
+      save_filepath: "%OUT_OBSALL%"
+  8:
+    GSVREQUEST: #raw data (skt at sfc-level from IFS model) for SATELLITE Part of OBSALL Apps
+      # From <expid>/conf/main.yml:
+      expver: "%REQUEST.EXPVER%"
+      # From user input <expid>/conf/request.yml:
+      activity: "%REQUEST.ACTIVITY%"
+      resolution: "%REQUEST.RESOLUTION%"
+      generation: "%REQUEST.GENERATION%"
+      realization: "%REQUEST.REALIZATION%"
+      experiment: "%REQUEST.EXPERIMENT%"
+      model: "%REQUEST.MODEL%"
+      # Hardcoded parameters:
+      dataset: climate-dt
+      class: d1
+      type: fc
+      stream: clte
+      levtype: "sfc" # please fill this
+      date: "%SPLIT_START_DATE%"
+      time: "0000/to/2300/by/0100"
+      param: "skt" # skt - skin temperature (235)
+      grid: "%OBSALL.GRID%" #fill this if needed. 0.05 is 5km
+      method: "%OBSALL.METHOD%"
+    OPAREQUEST:
+      # Hardcoded parameters
+      variable: "skt" # skt - skin temperature (235)
+      stat: "raw" # please fill this
+      stat_freq: "hourly" # please fill this
+      output_freq: "daily" # please fill this
+      time_step: 60 # in minutes, 60*timestep length in hours TODO: do that automatically
+      save: True
+      checkpoint: True
+      # From <expid>/conf/main.yml:
+      checkpoint_filepath: "%OUT_OBSALL%"
+      save_filepath: "%OUT_OBSALL%"
+  9:
+    GSVREQUEST: #raw data (t at pl-levels from IFS model) for SATELLITE Part of OBSALL Apps
+      # From <expid>/conf/main.yml:
+      expver: "%REQUEST.EXPVER%"
+      # From user input <expid>/conf/request.yml:
+      activity: "%REQUEST.ACTIVITY%"
+      resolution: "%REQUEST.RESOLUTION%"
+      generation: "%REQUEST.GENERATION%"
+      realization: "%REQUEST.REALIZATION%"
+      experiment: "%REQUEST.EXPERIMENT%"
+      model: "%REQUEST.MODEL%"
+      # Hardcoded parameters:
+      dataset: climate-dt
+      class: d1
+      type: fc
+      stream: clte
+      levtype: "pl" # please fill this
+      levelist: [1000, 925, 850, 700, 600, 500, 400, 300, 250, 200, 150, 100, 70, 50, 30, 20, 10, 5, 1]
+      date: "%SPLIT_START_DATE%"
+      time: "0000/to/2300/by/0100"
+      param: "t" #  t - air temperature (130) at multiple hPa pressure levels (see levelist)
+      grid: "2.0/2.0" # Use coarse grid for 3D fields to avoid "OOM Kill" in AMSU-A part. Hard-coded in AMSU-A for now.
+      #grid: "%OBSALL.GRID%"
+      method: "%OBSALL.METHOD%"
+    OPAREQUEST:
+      # Hardcoded parameters
+      variable: "t" # t - air temperature (130) at multiple hPa pressure levels (see levelist)
+      stat: "raw" # please fill this
+      stat_freq: "hourly" # please fill this
+      output_freq: "daily" # please fill this
+      time_step: 60 # in minutes, 60*timestep length in hours TODO: do that automatically
+      save: True
+      checkpoint: True
+      # From <expid>/conf/main.yml:
+      checkpoint_filepath: "%OUT_OBSALL%"
+      save_filepath: "%OUT_OBSALL%"
+  10:
+    GSVREQUEST: #raw data (q at pl-levels from IFS model) for AMSU-A Part of OBSALL Apps
+      # From <expid>/conf/main.yml:
+      expver: "%REQUEST.EXPVER%"
+      # From user input <expid>/conf/request.yml:
+      activity: "%REQUEST.ACTIVITY%"
+      resolution: "%REQUEST.RESOLUTION%"
+      generation: "%REQUEST.GENERATION%"
+      realization: "%REQUEST.REALIZATION%"
+      experiment: "%REQUEST.EXPERIMENT%"
+      model: "%REQUEST.MODEL%"
+      # Hardcoded parameters:
+      dataset: climate-dt
+      class: d1
+      type: fc
+      stream: clte
+      levtype: "pl" # please fill this
+      levelist: [1000, 925, 850, 700, 600, 500, 400, 300, 250, 200, 150, 100, 70, 50, 30, 20, 10, 5, 1]
+      date: "%SPLIT_START_DATE%"
+      time: "0000/to/2300/by/0100"
+      param: "q" #  q - specific humidity (133) at multiple hPa pressure levels (see levelist)
+      grid: "2.0/2.0" # Use coarse grid for 3D fields to avoid "OOM Kill" in AMSU-A part. Hard-coded in AMSU-A for now.
+      #grid: "%OBSALL.GRID%"
+      method: "%OBSALL.METHOD%"
+    OPAREQUEST:
+      # Hardcoded parameters
+      variable: "q" #  q - specific humidity (133) at multiple hPa pressure levels (see levelist)
+      stat: "raw" # please fill this
+      stat_freq: "hourly" # please fill this
+      output_freq: "daily" # please fill this
+      time_step: 60 # in minutes, 60*timestep length in hours TODO: do that automatically
+      save: True
+      checkpoint: True
+      # From <expid>/conf/main.yml:
+      checkpoint_filepath: "%OUT_OBSALL%"
+      save_filepath: "%OUT_OBSALL%"
+  11:
+    GSVREQUEST: #raw data (clwc at pl-levels from IFS model) for AMSU-A Part of OBSALL Apps
+      # From <expid>/conf/main.yml:
+      expver: "%REQUEST.EXPVER%"
+      # From user input <expid>/conf/request.yml:
+      activity: "%REQUEST.ACTIVITY%"
+      resolution: "%REQUEST.RESOLUTION%"
+      generation: "%REQUEST.GENERATION%"
+      realization: "%REQUEST.REALIZATION%"
+      experiment: "%REQUEST.EXPERIMENT%"
+      model: "%REQUEST.MODEL%"
+      # Hardcoded parameters:
+      dataset: climate-dt
+      class: d1
+      type: fc
+      stream: clte
+      levtype: "pl" # please fill this
+      levelist: [1000, 925, 850, 700, 600, 500, 400, 300, 250, 200, 150, 100, 70, 50, 30, 20, 10, 5, 1]
+      date: "%SPLIT_START_DATE%"
+      time: "0000/to/2300/by/0100"
+      param: "clwc" #  clwc - specific liquid water content (246) at multiple hPa pressure levels (see levelist)
+      grid: "2.0/2.0" # Use coarse grid for 3D fields to avoid "OOM Kill" in AMSU-A part. Hard-coded in AMSU-A for now.
+      #grid: "%OBSALL.GRID%"
+      method: "%OBSALL.METHOD%"
+    OPAREQUEST:
+      # Hardcoded parameters
+      variable: "clwc" #  clwc - specific liquid water content (246) at multiple hPa pressure levels (see levelist)
+      stat: "raw" # please fill this
+      stat_freq: "hourly" # please fill this
+      output_freq: "daily" # please fill this
+      time_step: 60 # in minutes, 60*timestep length in hours TODO: do that automatically
+      save: True
+      checkpoint: True
+      # From <expid>/conf/main.yml:
+      checkpoint_filepath: "%OUT_OBSALL%"
+      save_filepath: "%OUT_OBSALL%"
+  12:
+    GSVREQUEST: #raw data (avg_siconc at o2d-level from NEMO model) for AMSU-A Part of OBSALL Apps
+      # From <expid>/conf/main.yml:
+      expver: "%REQUEST.EXPVER%"
+      # From user input <expid>/conf/request.yml:
+      activity: "%REQUEST.ACTIVITY%"
+      resolution: "%REQUEST.RESOLUTION%"
+      generation: "%REQUEST.GENERATION%"
+      realization: "%REQUEST.REALIZATION%"
+      experiment: "%REQUEST.EXPERIMENT%"
+      model: "%REQUEST.MODEL%"
+      # Hardcoded parameters:
+      dataset: climate-dt
+      class: d1
+      type: fc
+      stream: clte
+      levtype: "o2d" # please fill this
+      date: "%SPLIT_START_DATE%"
+      time: "0000" # note, outputting ocean variables as daily averages, from NEMO model
+      param: "avg_siconc" # avg_siconc - sea ice fraction, param: [263001]
+      grid: "%OBSALL.GRID%" #fill this if needed. 0.05 is 5km
+      method: "%OBSALL.METHOD%"
+    OPAREQUEST:
+      # Hardcoded parameters
+      variable: "avg_siconc" # avg_siconc - sea ice fraction, param: [263001]
+      stat: "raw" # please fill this
+      stat_freq: "hourly" # please fill this
+      output_freq: "daily" # please fill this
+      time_step: 60 # in minutes, 60*timestep length in hours TODO: do that automatically
+      save: True
+      checkpoint: True
+      # From <expid>/conf/main.yml:
+      checkpoint_filepath: "%OUT_OBSALL%"
+      save_filepath: "%OUT_OBSALL%"

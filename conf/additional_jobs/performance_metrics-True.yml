@@ -1,0 +1,16 @@
+JOBS:
+  PERFORMANCE_METRICS:
+    FILE: templates/performance/performance_metrics.sh
+    PLATFORM: "%DEFAULT.HPCARCH%"
+    DEPENDENCIES:
+      MONITOR_RESOURCES:
+        STATUS: "COMPLETED"
+    RUNNING: chunk
+    WALLCLOCK: '00:30'
+    CHECK: on_submission
+    NOTIFY_ON: FAILED
+    SLURM_FREQ: 60
+    NODES: 1
+    PROCESSORS: 1
+    TASKS: 1
+    THREADS: 1

@@ -1,0 +1,46 @@
+RUN:
+  WORKFLOW: end-to-end
+  # Platform-dependent: in LUMI, it should be "cray"
+  ENVIRONMENT: intel
+  PROCESSOR_UNIT: cpu
+  TYPE: test
+MODEL:
+  NAME: ifs-nemo
+  SIMULATION: test-ifs-nemo
+  GRID_ATM: tco79l137
+  GRID_OCE: eORCA1_Z75
+  DVC_INPUTS_BRANCH: "ClimateDT-phase2"
+  INPUTS: "%HPCROOTDIR%/%PROJECT.PROJECT_DESTINATION%/dvc-cache-de340"
+EXPERIMENT:
+  DATELIST: 19900101 #Startdate
+  MEMBERS: fc0
+  CHUNKSIZEUNIT: month
+  SPLITSIZEUNIT: day
+  CHUNKSIZE: 1
+  NUMCHUNKS: 2
+  CALENDAR: standard
+APP:
+  ENERGY_INDICATORS: "True"
+  ENERGY_OFFSHORE: "True"
+  WILDFIRES_FWI: "True"
+  WILDFIRES_WISE: "True"
+  HYDROLAND: "True"
+  HYDROMET: "True"
+  OBSALL: "True"
+  DATA: "false"
+REQUEST:
+  RESOLUTION: standard
+  GENERATION: 2
+CONFIGURATION:
+  RAPS_USER_FLAGS: "--inproot-namelists"
+  ADDITIONAL_JOBS:
+    TRANSFER: "False"
+    BACKUP: "False"
+    WIPE: "False"
+    MEMORY_CHECKER: "True"
+    DQC: "True"
+    CLEAN: "True"
+    AQUA: "True"
+    MONITOR_RESOURCES: "True"
+    PERFORMANCE_METRICS: "True"
+    FIX_CONSTANT_VARIABLES: "True"
