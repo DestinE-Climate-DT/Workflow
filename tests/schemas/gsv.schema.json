@@ -1,0 +1,30 @@
+{
+  "$id": "schema:workflow/gsv",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "GSV",
+  "description": "Schema for the GSV section of the workflow",
+  "type": "object",
+  "properties": {
+      "VERSION": {
+        "type": "string",
+        "description": "Specify the version of the GSV_interface container used in the workflow.",
+        "default": "2.6.0"
+      },
+      "WEIGHTS_PATH": {
+        "type": "string",
+        "description": "Path to the weights.",
+        "default": "%CONFIGURATION.HPC_PROJECT_DIR%/gsv_files/gsv_weights"
+      },
+      "TEST_FILES": {
+        "type": "string",
+        "description": "Path to the test files.",
+        "default": "%CONFIGURATION.HPC_PROJECT_DIR%/gsv_files/gsv_test_files"
+      },
+      "DEFINITION_PATH": {
+        "type": "string",
+        "description": "Path to the grid definitions.",
+        "default": "%CONFIGURATION.HPC_PROJECT_DIR%/gsv_files/grid_definitions"
+      }
+  },
+  "required": ["VERSION", "WEIGHTS_PATH", "TEST_FILES", "DEFINITION_PATH"]
+}

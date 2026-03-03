@@ -1,0 +1,17 @@
+RUN:
+  CYCLE: "O-26.1"
+PLATFORMS:
+  MARENOSTRUM5:
+    HPCARCH_short: "MN5-o26.1"
+    CATALOG_NAME: "climatedt-o26.1"
+  MARENOSTRUM5-login:
+    HPCARCH_short: "MN5-o26.1"
+    CATALOG_NAME: "climatedt-o26.1"
+  LUMI:
+    HPCARCH_short: "lumi-o26.1"
+    CATALOG_NAME: "climatedt-o26.1"
+  LUMI-login:
+    HPCARCH_short: "lumi-o26.1"
+    CATALOG_NAME: "climatedt-o26.1"
+REQUEST:
+  EXPVER: "0001"

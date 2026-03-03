@@ -1,0 +1,30 @@
+JOBS:
+  SYNC_LRA:
+    DEPENDENCIES: LRA_GENERATOR AQUA_ANALYSIS
+    FILE: templates/aqua/sync_lra.sh
+    PLATFORM: lumi-login
+    RUNNING: once
+    WALLCLOCK: 00:30
+    CHECK: on_submission
+    NOTIFY_ON: FAILED
+  UPDATE_CATALOG:
+    DEPENDENCIES: SYNC_LRA
+    FILE: templates/aqua/update_catalog.sh
+    PLATFORM: "%DEFAULT.HPCARCH%"
+    RUNNING: member
+    WALLCLOCK: 00:05
+    CHECK: on_submission
+    NOTIFY_ON: FAILED
+    CONTAINER_DIR: "/appl/containers"
+  PUSH_UPDATED_CATALOG:
+    DEPENDENCIES: UPDATE_CATALOG
+    FILE: templates/aqua/aqua_push.sh
+    PLATFORM: local
+    RUNNING: member
+    WALLCLOCK: 00:30
+    CHECK: on_submission
+    NOTIFY_ON: FAILED
+    CONTAINER_DIR: "/appl/containers"
+    PUSH_FIGURES: "false"
+    PUSH_CATALOG: "true"
+    TOTALJOBS: 1

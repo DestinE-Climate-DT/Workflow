@@ -1,0 +1,7 @@
+# Reduced portfolio
+CONFIGURATION:
+  MULTIO_PLANS: "-reduced"
+  IFS:
+    MULTIO_PLANS: "-reduced"
+  NEMO:
+    MULTIO_PLANS: "-reduced"
