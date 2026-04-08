@@ -1,0 +1,138 @@
+JOBS:
+  APP_ENERGY_INDICATORS:
+    FILE: templates/application.sh
+    RUNNING: chunk
+    WALLCLOCK: 00:20
+    PLATFORM: '%DEFAULT.HPCARCH%'
+    PARTITION: '%CURRENT_APP_PARTITION%'
+    NODES: 1
+    PROCESSORS: 1
+    THREADS: '%CURRENT_OPA_PROCESSES%'
+    CHECK: on_submission
+    NOTIFY_ON:
+      - FAILED
+    SPLITS: auto
+    DEPENDENCIES:
+      OPA_ENERGY_INDICATORS:
+        SPLITS_FROM:
+          ALL:
+            SPLITS_TO: '[1:auto]*\1'
+      OPA_ENERGYTDIG2:
+        #      STATUS: FAILED
+        SPLITS_FROM:
+          ALL:
+            SPLITS_TO: '[1:auto]*\1'
+      OPA_ENERGYTDIG1:
+        #STATUS: FAILED
+        SPLITS_FROM:
+          ALL:
+            SPLITS_TO: '[1:auto]*\1'
+      APP_ENERGY_INDICATORS:
+        SPLITS_FROM:
+          ALL:
+            SPLITS_TO: previous
+      APP_ENERGY_INDICATORS-1: {}
+    ADDITIONAL_FILES: []
+  OPA_ENERGY_INDICATORS:
+    DEPENDENCIES:
+      DN:
+        SPLITS_FROM:
+          ALL:
+            SPLITS_TO: '[1:auto]*\1'
+      OPA_ENERGY_INDICATORS:
+        SPLITS_FROM:
+          ALL:
+            SPLITS_TO: previous
+      OPA_ENERGY_INDICATORS-1: {}
+    FILE: templates/opa.sh,conf/applications/request/request_ENERGY_INDICATORS.yml
+    PLATFORM: '%DEFAULT.HPCARCH%'
+    PARTITION: '%CURRENT_APP_PARTITION%'
+    RUNNING: chunk
+    NODES: 1
+    PROCESSORS: 1
+    THREADS: '%CURRENT_OPA_PROCESSES%'
+    CHECK: on_submission
+    CUSTOM_DIRECTIVES: '%CURRENT_OPA_CUSTOM_DIRECTIVES%'
+    EXCLUSIVE: '%CURRENT_OPA_EXCLUSIVE%'
+    RETRIALS: 1
+    WALLCLOCK: 00:20
+    NOTIFY_ON:
+      - FAILED
+    SPLITS: auto
+    ADDITIONAL_FILES: []
+  OPA_ENERGYTDIG1:
+    DEPENDENCIES:
+      DN:
+        SPLITS_FROM:
+          ALL:
+            SPLITS_TO: '[1:auto]*\1'
+      OPA_ENERGYTDIG1:
+        SPLITS_FROM:
+          ALL:
+            SPLITS_TO: previous
+      OPA_ENERGYTDIG1-1: {}
+    FILE: templates/opa.sh,conf/applications/request/request_ENERGYTDIG1.yml
+    PLATFORM: '%DEFAULT.HPCARCH%'
+    PARTITION: '%CURRENT_APP_PARTITION%'
+    RUNNING: chunk
+    NODES: 1
+    PROCESSORS: 1
+    THREADS: '%CURRENT_OPA_PROCESSES%'
+    CHECK: on_submission
+    CUSTOM_DIRECTIVES: '%CURRENT_OPA_CUSTOM_DIRECTIVES%'
+    EXCLUSIVE: '%CURRENT_OPA_EXCLUSIVE%'
+    RETRIALS: 1
+    WALLCLOCK: 00:20
+    NOTIFY_ON:
+      - FAILED
+    SPLITS: auto
+    ADDITIONAL_FILES: []
+  OPA_ENERGYTDIG2:
+    DEPENDENCIES:
+      DN:
+        SPLITS_FROM:
+          ALL:
+            SPLITS_TO: '[1:auto]*\1'
+      OPA_ENERGYTDIG2:
+        SPLITS_FROM:
+          ALL:
+            SPLITS_TO: previous
+      OPA_ENERGYTDIG2-1: {}
+    FILE: templates/opa.sh,conf/applications/request/request_ENERGYTDIG2.yml
+    PLATFORM: '%DEFAULT.HPCARCH%'
+    PARTITION: '%CURRENT_APP_PARTITION%'
+    RUNNING: chunk
+    NODES: 1
+    PROCESSORS: 1
+    THREADS: '%CURRENT_OPA_PROCESSES%'
+    CHECK: on_submission
+    CUSTOM_DIRECTIVES: '%CURRENT_OPA_CUSTOM_DIRECTIVES%'
+    EXCLUSIVE: '%CURRENT_OPA_EXCLUSIVE%'
+    RETRIALS: 1
+    WALLCLOCK: 00:20
+    NOTIFY_ON:
+      - FAILED
+    SPLITS: auto
+    ADDITIONAL_FILES: []
+WRAPPERS:
+  POLICY: flexible
+  WRAPPER_OPA_ENERGYTDIG1:
+    TYPE: vertical
+    JOBS_IN_WRAPPER: OPA_ENERGYTDIG1
+    MIN_WRAPPED: 10
+    MAX_WRAPPED: 15
+  WRAPPER_OPA_ENERGYTDIG2:
+    TYPE: vertical
+    JOBS_IN_WRAPPER: OPA_ENERGYTDIG2
+    MIN_WRAPPED: 10
+    MAX_WRAPPED: 15
+  WRAPPER_OPA_ENERGY_INDICATORS:
+    TYPE: vertical
+    JOBS_IN_WRAPPER: OPA_ENERGY_INDICATORS
+    MIN_WRAPPED: 10
+    MAX_WRAPPED: 15
+  WRAPPER_APP_ENERGY_INDICATORS:
+    TYPE: vertical
+    JOBS_IN_WRAPPER: APP_ENERGY_INDICATORS
+    MIN_WRAPPED: 10
+    MAX_WRAPPED: 15

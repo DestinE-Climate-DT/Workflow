@@ -1,0 +1,11 @@
+# Reduced portfolio
+CONFIGURATION:
+  MULTIO_PLANS: "-reduced"
+  IFS:
+    MULTIO_PLANS: "-reduced"
+  NEMO:
+    MULTIO_PLANS: "-reduced"
+AQUA:
+  # TODO: Readd 'tcc' to VARS_SFC once AQUA is updated to >= 0.19.9
+  VARS_SFC: "['tprate', '2t', 'msl', 'sdswrf', 'tnlwrf', 'ie', 'iews', 'inss', 'ishf', 'sdlwrf', 'slhtf', 'snlwrf', 'snswrf', 'tdswrf', 'tnswrf', 'tnlwrfcs', 'tnswrfcs', 'tsrwe']"
+  VARS_O2D: "['sithick', 'siconc', 'tos', 'sos']"

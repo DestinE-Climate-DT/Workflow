@@ -1,0 +1,63 @@
+MODEL:
+  # Place-holders to modify MIR_CACHE_PATHs via main.yml. Leave these parameters empty
+  # to use the default values defined by RAPS. Defining these parameters via the
+  # main.yml might not have an effect in all HPCs. It currently works in: LUMI, MN5
+  RAPS_MIR_CACHE_PATH:
+  RAPS_MIR_FESOM_CACHE_PATH:
+  # Path to restart files from a previous experiment (for restarted runs)
+  # Assuming that the experiment to read from is the same user
+  # /current/ is a symlink that always points to the latest completed chunk
+  RESTARTS_FROM_PATH: "%CURRENT_SCRATCH_DIR%/%CURRENT_PROJECT%/%CURRENT_USER%/%RUN.RESTART_FROM%/restarts/%CONFIGURATION.IFS.START_DATE%/%MEMBER%/current/"
+  BUNDLE_BUILD_DIR: "%^MODEL.PATH%/build"
+  BUNDLE_SOURCE_DIR: "%^MODEL.PATH%/source"
+  RAPS:
+    BIN: "%MODEL.BUNDLE_SOURCE_DIR%/raps/bin"
+    GENERAL_FLAGS: "--ifs-bundle-build-dir --icmcl %^MODEL.ICMCL_PATTERN% -R --deep "
+    FESOM_FLAGS: "--fesom --nonemopart "
+    RESTART_FLAGS: "--restartdirectory=%^CONFIGURATION.RESTART_DIR% --keeprestart "
+    FDB_FLAGS: "--keepfdb --multio-production-fdbs=%^MODEL.FDB_DIRS% --outexp=%^REQUEST.EXPVER% --generation=%REQUEST.GENERATION% "
+    IO_FLAGS: "--keepnetcdf --nextgemsout=6 --wam-multio --ifs-multio "
+    NAMELIST_FLAGS: "--inproot-namelists "
+  FDB_DIRS: "%^REQUEST.FDB_HOME%/native:%^REQUEST.FDB_HOME%:%^REQUEST.FDB_HOME%/latlon"
+RUN:
+  RESTARTED_RUN: "false"
+  RESTART_FROM: ""
+REQUEST:
+  MODEL: ifs-fesom
+  MODEL_NAME_UPPER: IFS-FESOM
+PLATFORMS:
+  LUMI:
+    RAPS_HOST_CPU: lum-c
+    RAPS_HOST_GPU: lum-g
+    RAPS_BIN_HPC_NAME: lumi
+    RAPS_COMPILER: cce
+    # Exports this value as mpilib for RAPS. It doesn't really switch the MPI lib
+    # and it neither affects the name of the rundir (mpilib hard-coded in RAPS for lumi)
+    RAPS_MPILIB: cray-mpich
+    PERFORMANCE_PLATFORM_FLAGS: "--wam-grib-version=1 --no-wam-output"
+  MARENOSTRUM5:
+    RAPS_HOST_CPU: mn5-gpp
+    RAPS_HOST_GPU:
+    RAPS_BIN_HPC_NAME: mn5
+    RAPS_COMPILER: intel
+    # Exports this value as mpilib for RAPS. It doesn't really switch the MPI lib
+    # but it affects the name of the rundir (e.g.
+    # `rundir/tco79l137/t02k/hres/intel.openmpi`)
+    RAPS_MPILIB: openmpi
+    PERFORMANCE_PLATFORM_FLAGS: ""
+PERFORMANCE_METRICS:
+  COMPLEXITY:
+    IFS: 10
+    NEMO: 50
+CONFIGURATION:
+  GENERATE_PROFILES: "True"
+  ADDITIONAL_JOBS:
+    FIX_CONSTANT_VARIABLES: "True"
+  RESTARTS:
+    FILES_TO_CHECK: "waminfo rcf"
+    DIRS_TO_CHECK: "fesom_raw_restart"
+
+AQUA:
+  GRID_VERSION: 4
+  # For IFS-FESOM, AQUA ocean grid name matches MODEL.GRID_OCE
+  GRID_OCE: "%MODEL.GRID_OCE%"
