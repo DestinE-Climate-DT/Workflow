@@ -1,0 +1,30 @@
+MODEL:
+  VERSION: destine_icon_v1.2.2_yaco_1.1.1
+  YACO_VERSION: destine_phase2_1.1.1_cce20
+  ICON_VERSION: destine_phase2_cce20
+  # Assuming that the experiment to read from is the same user
+  # And that "current" points to the latest restart files
+  # TODO current is deleted at the end of the chunk!
+  RESTARTS_FROM_PATH: "%CURRENT_SCRATCH_DIR%/%CURRENT_PROJECT%/%CURRENT_USER%/%RUN.RESTART_FROM%/restarts/%CONFIGURATION.ICON.START_DATE%/%MEMBER%/current/"
+REQUEST:
+  MODEL: icon
+  MODEL_NAME_UPPER: ICON
+PERFORMANCE_METRICS:
+  COMPLEXITY:
+    ATMOSPHERE: 27
+    OCEAN: 34
+    LAND: 355
+# Env configuration for the ICON model
+PLATFORMS:
+  LUMI:
+    HDF5_USE_FILE_LOCKING: "FALSE"
+    FI_CXI_OPTIMIZED_MRS: "false"
+    FI_CXI_RX_MATCH_MODE: "hybrid"
+    FI_MR_CACHE_MONITOR: "memhooks"
+    MPICH_ALLREDUCE_NO_SMP: 1
+    MPICH_COLL_OPT_OFF: 1
+    PMI_SIGNAL_STARTUP_COMPLETION: 1
+    # Needed for the ICON cce16 version
+    MPICH_SMP_SINGLE_COPY_MODE: NONE
+AQUA:
+  GRID_VERSION: 3

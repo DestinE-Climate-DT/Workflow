@@ -1,0 +1,22 @@
+#!/bin/bash
+
+set -xuve
+
+# HEADER
+
+HPCROOTDIR=${1:-%HPCROOTDIR%}
+EXPID=${2:-%DEFAULT.EXPID%}
+# AQUA_LRA_OUTPUT_PATH added to sync the LRA results to a common place
+LOCAL_LRA_OUTPUT_PATH=${3:-%AQUA.LOCAL_LRA_OUTPUT_PATH%}
+CENTRAL_LRA_PATH=${4:-%AQUA.CENTRAL_LRA_OUTPUT_PATH%}
+SYNC_LRA_HPCHOST=${5:-%AQUA.SYNC_LRA_HPCHOST%}
+CATALOG=${6:-%HPCCATALOG_NAME%}
+MODEL=${7:-%REQUEST.MODEL_NAME_UPPER%}
+EXPERIMENT_NAME=${8:-%AQUA.EXPERIMENT_NAME%}
+
+# END_HEADER
+
+# Rsync the LRA results from the HPC to a central place:
+# lumi-login:/appl/local/climatedt/data/AQUA/LRA
+
+rsync -av --mkpath --progress ${SYNC_LRA_HPCHOST}${LOCAL_LRA_OUTPUT_PATH}/${CATALOG}/${MODEL}/${EXPERIMENT_NAME}/ ${CENTRAL_LRA_PATH}/${CATALOG}/${MODEL}/${EXPERIMENT_NAME}/
