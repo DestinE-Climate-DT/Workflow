@@ -1,0 +1,13 @@
+JOBS:
+  MONITOR_RESOURCES:
+    FILE: templates/performance/monitor_resources.sh
+    PLATFORM: "%DEFAULT.HPCARCH%-login"
+    DEPENDENCIES:
+      SIM:
+        STATUS: "RUNNING"
+    RUNNING: chunk
+    WALLCLOCK: "%JOBS.SIM.WALLCLOCK%"
+    CHECK: on_submission
+    NOTIFY_ON: FAILED
+    SAMPLING_FREQ: 10  # High-frequency sampling for pidstat (seconds)
+    SLURM_FREQ: 60  # Low-frequency sampling for SLURM commands (seconds)

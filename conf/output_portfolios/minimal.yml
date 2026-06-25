@@ -1,0 +1,10 @@
+# Minimal portfolio
+CONFIGURATION:
+  MULTIO_PLANS: "-minimal"
+  IFS:
+    MULTIO_PLANS: "-minimal"
+  NEMO:
+    MULTIO_PLANS: "-minimal"
+AQUA:
+  VARS_SFC: "['tprate', '2t', 'msl', 'tcc', 'sdswrf', 'tnlwrf', 'ie', 'iews', 'inss', 'ishf', 'sdlwrf', 'slhtf', 'snlwrf', 'snswrf', 'tdswrf', 'tnswrf', 'tnlwrfcs', 'tnswrfcs', 'tsrwe']"
+  VARS_O2D: "['sithick', 'siconc', 'tos', 'sos']"

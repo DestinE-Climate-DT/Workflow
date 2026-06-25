@@ -1,0 +1,64 @@
+MODEL:
+  RESOLUTION: "120km"
+  GRID_OCE: eORCA1_Z75
+  RAPS:
+    # ------------------------
+    # --- Scientific flags ---
+    # ------------------------
+    USER_RESOL_SCI_FLAGS: ""
+    # -------------------------
+    # --- Performance flags ---
+    # -------------------------
+    USER_RESOL_PERF_FLAGS: ""
+CONFIGURATION:
+  ICMCL: "yearly_extra"
+  IFS:
+    GTYPE: tco
+    RESOL: 79
+    LEVELS: 137
+    EXPVER: hz9m
+    LABEL: LWDA
+    # TODO: verify
+    IO_PPN: 16
+    IO_NODES: "%CURRENT_IFS_IO_NODES%"
+  NEMO:
+    # TODO: verify
+    IO_PPN: 8
+    IO_NODES: "%CURRENT_NEMO_IO_NODES%"
+  DQC_PROFILE: lowres
+  DQC_WALLCLOCK: "00:20"
+WALLCLOCKS:
+  MONTHLY: "01:00"
+  DAILY: "00:30"
+EXPERIMENT:
+  CHUNKSIZEUNIT: month
+  CHUNKSIZE: 1
+  # Setting 2 months for testing
+  NUMCHUNKS: 2
+PLATFORMS:
+  LUMI:
+    # TODO: verify
+    NODES: 3
+    TASKS: 16
+    THREADS: 8
+    PROCESSORS_PER_NODE: 128
+    IFS_IO_NODES: 1
+    NEMO_IO_NODES: 1
+  MARENOSTRUM5:
+    # TODO: verify
+    TYPE: slurm
+    QUEUE: "gp_debug"
+    MAX_WALLCLOCK: "02:00"
+    NODES: 3
+    TASKS: 28
+    THREADS: 4
+    PROCESSORS_PER_NODE: 112
+    IFS_IO_NODES: 1
+    NEMO_IO_NODES: 1
+REQUEST:
+  RESOLUTION: standard
+AQUA:
+  GRID_ATM: tco79
+  RESOLUTION_ATM: hpz5
+  GRID_OCE: eORCA1
+  RESOLUTION_OCE: hpz5

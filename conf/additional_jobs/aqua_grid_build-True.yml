@@ -1,0 +1,68 @@
+CONFIGURATION:
+  # Grid data directory - dedicated location for grids, weights, and areas
+  # Separate from AQUA config directory for clarity
+  GRID_DATADIR: "%HPCROOTDIR%/aqua-data"
+  GRID_OUTDIR: "%CONFIGURATION.GRID_DATADIR%/grids"
+JOBS:
+  AQUA_GRID_BUILD:
+    # AQUA_GRID_BUILD runs after first SIM chunk to extract native grid structures
+    # and create grid definition files for AQUA/LRA_GENERATOR
+    # Also configures AQUA to use experiment-local grids directory
+    DEPENDENCIES:
+      AQUA_SETUP:
+      SIM:
+        CHUNKS_FROM:
+          all:
+            CHUNKS_TO: "1"
+      DQC_BASIC:
+        CHUNKS_FROM:
+          all:
+            CHUNKS_TO: "1"
+    FILE: templates/aqua/grid_build.sh
+    NODES: 1
+    PROCESSORS: '%CURRENT_PROCESSORS_PER_NODE%'
+    PARTITION: '%CURRENT_APP_PARTITION%'
+    TASKS: 0
+    THREADS: 1
+    PLATFORM: '%DEFAULT.HPCARCH%'
+    EXCLUSIVE: "True"
+    RUNNING: once # Only runs once, grids don't change per chunk
+    WALLCLOCK: 01:00 # Grid building can take time
+    CHECK: on_submission
+    NOTIFY_ON: FAILED
+  LRA_GENERATOR:
+    # When AQUA_GRID_BUILD is enabled, LRA_GENERATOR must wait for it
+    DEPENDENCIES: AQUA_GRID_BUILD
+# AQUA_GRID_BUILD configuration
+AQUA_GRID_BUILD:
+  # Grid detection and building options
+  CHECK_EXISTING_GRIDS: "True" # Check if grids exist
+  SKIP_IF_AVAILABLE: "True" # Skip if grid files found
+  REBUILD: "False" # Force rebuild if grids exist
+  VERIFY_GRIDS: "True" # Verify with CDO after building
+  FIX_COORDINATES: "True" # Fix model-specific issues
+  LOGLEVEL: "INFO" # DEBUG, INFO, WARNING, ERROR
+  # Sources for grid extraction (simulation outputs)
+  # Map to AQUA sources for HEALPix grids
+  SOURCE_ATM: "hourly-%AQUA.RESOLUTION_ATM%-hl" # IFS atmosphere
+  SOURCE_OCE_2D: "daily-%AQUA.RESOLUTION_OCE%-o2d" # Ocean 2D
+  SOURCE_OCE_3D: "daily-%AQUA.RESOLUTION_OCE%-o3d" # Ocean 3D
+  # Vertical coordinate type for 3D ocean grids (AQUA v0.19.7+)
+  # IFS-FESOM/IFS-NEMO use "level"; ICON uses "level_full" (override in model config)
+  VERT_COORD_3D: "level"
+  # Grid output directory (component subdirectories created automatically: IFS/, FESOM/, NEMO/, HealPix/)
+  # Grids are built into AQUA config directory so LRA_GENERATOR can find them automatically
+  GRID_OUTDIR: "%CONFIGURATION.GRID_OUTDIR%"
+  # Grid version number - Inherited from model config (AQUA.GRID_VERSION)
+  # AQUA v0.19.6+ requires:
+  #   - v4 for IFS-FESOM (interpolation changes)
+  #   - v3 for IFS-NEMO and ICON
+  # Override here only if needed for specific use cases
+  GRID_VERSION: "%AQUA.GRID_VERSION%"
+
+# Ocean grid name - MUST BE DEFINED in model config AQUA.GRID_OCE
+# Examples: CORE2, DARS, NG5, eORCA1, eORCA025, eORCA12
+# See model config files (conf/model/*/tco*-*.yml) for values
+# Required config parameters:
+#   - AQUA.GRID_OCE: Ocean grid name
+#   - CONFIGURATION.IFS.RESOL: Numeric resolution (79, 399, 1279, 2559)

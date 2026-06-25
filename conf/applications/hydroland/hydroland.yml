@@ -1,0 +1,15 @@
+HYDROLAND:
+  DELETE_FILES: true
+  APPLY_INDICATORS: true
+  RUN_FREQUENCY: day # day or month
+  APPLY_CDO_MERGETIME: false # only applicable if RUN_FREQUENCY is month
+  INIT_FILES: "%APP_AUX_IN_DATA_DIR%/hydroland_v%HYDROLAND.IN_DATA_VERSION%"
+  PRE_VARIABLE: "avg_tprate"
+  TAVG_VARIABLE: "2t"
+  STAT: "raw" # raw for STAT_FREQ: hourly | mean for STAT_FREQ: daily
+  STAT_FREQ: "hourly"
+  PRIOR_APP_OUTPATH: "None"
+  RESTART_FROM_PRIOR_RUN: false
+  BIAS_ADJUSTMENT:
+    APPLY_BA: false
+    FUTURE_START_DATE: "2015-01-01"

@@ -1,0 +1,32 @@
+RUN:
+  WORKFLOW: model
+  ENVIRONMENT: cray
+  PROCESSOR_UNIT: gpu
+  TYPE: test
+MODEL:
+  NAME: icon
+  SIMULATION: test-control-icon
+  GRID_ATM: r2b8
+  GRID_OCE: r2b8
+EXPERIMENT:
+  DATELIST: 19900101
+  MEMBERS: "default"
+  CHUNKSIZEUNIT: day
+  CHUNKSIZE: 1
+  NUMCHUNKS: 2
+  CALENDAR: standard
+CONFIGURATION:
+  DATA_PORTFOLIO: "full"
+  ADDITIONAL_JOBS:
+    TRANSFER: "False"
+    BACKUP: "False"
+    MEMORY_CHECKER: "False"
+    DQC: "False"
+    AQUA: "True"
+    LRA: "True"
+JOBS:
+  SIM:
+    PARTITION: standard-g
+    WALLCLOCK: '00:15'
+    NODES: 16
+    CUSTOM_DIRECTIVES: "['#SBATCH --gpus-per-node=8', '#SBATCH --exclusive']"
