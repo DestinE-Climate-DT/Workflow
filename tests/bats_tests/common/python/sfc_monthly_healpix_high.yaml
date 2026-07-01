@@ -1,0 +1,18 @@
+date-format: month
+mars-keys:
+  class: d1
+  dataset: climate-dt
+  experiment: hist # To be overwritten by workflow
+  activity: baseline # To be overwritten by workflow
+  generation: 2 # To be overwritten by workflow
+  model: ifs-nemo
+  realization: 1 # To be overwritten by workflow
+  expver: 0001 # To be overwritten by workflow
+  stream: clmn
+  resolution: high
+  type: fc
+  levtype: sfc
+  year: [1990]
+  month: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12]
+  param: [8, 9, 78, 79, 134, 137, 141, 144, 146, 147, 148, 151, 159, 164, 165, 166, 167, 168, 169, 175, 176, 177, 178, 179, 180, 181, 182, 186, 187, 188, 212, 228, 235, 260048]
+grid: H128
