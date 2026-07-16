@@ -1,0 +1,19 @@
+# Profile automatically generated with profile_generator.py based on Data Portfolio version v0.0.4
+date-format: date
+mars-keys:
+  class: d1
+  dataset: climate-dt
+  experiment: hist # To be overwritten by workflow
+  activity: baseline # To be overwritten by workflow
+  generation: 2 # To be overwritten by workflow
+  model: ifs-nemo
+  realization: 1 # To be overwritten by workflow
+  expver: 0001 # To be overwritten by workflow
+  stream: clte
+  date: 19900101 # To be overwritten by workflow
+  resolution: high
+  type: fc
+  levtype: sfc
+  time: "0000/to/2300/by/0100"
+  param: [8, 9, 78, 79, 134, 137, 141, 144, 146, 147, 148, 151, 159, 164, 165, 166, 167, 168, 169, 175, 176, 177, 178, 179, 180, 181, 182, 186, 187, 188, 212, 228, 235, 260048]
+grid: H128

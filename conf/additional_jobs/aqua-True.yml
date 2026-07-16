@@ -1,0 +1,79 @@
+JOBS:
+  AQUA_SETUP:
+    DEPENDENCIES: REMOTE_SETUP
+    FILE: templates/remote_setup/aqua_setup.sh,templates/aqua/config_catalog.yaml
+    PLATFORM: '%DEFAULT.HPCARCH%-login'
+    RUNNING: date
+    WALLCLOCK: 00:10
+    CHECK: on_submission
+    NOTIFY_ON: FAILED
+    TOTALJOBS: 1
+  AQUA_ANALYSIS:
+    DEPENDENCIES: AQUA_SETUP LRA_GENERATOR AQUA_ANALYSIS-12
+    FILE: templates/aqua/aqua_analysis.sh
+    NODES: 1
+    PROCESSORS: '%CURRENT_PROCESSORS_PER_NODE%'
+    TASKS: 0
+    THREADS: 1
+    PARTITION: '%CURRENT_APP_PARTITION%'
+    PLATFORM: '%DEFAULT.HPCARCH%'
+    EXCLUSIVE: "True"
+    RUNNING: chunk
+    WALLCLOCK: 02:00
+    FREQUENCY: 12
+    CHECK: on_submission
+    NOTIFY_ON: FAILED
+    TOTALJOBS: 1
+  AQUA_PUSH:
+    DEPENDENCIES: AQUA_SETUP AQUA_ANALYSIS
+    FILE: templates/aqua/aqua_push.sh
+    PLATFORM: local
+    RUNNING: chunk
+    WALLCLOCK: 02:00
+    FREQUENCY: "%^JOBS.AQUA_ANALYSIS.FREQUENCY%"
+    NOTIFY_ON: FAILED
+    CONTAINER_DIR: "/appl/containers"
+    PUSH_FIGURES: "true"
+    PUSH_CATALOG: "true"
+    TOTALJOBS: 1
+  REMOTE_SETUP:
+    FILE: templates/remote_setup/remote_setup.sh
+AQUA:
+  CONTAINER_VERSION: "0.19.13"
+  # Git revision (branch, tag or commit) to clone Climate-DT-catalog from
+  # https://github.com/DestinE-Climate-DT/Climate-DT-catalog
+  CATALOG_REF: "e26.1_v2"
+  LOCAL_LRA_OUTPUT_PATH: "%APP.OUTPATH%/LRA/"
+  CENTRAL_LRA_OUTPUT_PATH: "/appl/local/climatedt/data/AQUA/LRA/"
+  SYNC_LRA_HPCHOST: "%HPCSYNC_LRA_HPCHOST%"
+  INSTALL_DIR: "%HPCROOTDIR%/.aqua"
+  # START_DATE: Override catalog start date if different from experiment start (format: YYYYMMDD)
+  # If not set, defaults to experiment SDATE. LRA will process all data from START_DATE onwards.
+  # Need help with the variables
+  SOURCE_SFC: "monthly-%AQUA.RESOLUTION_ATM%-sfc"
+  WORKERS_SFC: 16
+  VARS_PL: "['q', 't', 'u', 'v']"
+  SOURCE_PL: "monthly-%AQUA.RESOLUTION_ATM%-pl"
+  WORKERS_PL: 6
+  VARS_HL: "[]"
+  SOURCE_HL: monthly-native-hl
+  WORKERS_HL: 0
+  SOURCE_O2D: "monthly-%AQUA.RESOLUTION_OCE%-o2d"
+  WORKERS_O2D: 12
+  VARS_O3D: "['thetao', 'so']"
+  SOURCE_O3D: "monthly-%AQUA.RESOLUTION_OCE%-o3d"
+  WORKERS_O3D: 3
+  VARS_SOL: "[]"
+  SOURCE_SOL: monthly-native-sol
+  WORKERS_SOL: 0
+  FIXER_NAME: climatedt-phase2-reduced
+  BUCKET: aqua-web
+  REPOSITORY: "DestinE-Climate-DT/aqua-web"
+  CARTOPY_DATA_DIR: "/opt/conda/share/cartopy"
+  EXPERIMENT_NAME: "%DEFAULT.EXPID%"
+  ANALYSIS_CONFIG: "%HPCROOTDIR%/.aqua/analysis/config.aqua-analysis.default.yaml"
+  # in AQUA analysis, look for PDF plots generated within the below number of minutes
+  SEARCH_TIME: 15
+  CATALOG_SOURCE: "lra-r100-monthly"
+APP:
+  OUTPATH: "%HPCROOTDIR%/output"

@@ -1,0 +1,22 @@
+JOBS:
+  PERFORMANCE_METRICS:
+    FILE: templates/performance/performance_metrics.sh
+    PLATFORM: "%DEFAULT.HPCARCH%"
+    DEPENDENCIES:
+      # MONITOR_RESOURCES completes at the per-chunk sim_done marker the SIM
+      # writes at the end of its compute, so depending on it alone keeps
+      # PERFORMANCE_METRICS chunk-scoped under a wrapper (no waiting for the
+      # whole allocation). The SIM_STAT end line is written by Autosubmit's exit
+      # handler immediately after sim_done; read_chunk_runtime_from_stat skips a
+      # half-written file, so this does not need a SIM COMPLETED dependency.
+      MONITOR_RESOURCES:
+        STATUS: "COMPLETED"
+    RUNNING: chunk
+    WALLCLOCK: '00:30'
+    CHECK: on_submission
+    NOTIFY_ON: FAILED
+    SLURM_FREQ: 60
+    NODES: 1
+    PROCESSORS: 1
+    TASKS: 1
+    THREADS: 1

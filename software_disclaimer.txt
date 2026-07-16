@@ -1,0 +1,69 @@
+Name: Autosubmit
+URL:  https://github.com/BSC-ES/autosubmit
+License: GNU GPL-3.0
+
+Name: ICON-MPIM
+URL:  https://gitlab.dkrz.de/icon/icon-mpim
+License: BSD 3-clause license
+
+Name: NEMO
+URL: https://forge.nemo-ocean.eu/nemo/nemo/-/blob/main
+License: CeCILL v2.0
+
+Name: IFS
+URL: https://git.ecmwf.int/projects/DE/repos/ifs-bundle
+License: IFS is available under ECMWF-specific restricted access conditions, sometimes referred to here as a special licence. No public open-source licence applies to the full IFS source code. 
+
+Name: FESOM
+URL:  https://github.com/FESOM/fesom2
+License: GNU GPL-3.0
+
+Name: AQUA
+URL:  https://github.com/DestinE-Climate-DT/AQUA
+License: Apache License 2.0
+
+Name: GSV Interface
+URL:  https://gitlab.earth.bsc.es/digital-twins/de_340-2/gsv_interface
+License: GNU GPL-3.0
+
+Name: DQC
+URL:  https://gitlab.earth.bsc.es/digital-twins/de_340-2/gsv_interface
+License: Apache License 2.0
+
+Name: OBSALL
+URL:  https://earth.bsc.es/gitlab/digital_twins_public/obsall
+License: Apache Licence 2.0
+
+Name: Data Portfolio
+URL: https://gitlab.earth.bsc.es/digital-twins/de_340-2/data-portfolio
+License: None
+
+Name: One Pass
+URL: https://gitlab.earth.bsc.es/digital-twins/de_340-2/one_pass
+License: Apache Licence 2.0
+
+Name: Energy Indicators
+URL: https://gitlab.earth.bsc.es/digital-twins/de_340-2/energy_onshore
+License: Apache Licence 2.0
+
+Name: Energy Offshore
+URL: https://gitlab.earth.bsc.es/digital-twins/de_340-2/energy_offshore
+License: MIT License
+
+Name: Hydroland
+URL: https://github.com/DestinE-Climate-DT/hydroland
+License: LGPL-3.0
+
+Name: Hydromet
+URL:  https://www.dwd.de/EN/ourservices/catrare/catrare.html
+License: Owned by Deutscher Wetterdienst (DWD), a licence is granted to ECMWF to use the software for all acts necessary for (i) the use of the Deliverables by ECMWF and the Union, including those envisaged
+in the Destination Earth initiative; and (ii) any purpose necessary to fulfil ECMWF or the Union's
+obligations under the Destination Earth Data Policy.
+
+Name: Wildfires FWI
+URL: https://github.com/spolade/FWI
+License: Apache Licence 2.0
+
+Name: Widlfires WISE
+URL: https://github.com/Joonasko/WISE
+License: AGPLv3
