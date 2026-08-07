@@ -1,0 +1,74 @@
+HYDROLAND:
+  1:
+    GSVREQUEST: #raw data
+      # From <expid>/conf/main.yml:
+      expver: "%REQUEST.EXPVER%"
+      # From user input <expid>/conf/request.yml:
+      activity: "%REQUEST.ACTIVITY%"
+      resolution: "%REQUEST.RESOLUTION%"
+      generation: "%REQUEST.GENERATION%"
+      realization: "%REQUEST.REALIZATION%"
+      experiment: "%REQUEST.EXPERIMENT%"
+      model: "%REQUEST.MODEL%"
+      # Hardcoded parameters:
+      dataset: climate-dt
+      class: d1
+      type: fc
+      stream: clte
+      levtype: "sfc"
+      date: "%SPLIT_START_DATE%"
+      time: "0000/to/2300/by/0100"
+      param: "%HYDROLAND.TAVG_VARIABLE%"
+      grid: "%HYDROLAND.GRID%"
+      method: "%HYDROLAND.METHOD%"
+      area: "%HYDROLAND.AREA%"
+    OPAREQUEST:
+      # Hardcoded parameters:
+      variable: "%HYDROLAND.TAVG_VARIABLE%"
+      stat: "%HYDROLAND.STAT%"
+      stat_freq: "%HYDROLAND.STAT_FREQ%"
+      output_freq: "daily"
+      time_step: 60 # in minutes
+      bias_adjust: "%HYDROLAND.BIAS_ADJUSTMENT.APPLY_BA%"
+      ba_reference_dir: "%HYDROLAND.INIT_FILES%/bias_adjustment/0.05/cdfs_2t"
+      ba_future_start_date: "%HYDROLAND.BIAS_ADJUSTMENT.FUTURE_START_DATE%"
+      ba_agg_method: "mean"
+      ba_detrend: True
+      ba_detrend_skip_years: 10
+  2:
+    GSVREQUEST: #raw data
+      # From <expid>/conf/main.yml:
+      expver: "%REQUEST.EXPVER%"
+      # From user input <expid>/conf/request.yml:
+      activity: "%REQUEST.ACTIVITY%"
+      resolution: "%REQUEST.RESOLUTION%"
+      generation: "%REQUEST.GENERATION%"
+      realization: "%REQUEST.REALIZATION%"
+      experiment: "%REQUEST.EXPERIMENT%"
+      model: "%REQUEST.MODEL%"
+      # Hardcoded parameters:
+      dataset: climate-dt
+      class: d1
+      type: fc
+      stream: clte
+      levtype: "sfc"
+      date: "%SPLIT_START_DATE%"
+      time: "0000/to/2300/by/0100"
+      param: "%HYDROLAND.PRE_VARIABLE%"
+      grid: "%HYDROLAND.GRID%"
+      method: "%HYDROLAND.METHOD%"
+      area: "%HYDROLAND.AREA%"
+    OPAREQUEST:
+      # Hardcoded parameters:
+      variable: "%HYDROLAND.PRE_VARIABLE%"
+      stat: "%HYDROLAND.STAT%"
+      stat_freq: "%HYDROLAND.STAT_FREQ%"
+      output_freq: "daily"
+      time_step: 60 # in minutes
+      bias_adjust: "%HYDROLAND.BIAS_ADJUSTMENT.APPLY_BA%"
+      ba_reference_dir: "%HYDROLAND.INIT_FILES%/bias_adjustment/0.05/cdfs_avg_tprate"
+      ba_future_start_date: "%HYDROLAND.BIAS_ADJUSTMENT.FUTURE_START_DATE%"
+      ba_agg_method: "mean"
+      ba_non_negative: True
+      ba_lower_threshold: 0.0000001157407407
+      ba_transform_method: "log"

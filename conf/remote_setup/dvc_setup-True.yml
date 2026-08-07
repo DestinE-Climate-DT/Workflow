@@ -1,0 +1,10 @@
+JOBS:
+  DVC_SETUP:
+    DEPENDENCIES: REMOTE_SETUP
+    FILE: templates/remote_setup/dvc_setup.sh
+    PLATFORM: '%DEFAULT.HPCARCH%-login'
+    RUNNING: once
+    WALLCLOCK: 01:00
+    CHECK: on_submission
+    NOTIFY_ON: FAILED
+    TOTALJOBS: 1

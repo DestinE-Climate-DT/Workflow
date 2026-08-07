@@ -1,0 +1,32 @@
+## In this file we define the configurations used in the CONTROL runs
+EXPERIMENT:
+  DATELIST: 19900101
+  MEMBERS: fc0
+  CALENDAR: standard
+# TODO: does it makes sense to keep the retrial here?
+JOBS:
+  SIM:
+    RETRIALS: 0
+    WALLCLOCK: "%WALLCLOCKS.MONTHLY%"
+CONFIGURATION:
+  RAPS:
+    FORCING_AEROSOLS: "aerosol_cams-extended-macv2sp-ssp370_climatology_CONFESS_1951-2100_4D.nc"
+    FORCING_AEROSOLS_VOLCANIC: "cmip6_stratospheric_aerosol_aod_extend.dat"
+    FORCING_GHG: "greenhouse_gas_timeseries_CMIP6_SSP370_CFC11equiv_47r1.nc"
+    FORCING_OZONE: "cmip6-ozone-scenarios/SSP370"
+    FIXYEAR: 1990
+MODEL:
+  RAPS:
+    # ------------------------
+    # --- Scientific flags ---
+    # ------------------------
+    # --teos10 : activate the TEOS10 instead of EOS80
+    # --sicoupl="fractional" : using fractional seaice coupling (old --sicoupl=1)
+    # --no-ozone : turn ozone handling off
+    # --inproot-namelists : using user defined input files/namelists instad of <model/RAPS/inputs>
+    USER_SIM_SCI_FLAGS: ''
+REQUEST:
+  EXPERIMENT: "cont"
+  ACTIVITY: "baseline"
+  GENERATION: 2
+  REALIZATION: 1

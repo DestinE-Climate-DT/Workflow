@@ -1,0 +1,22 @@
+RUN:
+  WORKFLOW: model
+  # Platform-dependent: in LUMI, it should be "cray"
+  ENVIRONMENT: intel
+  PROCESSOR_UNIT: cpu
+  TYPE: test
+MODEL:
+  NAME: ifs-nemo
+  SIMULATION: SSP370-ifs-nemo
+  GRID_ATM: tco2559l137
+  GRID_OCE: eORCA12_Z75
+CONFIGURATION:
+  DATA_PORTFOLIO: "full"
+  ADDITIONAL_JOBS:
+    TRANSFER: "False"
+    BACKUP: "False"
+    WIPE: "False"
+    MEMORY_CHECKER: "True"
+    DQC: "True"
+    CLEAN: "True"
+    AQUA: "True"
+    LRA: "True"

@@ -1,0 +1,37 @@
+{
+  "$id": "schema:workflow/experiment",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Experiment",
+  "description": "Schema for the Experiment section of the workflow",
+  "type": "object",
+  "properties": {
+    "DATELIST": {
+      "type": "integer",
+      "description": "List of dates to run the simulation."
+    },
+    "MEMBERS": {
+      "type": "string",
+      "pattern": "^fc[0-9]+( +fc[0-9]+)*$",
+      "description": "Name of ensemble members, each matching fcN. The realization is derived from the name: fcN -> realization N+1, so the list need not start at fc0. (Example: fc0 fc1 fc2, or fc10 fc11 to start at realization 11)"
+    },
+    "CHUNKSIZEUNIT": {
+      "type": "string",
+      "enum": ["hour", "day", "month", "year"],
+      "description": "Unit of the chunk size."
+    },
+    "CHUNKSIZE": {
+      "type": "integer",
+      "description": "Size of the chunk, in CHUNKSIZEUNITs."
+    },
+    "NUMCHUNKS": {
+      "type": "integer",
+      "description": "Number of chunks to run."
+    },
+    "CALENDAR": {
+      "type": "string",
+      "enum": ["noleap", "standard"],
+      "description": "Calendar to use."
+    }
+  },
+  "required": ["DATELIST", "CHUNKSIZEUNIT", "CHUNKSIZE", "NUMCHUNKS", "CALENDAR"]
+}

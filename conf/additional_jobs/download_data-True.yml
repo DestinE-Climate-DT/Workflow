@@ -1,0 +1,22 @@
+JOBS:
+  DOWNLOAD_DATA:
+    FILE: templates/download_data.sh
+    PLATFORM: "%HPCOFFLINE_DN_PLATFORM%"
+    PARTITION: "%CURRENT_APP_PARTITION%"
+    DEPENDENCIES: REMOTE_SETUP SYNC_REQUESTS
+    RUNNING: chunk
+    SPLITS: 'auto'
+    WALLCLOCK: '03:00'
+    NODES: 1
+    PROCESSORS: 1
+    TASKS: 1
+    THREADS: 1
+    CHECK: on_submission
+  SYNC_REQUESTS:
+    FILE: templates/sync_requests.sh
+    PLATFORM: local
+    DEPENDENCIES: BUILD_REQUESTS
+    RUNNING: chunk
+PLATFORMS:
+  MARENOSTRUM5:
+    SYNC_DATAMOVER: "True"
