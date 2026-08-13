@@ -1,0 +1,34 @@
+RUN:
+  WORKFLOW: model
+  ENVIRONMENT: intel
+  PROCESSOR_UNIT: cpu
+  TYPE: research
+MODEL:
+  NAME: ifs-nemo
+  SIMULATION: test-ifs-nemo
+  GRID_ATM: tco79l137
+  GRID_OCE: eORCA1_Z75
+EXPERIMENT:
+  CHUNKSIZEUNIT: month
+  CHUNKSIZE: 1
+  NUMCHUNKS: 1
+CONFIGURATION:
+  IFS:
+    START_DATE: 19900101
+  ADDITIONAL_JOBS:
+    TRANSFER: 'True'
+    BACKUP: 'False'
+    WIPE: 'True'
+    DQC: 'True'
+    CLEAN: 'False'
+    AQUA: 'False'
+    MEMORY_CHECKER: 'False'
+    SIZE_CHECK: 'False'
+    MONITOR_RESOURCES: 'True'
+    PERFORMANCE_METRICS: 'True'
+  WIPE:
+    DOIT: 'True'
+  DATA_PORTFOLIO: 'reduced'
+JOBS:
+  TRANSFER:
+    WALLCLOCK: '01:30'

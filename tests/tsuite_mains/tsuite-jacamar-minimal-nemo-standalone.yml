@@ -1,0 +1,18 @@
+CONFIG:
+  AUTOSUBMIT_VERSION: "4.1.16"
+  TOTALJOBS: 20
+  MAXWAITINGJOBS: 20
+DEFAULT:
+  EXPID: "t0kl"
+  HPCARCH: marenostrum5
+  #hint: use %PROJDIR% to point to the project folder (where the project is cloned)
+  CUSTOM_CONFIG: "%PROJDIR%/conf/bootstrap/"
+PROJECT:
+  PROJECT_TYPE: git
+  PROJECT_DESTINATION: git_project
+GIT:
+  PROJECT_ORIGIN: https://earth.bsc.es/gitlab/digital-twins/de_340-3/workflow
+  PROJECT_BRANCH: "main"
+  PROJECT_COMMIT: ''
+  PROJECT_SUBMODULES: 'data-portfolio dvc-cache-de340'
+  FETCH_SINGLE_BRANCH: true

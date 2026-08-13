@@ -1,0 +1,109 @@
+#!/bin/bash
+
+# HEADER
+# Container Images
+AQUA_CONTAINER=${1:-%CURRENT_AQUA_CONTAINER%}
+# Repository, Project and Experiment Paths
+MSF_REPOSITORY_DIR=${2:-%CONFIGURATION.MODEL_SERVING_FLOW.REPOSITORY_DIR%}
+PROJECT_DIR=${3:-%CONFIGURATION.PROJECT_ROOTDIR%}
+HPC_PROJECT_DIR=${4:-%CONFIGURATION.HPC_PROJECT_DIR%}
+EXPERIMENT_DIR=${5:-%HPCROOTDIR%}
+HPCARCH_short=${6:-%CURRENT_HPCARCH_SHORT%}
+UTILS_LIB_DIR=${7:-%CONFIGURATION.MODEL_SERVING_FLOW.UTILS_LIB_DIR%}
+# Checkpoint Information
+epoch=${8:-%CONFIGURATION.MODEL_SERVING_FLOW.CHECKPOINT.EPOCH%}
+step=${9:-%CONFIGURATION.MODEL_SERVING_FLOW.CHECKPOINT.STEP%}
+# Inference Execution Parameters
+START_DATE=${10:-%CHUNK_START_DATE%}
+CHUNKSIZE=${11:-%EXPERIMENT.CHUNKSIZE%}
+CHUNKSIZEUNIT=${12:-%EXPERIMENT.CHUNKSIZEUNIT%}
+# AQUA Setup & Paths
+AQUA=${13:-%CURRENT_AQUA%}
+AQUA_DIAGNOSTICS=${14:-%CURRENT_AQUA_DIAGNOSTICS%}
+AQUA_CATALOG_DIR=${15:-%CURRENT_AQUA_CATALOG%}
+AQUA_CONFIG=${16:-%CONFIGURATION.MODEL_SERVING_FLOW.AQUA_CONFIG_DIR%}
+# Output Folders
+EVALUATION_OUTPUT_DIR=${17:-%CONFIGURATION.MODEL_SERVING_FLOW.EVALUATION_OUTPUT_DIR%}
+ACTIVE_RUN_DIR=${18:-%CONFIGURATION.MODEL_SERVING_FLOW.ACTIVE_RUN_DIR_SYMLINK%}
+# Data Catalogs - Reference Data
+DATA_REF_CATALOG=${19:-%CONFIGURATION.MODEL_SERVING_FLOW.EVALUATION.REFERENCE_DATA.CATALOG%}
+DATA_REF_MODEL=${20:-%CONFIGURATION.MODEL_SERVING_FLOW.EVALUATION.REFERENCE_DATA.MODEL%}
+DATA_REF_EXP=${21:-%CONFIGURATION.MODEL_SERVING_FLOW.EVALUATION.REFERENCE_DATA.EXPERIMENT%}
+DATA_REF_SOURCE=${22:-%CONFIGURATION.MODEL_SERVING_FLOW.EVALUATION.REFERENCE_DATA.SOURCE%}
+# Data Catalogs - Predictions Data
+DATA_PRED_CATALOG=${23:-%CONFIGURATION.MODEL_SERVING_FLOW.EVALUATION.PREDICTIONS_DATA.CATALOG%}
+DATA_PRED_MODEL=${24:-%CONFIGURATION.MODEL_SERVING_FLOW.EVALUATION.PREDICTIONS_DATA.MODEL%}
+DATA_PRED_EXP=${25:-%CONFIGURATION.MODEL_SERVING_FLOW.EVALUATION.PREDICTIONS_DATA.EXPERIMENT%}
+# Inference
+CHUNKSIZE=${26:-%EXPERIMENT.CHUNKSIZE%}
+CHUNKSIZEUNIT=${27:-%EXPERIMENT.CHUNKSIZEUNIT%}
+# END_HEADER
+
+module load singularity
+source $UTILS_LIB_DIR/utils_inference.sh # format_start_date, compute_lead_time_hours, build_name_inference_output, run_id_from_symlink
+
+RUN_ID=$(run_id_from_symlink "${ACTIVE_RUN_DIR}")
+CONFIG_AQUA_DIAGNOSTICS="${MSF_REPOSITORY_DIR}/config/diagnostic_config"
+
+# Container paths to necessary data
+CARTOPY_DATA_DIR="/opt/conda/share/cartopy"
+ESMFMKFILE="/opt/conda/lib/esmf.mk"
+
+# lead time in hours
+lead_time_hours=$(compute_lead_time_hours "$START_DATE" "$CHUNKSIZE" "$CHUNKSIZEUNIT")
+
+# convert SDATE (YYYYMMDD) to YYYY-MM-DDTHH:mm:ss format
+start_date_formatted=$(format_start_date "$START_DATE")
+DATA_PRED_SOURCE_NC=$(build_name_inference_output "$RUN_ID" "$epoch" "$step" "$start_date_formatted" "$lead_time_hours")
+
+# remove the tailing .nc
+DATA_PRED_SOURCE=${DATA_PRED_SOURCE_NC%.nc}
+
+# dates parameters
+START_DATE_EVALUATION=$(date -d "$START_DATE" +%F) # %F = YYYY-MM-DD
+END_DATE_EVALUATION=$(date -d "$START_DATE_EVALUATION +$CHUNKSIZE $CHUNKSIZEUNIT" +%F)
+
+# ── Build singularity command ─────────────────────────────────────────────────
+SINGULARITY_CMD=(
+    singularity exec
+    --cleanenv
+    --no-mount /etc/localtime
+    --bind "${HPC_PROJECT_DIR}:${HPC_PROJECT_DIR}"
+
+    --env "PYTHONPATH=/opt/conda/lib/python3.10/site-packages"
+    --env "ESMFMKFILE=${ESMFMKFILE}"
+
+    --env "AQUA=${AQUA}"
+    --env "AQUA_DIAGNOSTICS=${AQUA_DIAGNOSTICS}"
+    --env "CONFIG_AQUA_DIAGNOSTICS=${CONFIG_AQUA_DIAGNOSTICS}"
+    --env "AQUA_CONFIG=${AQUA_CONFIG}"
+
+    --env "DATA_REF_CATALOG=${DATA_REF_CATALOG}"
+    --env "DATA_REF_MODEL=${DATA_REF_MODEL}"
+    --env "DATA_REF_EXP=${DATA_REF_EXP}"
+    --env "DATA_REF_SOURCE=${DATA_REF_SOURCE}"
+
+    --env "DATA_CATALOG=${DATA_PRED_CATALOG}"
+    --env "DATA_MODEL=${DATA_PRED_MODEL}"
+    --env "DATA_EXP=${DATA_PRED_EXP}"
+    --env "DATA_SOURCE=${DATA_PRED_SOURCE}"
+
+    --env "START_DATE=${START_DATE_EVALUATION}"
+    --env "END_DATE=${END_DATE_EVALUATION}"
+
+    --env "PYTHONUSERBASE=1",
+
+    --env "OUTPUT_DIR=${EVALUATION_OUTPUT_DIR}"
+)
+
+# Add container and aqua analysis command
+SINGULARITY_CMD+=(
+    "$AQUA_CONTAINER"
+    bash -c "
+        ${MSF_REPOSITORY_DIR}/scripts/run_ev_jose.sh --diagnostics all
+    "
+)
+
+echo "[INFO] Running AQUA evaluation..."
+"${SINGULARITY_CMD[@]}"
+echo "[INFO] Evaluation completed."

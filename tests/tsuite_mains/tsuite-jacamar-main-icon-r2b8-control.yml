@@ -1,0 +1,29 @@
+RUN:
+  WORKFLOW: model
+  ENVIRONMENT: cray
+  PROCESSOR_UNIT: gpu
+  TYPE: test
+MODEL:
+  NAME: icon
+  SIMULATION: test-control-icon
+  GRID_ATM: r2b8
+  GRID_OCE: r2b8
+  VERSION: destine_icon_v1.2.3_yaco_1.1.1
+  ICON_VERSION: destine_phase2_v1.2.3_cce20
+  YACO_VERSION: destine_phase2_1.1.1_cce20
+EXPERIMENT:
+  DATELIST: 19900101
+  MEMBERS: fc0
+  CHUNKSIZEUNIT: day
+  CHUNKSIZE: 1
+  NUMCHUNKS: 2
+  CALENDAR: standard
+CONFIGURATION:
+  DATA_PORTFOLIO: full
+  ADDITIONAL_JOBS:
+    TRANSFER: 'False'
+    BACKUP: 'False'
+    MEMORY_CHECKER: 'False'
+    DQC: 'False'
+    MONITOR_RESOURCES: 'True'
+    PERFORMANCE_METRICS: 'True'

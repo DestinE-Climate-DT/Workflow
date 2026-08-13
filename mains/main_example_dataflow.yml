@@ -1,0 +1,45 @@
+RUN:
+  WORKFLOW: simless
+  ENVIRONMENT: intel
+  PROCESSOR_UNIT: cpu
+  TYPE: production
+EXPERIMENT:
+  DATELIST: 19900101 #Startdate
+  MEMBERS: fc0
+  CHUNKSIZEUNIT: month
+  CHUNKSIZE: 1
+  NUMCHUNKS: 2
+  CALENDAR: standard
+  LAST_DATE: 19900228
+  SPLITSIZE: 15
+  SPLITSIZEUNIT: "day"
+  TARGET_RES: H128
+  TARGET_GRID: healpix
+CONFIGURATION:
+  ADDITIONAL_JOBS:
+    AQUA: "False"
+    DOWNLOAD_DATA: "True"
+    DATAFLOW: "True"
+REQUEST:
+  MODEL: ifs-nemo
+  EXPERIMENT: "hist"
+  ACTIVITY: "baseline"
+  GENERATION: 2
+  REALIZATION: 1
+  EXPVER: "0001"
+  RESOLUTION: "standard"
+  CLASS: d1
+  DATASET: climate-dt
+  STREAM: clte
+  FDB_HOME: "/gpfs/projects/ehpc01/dte/fdb"
+PLATFORMS:
+  MARENOSTRUM5:
+    PROJECT: pred1
+    QUEUE: gp_resa
+JOBS:
+  SYNC_REQUESTS:
+    TOTALJOBS: 1
+  DOWNLOAD_DATA:
+    PLATFORM: marenostrum5-transfer
+WRAPPERS:
+  MAX_WRAPPED: 10

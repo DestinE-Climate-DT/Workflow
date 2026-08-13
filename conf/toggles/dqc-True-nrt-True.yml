@@ -1,0 +1,22 @@
+# NRT override for DQC: run one DQC_BASIC per daily SIM split instead of once
+# per chunk, so quality checks flow daily. Loaded only when ADDITIONAL_JOBS.DQC
+# and NRT are both True; loads after dqc-True.yml so this full dep set wins.
+# The '[1:auto]*\1' mapping ties split N of the child to split N of the parent.
+JOBS:
+  DQC_BASIC:
+    SPLITS: auto
+    DEPENDENCIES:
+      SIM:
+        SPLITS_FROM:
+          ALL:
+            SPLITS_TO: '[1:auto]*\1'
+      # Serialize the daily DQC chain so the FDB info file's data_end_date
+      # advances monotonically (splits may finish out of order otherwise).
+      DQC_BASIC:
+        SPLITS_FROM:
+          ALL:
+            SPLITS_TO: previous
+  DQC_FULL:
+    # DQC_BASIC advances the FDB info file split by split; a member-level
+    # DQC_FULL has no SPLIT_END_DATE to advance it with.
+    UPDATE_FDB_INFO: "False"

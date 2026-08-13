@@ -1,0 +1,7 @@
+## String representation of Job List [6]  ##
+a006_LOCAL_SETUP ~ [1 child] [COMPLETED]
+|  a006_SYNCHRONIZE ~ [1 child] [COMPLETED]
+|  |  a006_19900101_fc0_1_SIM ~ [1 child] [FAILED]
+|  |  |  a006_19900101_fc0_1_DQC_BASIC [WAITING]
+|  |  a006_19900101_fc0_2_SIM ~ [1 child] [COMPLETED]
+|  |  |  a006_19900101_fc0_2_DQC_BASIC [COMPLETED]

@@ -1,0 +1,21 @@
+RUN:
+  WORKFLOW: model
+  ENVIRONMENT: intel
+  PROCESSOR_UNIT: cpu
+  TYPE: research
+MODEL:
+  NAME: ifs-fesom
+  SIMULATION: ifs-fesom-baseline-hist-tco79
+  GRID_ATM: tco79l137
+  PATH: /gpfs/projects/ehpc01/sbeyer/models/DE_CY48R1.0_climateDT_20260326
+  INPUTS: /gpfs/scratch/ehpc01/sbeyer/inproot
+CONFIGURATION:
+  DATA_PORTFOLIO: full
+  ADDITIONAL_JOBS:
+    DQC: 'True'
+    AQUA: 'True'
+    SYNC_LRA: 'True'
+    LRA: 'True'
+PLATFORMS:
+  MARENOSTRUM5:
+    DATABRIDGE_FDB_HOME: ''

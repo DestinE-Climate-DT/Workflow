@@ -1,0 +1,51 @@
+RUN:
+  WORKFLOW: end-to-end
+  ENVIRONMENT: cray
+  PROCESSOR_UNIT: cpu
+  TYPE: test
+MODEL:
+  NAME: ifs-nemo
+  SIMULATION: test-ifs-nemo
+  GRID_ATM: tco79l137
+  GRID_OCE: eORCA1_Z75
+  INPUTS: '%HPCROOTDIR%/%PROJECT.PROJECT_DESTINATION%/dvc-cache-de340'
+  DVC_INPUTS_BRANCH: ClimateDT-phase2
+EXPERIMENT:
+  DATELIST: 19900101 #Startdate
+  MEMBERS: fc0 fc1
+  CHUNKSIZEUNIT: month
+  SPLITSIZEUNIT: day
+  CHUNKSIZE: 1
+  NUMCHUNKS: 1
+  CALENDAR: standard
+CONFIGURATION:
+  DATA_PORTFOLIO: full
+  RAPS_EXPERIMENT: control
+  RAPS_USER_FLAGS: --inproot-namelists
+  ADDITIONAL_JOBS:
+    TRANSFER: 'False'
+    BACKUP: 'False'
+    WIPE: 'False'
+    MEMORY_CHECKER: 'True'
+    DQC: 'True'
+    CLEAN: 'True'
+    SIZE_CHECK: 'True'
+REQUEST:
+  EXPERIMENT: cont
+  ACTIVITY: baseline
+APP:
+  ENERGY_INDICATORS: 'True'
+AQUA:
+  ECCODES_PATH: /projappl/project_465000454/eccodes/eccodes-2.35.1/definitions
+PLATFORMS:
+  LUMI:
+    TYPE: slurm
+    APP_PARTITION: small
+    MAX_WALLCLOCK: 02:00
+JOBS:
+  SIM:
+    NODES: 4
+    WALLCLOCK: 02:00
+    PARTITION: standard
+  CLEAN:
+    WALLCLOCK: 02:00

@@ -1,0 +1,31 @@
+JOBS:
+  CLEAN_PREVIOUS_REQUESTS:
+    FILE: templates/dataflow/clean_previous_requests.sh
+    PLATFORM: local
+    DEPENDENCIES: BUILD_REQUESTS
+    RUNNING: once
+  SYNC_REQUESTS:
+    FILE: templates/dataflow/sync_requests.sh
+    PLATFORM: local
+    DEPENDENCIES: CLEAN_PREVIOUS_REQUESTS
+    RUNNING: chunk
+  DOWNLOAD_DATA:
+    FILE: templates/dataflow/download_data.sh
+    PLATFORM: "%HPCOFFLINE_DN_PLATFORM%"
+    PARTITION: "%CURRENT_APP_PARTITION%"
+    DEPENDENCIES: SYNC_REQUESTS
+    RUNNING: chunk
+    SPLITS: 'auto'
+    SPLITSIZEUNIT: "%EXPERIMENT.SPLITSIZEUNIT%"
+    SPLITSIZE: "%EXPERIMENT.SPLITSIZE%"
+    WALLCLOCK: '03:00'
+    NODES: 1
+    PROCESSORS: 1
+    TASKS: 1
+    THREADS: 1
+    CHECK: on_submission
+PLATFORMS:
+  MARENOSTRUM5:
+    SYNC_DATAMOVER: "True"
+CONFIGURATION:
+  GENERATE_PROFILES: "False"

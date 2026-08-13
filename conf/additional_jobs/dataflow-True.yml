@@ -1,0 +1,182 @@
+JOBS:
+  BUILD_REQUESTS:
+    FILE: templates/dataflow/build_requests.sh,data_pipelines/conf/general_request_workflow.yaml
+    PLATFORM: "%DEFAULT.HPCARCH%"
+    PARTITION: "%CURRENT_APP_PARTITION%"
+    DEPENDENCIES: REMOTE_SETUP
+    RUNNING: chunk
+    WALLCLOCK: '00:30'
+    SPLITSIZEUNIT: "%EXPERIMENT.SPLITSIZEUNIT%"
+    SPLITSIZE: "%EXPERIMENT.SPLITSIZE%"
+    NODES: 1
+    PROCESSORS: 1
+    TASKS: 1
+    THREADS: 1
+    CHECK: on_submission
+  CREATE_ZARR:
+    FILE: templates/dataflow/create_zarr.sh
+    PLATFORM: '%DEFAULT.HPCARCH%'
+    PARTITION: "%CURRENT_APP_PARTITION%"
+    DEPENDENCIES: BUILD_REQUESTS
+    SPLITSIZEUNIT: "%EXPERIMENT.SPLITSIZEUNIT%"
+    SPLITSIZE: "%EXPERIMENT.SPLITSIZE%"
+    RUNNING: chunk
+    WALLCLOCK: '03:00'
+    NODES: 1
+    PROCESSORS: 1
+    TASKS: 1
+    THREADS: 1
+    CHECK: on_submission
+  GENERATE_DATASETS:
+    FILE: templates/dataflow/generate_dataset.sh
+    PLATFORM: "%DEFAULT.HPCARCH%"
+    PARTITION: "%CURRENT_APP_PARTITION%"
+    SPLITSIZEUNIT: "%EXPERIMENT.SPLITSIZEUNIT%"
+    SPLITSIZE: "%EXPERIMENT.SPLITSIZE%"
+    TARGET_RES: "%EXPERIMENT.TARGET_RES%"
+    TARGET_GRID: "%EXPERIMENT.TARGET_GRID%"
+    DEPENDENCIES:
+      DOWNLOAD_DATA:
+        SPLITS_FROM:
+          all:
+            SPLITS_TO: '[1:auto]*\1'
+      CREATE_ZARR:
+        SPLITS_FROM:
+          all:
+            SPLITS_TO: all
+    RUNNING: chunk
+    SPLITS: 'auto'
+    WALLCLOCK: '05:00'
+    NODES: 1
+    PROCESSORS: 1
+    TASKS: 1
+    THREADS: 1
+    CHECK: on_submission
+  CREATE_ANEMOI_DS_CONFIG:
+    FILE: templates/dataflow/create_anemoi_config.sh
+    PLATFORM: '%DEFAULT.HPCARCH%'
+    PARTITION: "%CURRENT_APP_PARTITION%"
+    DEPENDENCIES:
+      GENERATE_DATASETS:
+        SPLITS_FROM:
+          all:
+            SPLITS_TO: '[1:auto]*\1'
+    RUNNING: date
+    WALLCLOCK: '03:00'
+    NODES: 1
+    PROCESSORS: 1
+    TASKS: 1
+    THREADS: 1
+    CHECK: on_submission
+  INIT_ANEMOI_DS:
+    FILE: templates/dataflow/init_anemoi-ds.sh
+    PLATFORM: '%DEFAULT.HPCARCH%'
+    PARTITION: "%CURRENT_APP_PARTITION%"
+    DEPENDENCIES: CREATE_ANEMOI_DS_CONFIG
+    RUNNING: date
+    WALLCLOCK: '03:00'
+    NODES: 1
+    PROCESSORS: 1
+    TASKS: 1
+    THREADS: 1
+    CHECK: on_submission
+  LOAD_PART_ANEMOI_DS:
+    FILE: templates/dataflow/load_anemoi.sh
+    PLATFORM: "%DEFAULT.HPCARCH%"
+    PARTITION: "%CURRENT_APP_PARTITION%"
+    DEPENDENCIES: INIT_ANEMOI_DS
+    RUNNING: chunk
+    WALLCLOCK: '00:30'
+    NODES: 1
+    PROCESSORS: 1
+    TASKS: 1
+    THREADS: 1
+    CHECK: on_submission
+  FINALISE_ANEMOI_DS:
+    FILE: templates/dataflow/finalise_anemoi-ds.sh
+    PLATFORM: '%DEFAULT.HPCARCH%'
+    PARTITION: "%CURRENT_APP_PARTITION%"
+    DEPENDENCIES: LOAD_PART_ANEMOI_DS
+    RUNNING: date
+    WALLCLOCK: '00:30'
+    NODES: 1
+    PROCESSORS: 1
+    TASKS: 1
+    THREADS: 1
+    CHECK: on_submission
+  INIT_ADDITIONAL_STATISTICS:
+    FILE: templates/dataflow/initialize_additional_statistics.sh
+    PLATFORM: '%DEFAULT.HPCARCH%'
+    PARTITION: "%CURRENT_APP_PARTITION%"
+    DEPENDENCIES: FINALISE_ANEMOI_DS
+    RUNNING: date
+    WALLCLOCK: '00:30'
+    NODES: 1
+    PROCESSORS: 1
+    TASKS: 1
+    THREADS: 1
+    CHECK: on_submission
+  LOAD_ADDITIONAL_STATISTICS:
+    FILE: templates/dataflow/load_additional_statistics.sh
+    PLATFORM: '%DEFAULT.HPCARCH%'
+    PARTITION: "%CURRENT_APP_PARTITION%"
+    DEPENDENCIES: INIT_ADDITIONAL_STATISTICS
+    RUNNING: chunk
+    WALLCLOCK: '06:00'
+    NODES: 1
+    PROCESSORS: 1
+    TASKS: 1
+    THREADS: 1
+    CHECK: on_submission
+  FINALIZE_ADDITIONAL_STATISTICS:
+    FILE: templates/dataflow/finalize_additional_statistics.sh
+    PLATFORM: '%DEFAULT.HPCARCH%'
+    PARTITION: "%CURRENT_APP_PARTITION%"
+    DEPENDENCIES: LOAD_ADDITIONAL_STATISTICS
+    RUNNING: date
+    WALLCLOCK: '01:00'
+    NODES: 1
+    PROCESSORS: 1
+    TASKS: 1
+    THREADS: 1
+    CHECK: on_submission
+  CLEANUP_ANEMOI_DS:
+    FILE: templates/dataflow/cleanup_anemoi-ds.sh
+    PLATFORM: '%DEFAULT.HPCARCH%'
+    PARTITION: "%CURRENT_APP_PARTITION%"
+    DEPENDENCIES: FINALIZE_ADDITIONAL_STATISTICS
+    RUNNING: date
+    WALLCLOCK: '00:30'
+    NODES: 1
+    PROCESSORS: 1
+    TASKS: 1
+    THREADS: 1
+    CHECK: on_submission
+EXPERIMENT:
+  #  SPLITSIZEUNIT: day # default CHUNKSIZEUNIT-1 (month-1 == day)
+  # Split size. NUMERIC: 4, 6, 12
+  #  SPLITSIZE: 5
+  # Split policy. STRING: flexible, strict
+  SPLITPOLICY: flexible
+CONFIGURATION:
+  DATAFLOW:
+    REQUESTS_DIR: "%HPCROOTDIR%/requests/generated"
+    REPOSITORY_DIR: "%HPCROOTDIR%/%PROJECT.PROJECT_DESTINATION%/data_pipelines"
+    OUTPUT_DIR: "%HPCROOTDIR%/dataflow_output"
+    TARGET_RES: "H128"
+    TARGET_GRID: "healpix"
+  GENERATE_PROFILES: "False"
+PLATFORMS:
+  MARENOSTRUM5:
+    #ANEMOI_CONTAINER: "/gpfs/projects/ehpc165/containers/anemoi-containers/anemoi-250606.sif"
+    DATAFLOW_CONTAINER: "/gpfs/scratch/bsc32/bsc927078/dataflow_bsc.sif" # TODO, improve usage like lines after
+  MARENOSTRUM5-LOGIN:
+    ANEMOI_CONTAINER: "%PLATFORMS.MARENOSTRUM5.ANEMOI_CONTAINER%"
+    DATAFLOW_CONTAINER: "%PLATFORMS.MARENOSTRUM5.DATAFLOW_CONTAINER%"
+  LUMI:
+    # TODO unify in calls
+    ANEMOI_CONTAINER: " /pfs/lustrep3/scratch/project_465000454/aayaiavi/climatedt-emulator-internal/environment_manager/dataflow_bsc_v3.0.0.sif"
+    DATAFLOW_CONTAINER: "/pfs/lustrep3/scratch/project_465000454/aayaiavi/climatedt-emulator-internal/environment_manager/dataflow_bsc_v3.0.0.sif"
+  LUMI-LOGIN:
+    ANEMOI_CONTAINER: "%PLATFORMS.LUMI.ANEMOI_CONTAINER%"
+    DATAFLOW_CONTAINER: "%PLATFORMS.LUMI.DATAFLOW_CONTAINER%"

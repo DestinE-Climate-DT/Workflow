@@ -1,0 +1,22 @@
+RUN:
+  WORKFLOW: model
+  ENVIRONMENT: cray
+  PROCESSOR_UNIT: gpu
+  TYPE: production
+MODEL:
+  NAME: icon
+  SIMULATION: control-r2b9-icon-1990
+  GRID_ATM: r2b9
+  GRID_OCE: r2b9
+  VERSION: destine_icon_v1.2.3_yaco_1.1.1
+  ICON_VERSION: destine_phase2_v1.2.3_cce20
+CONFIGURATION:
+  ADDITIONAL_JOBS:
+    TRANSFER: "True"
+    BACKUP: "True"
+    WIPE: "True"
+    MEMORY_CHECKER: "True"
+    DQC: "True"
+    CLEAN: "True"
+    AQUA: "True"
+    LRA: "True"

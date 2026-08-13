@@ -1,0 +1,24 @@
+RUN:
+  WORKFLOW: apps
+  ENVIRONMENT: cray
+  PROCESSOR_UNIT: cpu
+  TYPE: production
+APP:
+  DATA: 'True'
+  READ_FROM_DATABRIDGE: 'True'
+EXPERIMENT:
+  DATELIST: 19900101 #Startdate
+  MEMBERS: fc0
+  CHUNKSIZEUNIT: day
+  SPLITSIZEUNIT: day
+  CHUNKSIZE: 2
+  NUMCHUNKS: 2
+  CALENDAR: standard
+REQUEST:
+  EXPERIMENT: cont
+  ACTIVITY: baseline
+  RESOLUTION: standard
+  REALIZATION: 1
+  GENERATION: 2
+  MODEL: ifs-nemo
+  EXPVER: t0sr

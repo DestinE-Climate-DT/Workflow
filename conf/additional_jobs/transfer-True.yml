@@ -1,0 +1,41 @@
+JOBS:
+  TRANSFER:
+    FILE: templates/transfer.sh
+    PLATFORM: "%DEFAULT.HPCARCH%-transfer"
+    DEPENDENCIES: REMOTE_SETUP SIM FIX_CONSTANT_VARIABLES TRANSFER-1 DQC_BASIC
+    RUNNING: chunk
+    RETRIALS: 5
+    SPLITS: 'auto'
+    WALLCLOCK: '06:00'
+    NODES: 1
+    PROCESSORS: 1
+    TASKS: 1
+    THREADS: 1
+    CHECK: on_submission
+    NOTIFY_ON: FAILED
+EXPERIMENT:
+  SPLITSIZEUNIT: day # default CHUNKSIZEUNIT-1 (month-1 == day)
+  # Split size. NUMERIC: 4, 6, 12
+  SPLITSIZE: 2
+  # Split policy. STRING: flexible, strict
+  SPLITPOLICY: flexible
+CONFIGURATION:
+  GENERATE_PROFILES: "True"
+  TRANSFER:
+    MODIFY_METADATA: "False"
+    MODIFY_METADATA_FIELDS: "experimentVersionNumber=%REQUEST.BRIDGE_EXPVER%"
+REQUEST:
+  BRIDGE_EXPVER: "0001"
+PLATFORMS:
+  MARENOSTRUM5:
+    SYNC_DATAMOVER: "True"
+
+#WRAPPERS:
+#  WRAPPER_0:
+#    JOBS_IN_WRAPPER: TRANSFER
+#    METHOD: ASTHREAD
+#    TYPE: horizontal
+#    POLICY: mixed
+#    RETRIALS: 5
+#    MIN_WRAPPED: 1
+#    MAX_WRAPPED: 16

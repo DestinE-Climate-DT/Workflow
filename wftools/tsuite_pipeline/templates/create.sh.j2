@@ -1,0 +1,15 @@
+expid="{{ expid_ref }}"
+echo "=== Creating experiment $expid (type {{ type_name }}, autosubmit create) ==="
+autosubmit create "$expid" -np 2>&1 | tee "reports/create_$expid.txt"
+create_exit=${PIPESTATUS[0]}
+
+if [ "$create_exit" -eq 0 ]; then
+  echo -e "${GREEN}PASS${NC} $expid: create OK"
+  destine report add "{{ type_name }}_create" pass "reports/create_$expid.txt" --classname "$expid"
+else
+  echo -e "${RED}FAIL${NC} $expid: create FAILED"
+  destine report add "{{ type_name }}_create" fail "reports/create_$expid.txt" --classname "$expid"
+fi
+
+destine report generate reports/tsuite-create.xml
+[ "$create_exit" -eq 0 ]

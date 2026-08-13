@@ -1,0 +1,38 @@
+RUN:
+  WORKFLOW: end-to-end
+  ENVIRONMENT: intel
+  PROCESSOR_UNIT: cpu
+  TYPE: research
+MODEL:
+  NAME: ifs-fesom
+  SIMULATION: ifs-fesom-story-nudging-hist-tco79
+  GRID_ATM: tco79l137
+  VERSION: 'ansible_DE_CY48R1.0_climateDT_20260311-cpu'
+CONFIGURATION:
+  DATA_PORTFOLIO: "full"
+  ADDITIONAL_JOBS:
+    TRANSFER: 'True'
+    BACKUP: 'False'
+    WIPE: 'True'
+    MEMORY_CHECKER: 'True'
+    SIZE_CHECK: 'True'
+    DQC: 'True'
+    CLEAN: 'True'
+    AQUA: 'True'
+    LRA: "True"
+  WIPE:
+    DOIT: 'True'
+APP:
+  ENERGY_INDICATORS: "True"
+  WILDFIRES_FWI: "True"
+  WILDFIRES_WISE: "True"
+  HYDROLAND: "True"
+  HYDROMET: "True"
+  OBSALL: "True"
+  # DATA: "True"
+PLATFORMS:
+  MARENOSTRUM5:
+    DATABRIDGE_FDB_HOME: ''
+EXPERIMENT:
+  MEMBERS: "fc0 fc1 fc2"
+  SPLITSIZEUNIT: day

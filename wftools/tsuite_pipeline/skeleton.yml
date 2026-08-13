@@ -1,0 +1,134 @@
+# Child-pipeline skeleton for the tsuite generator.
+#
+# Placeholders (Python str.format at generate() time):
+#   {stage_class} -> "required" or "optional"
+#   {type_name} -> experiment type (e.g. ifs-nemo-lowres)
+defaults:
+  # `resources` after `run`: every SLURM job is finished once `run` returns.
+  # It must stay ahead of `delete`, which reclaims HPCROOTDIR.
+  phases: [expid, create, run, resources, monitor, delete]
+  stage_classes: [required, optional]
+  workflow:
+    rules:
+      - {when: always}
+  child_defaults:
+    tags: [jacamar]
+    id_tokens:
+      CI_JOB_JWT:
+        aud: https://gitlab.earth.bsc.es
+        # `variables` and `before_script` are injected by generate() (they carry
+        # runtime values / Python objects that don't fit in a data file).
+# Every job carries `allow_failure: true`.  Two reasons:
+#   1. MR-blocking decision is owned by the parent's `tsuite-required` job,
+#      which inspects JUnit content for detected types.  Per-job allow_failure
+#      on the chain is cosmetic for blocking purposes.
+#   2. allow_failure: true on run/monitor makes a failed job look like
+#      "success" to dependents -- so the `delete` job still fires via default
+#      `on_success` whether run/monitor passed or failed.  We *want* delete
+#      to run on failure too, so it can report the verdict and print debug
+#      instructions; whether it actually removes the experiment is then
+#      decided inside the script from the `RUN_FAILED_*` flag.
+# SKIPPED run/monitor (cascade because expid was never clicked) is *not*
+# affected by allow_failure -- delete stays skipped.  Desired: nothing was
+# started, nothing to clean.
+jobs:
+  expid:
+    stage: "{stage_class}-expid"
+    allow_failure: true
+    # `rules` and `script` injected in generate() (rules depend on `detected`).
+    artifacts:
+      expire_in: 14d
+      when: always
+      reports:
+        dotenv: "expid-{type_name}.env"
+        junit: reports/tsuite-expid.xml
+  create:
+    stage: "{stage_class}-create"
+    allow_failure: true
+    needs:
+      - {job: "expid-{type_name}", artifacts: true}
+    # script injected
+    artifacts:
+      expire_in: 14d
+      when: always
+      reports:
+        junit: reports/tsuite-create.xml
+  run:
+    stage: "{stage_class}-run"
+    allow_failure: true
+    timeout: 12h
+    needs:
+      - {job: "create-{type_name}", artifacts: true}
+      - {job: "expid-{type_name}", artifacts: true}
+    # script injected
+    artifacts:
+      expose_as: "Run Logs - {type_name}"
+      expire_in: 14d
+      when: always
+      paths: [reports/]
+      reports:
+        junit: reports/tsuite-run.xml
+        dotenv: "run-{type_name}.env"
+  monitor:
+    stage: "{stage_class}-monitor"
+    allow_failure: true
+    needs:
+      - {job: "run-{type_name}", artifacts: true}
+      - {job: "expid-{type_name}", artifacts: true}
+      # Serialised: both drive Autosubmit against the same expid.
+      - {job: "resources-{type_name}", artifacts: true}
+    # script injected
+    artifacts:
+      expose_as: "Experiment {type_name} Reports"
+      expire_in: 14d
+      when: always
+      paths: [reports/]
+      reports:
+        junit: reports/tsuite-monitor.xml
+        metrics: reports/metrics.txt
+  resources:
+    stage: "{stage_class}-resources"
+    allow_failure: true
+    needs:
+      - {job: "run-{type_name}", artifacts: true}
+      - {job: "expid-{type_name}", artifacts: true}
+    # script injected
+    artifacts:
+      expose_as: "Resources {type_name}"
+      expire_in: 14d
+      when: always
+      paths: [reports/]
+      reports:
+        junit: reports/tsuite-resources.xml
+        metrics: reports/metrics-resources.txt
+  # `delete` and `force-delete` share needs + artifacts; generate() injects
+  # `script`.  `on_success` for required and optional alike: an un-clicked
+  # optional chain is skipped with its `expid`, so there is nothing to clean.
+  delete:
+    stage: "{stage_class}-delete"
+    allow_failure: true
+    needs:
+      - {job: "expid-{type_name}", artifacts: true}
+      - {job: "run-{type_name}", artifacts: true}
+      # Reaches `resources` transitively, so it cannot reclaim HPCROOTDIR
+      # mid-collection.
+      - {job: "monitor-{type_name}", artifacts: true}
+    artifacts:
+      expire_in: 14d
+      when: always
+      reports:
+        junit: reports/tsuite-delete.xml
+  force_delete:
+    stage: "{stage_class}-delete"
+    when: manual
+    allow_failure: true
+    needs:
+      - {job: "expid-{type_name}", artifacts: true}
+      - {job: "run-{type_name}", artifacts: true}
+      - {job: "monitor-{type_name}", artifacts: true}
+    # script injected
+    artifacts:
+      expire_in: 14d
+      when: always
+      reports:
+        junit: reports/tsuite-delete.xml

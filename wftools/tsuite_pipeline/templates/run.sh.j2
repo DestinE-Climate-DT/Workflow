@@ -1,0 +1,84 @@
+expid="{{ expid_ref }}"
+echo "=== Running experiment $expid (type {{ type_name }}, autosubmit run) ==="
+echo "WARNING: This will submit jobs to HPC clusters."
+echo ""
+
+# Fail-safe verdict: assume FAILED until 'autosubmit run' confirms success.
+# Written up front so that if this job dies without reaching the final verdict
+# write below (runner timeout, OOM), the dotenv still exists with RUN_FAILED=1
+# and the `delete` job PRESERVES the experiment instead of deleting it.
+echo "{{ flag_var }}=1" > "run-{{ type_name }}.env"
+
+# Run AS in foreground; tee captures full output and streams to CI stdout.
+# The `if` keeps errexit from aborting here: a non-zero AS exit is a result to
+# report, and every diagnostic below depends on reaching the next line.
+if autosubmit run "$expid" 2>&1 | tee "reports/run_$expid.txt"; then
+  run_exit=0
+else
+  run_exit=${PIPESTATUS[0]}
+fi
+
+# Promote run to FAIL on any of the following signals in the log,
+# even if `autosubmit run` exited 0 (it can mask platform/critical errors).
+#
+# 'Run successful' is Autosubmit's authoritative completion marker -- it is
+# printed only when the run finishes with every job done.  A terminal job
+# failure prints 'Some jobs have failed' instead, and a critical bail (e.g.
+# eCode=7010) prints neither.  So if the marker is present the run is good, and
+# benign startup noise (6xxx ERROR-level eCodes) must not override it.
+if [ "$run_exit" -eq 0 ]; then
+  if grep -q "Run successful" "reports/run_$expid.txt" 2>/dev/null; then
+    echo "Detected: 'Run successful' -- run completed cleanly."
+  elif grep -q "Some jobs have failed" "reports/run_$expid.txt" 2>/dev/null; then
+    echo "Detected: 'Some jobs have failed' in run log."
+    run_exit=1
+  elif grep -qE "^\[CRITICAL\]|eCode=7[0-9]{3}" "reports/run_$expid.txt" 2>/dev/null; then
+    echo "Detected: [CRITICAL] / eCode=7NNN in run log."
+    run_exit=1
+  fi
+fi
+
+if [ "$run_exit" -eq 0 ]; then
+  echo -e "${GREEN}PASS${NC} $expid: run OK"
+  destine report add "{{ type_name }}_run" pass "reports/run_$expid.txt" --classname "$expid"
+else
+  echo -e "${RED}FAIL${NC} $expid: run FAILED"
+  destine report add "{{ type_name }}_run" fail "reports/run_$expid.txt" --classname "$expid"
+  echo "NOTE: retrying this job alone will not recover a FAILED experiment."
+  echo "      Re-run create-{{ type_name }} first, then this job."
+fi
+
+start_section "run_log_$expid" "Autosubmit output: $expid" true
+cat "reports/run_$expid.txt"
+end_section "run_log_$expid"
+
+# On failure, dump per-job .err / .out logs so the CI log surfaces the real
+# cause (e.g. LOCAL_SETUP died, platform connect issue, etc.).
+if [ "$run_exit" -ne 0 ]; then
+  log_dir="/appl/AS/AUTOSUBMIT_DATA/$expid/tmp/LOG_$expid"
+  if [ -d "$log_dir" ]; then
+    start_section "joblogs_$expid" "Per-job logs: $expid" true
+    echo "--- Listing $log_dir ---"
+    ls -la "$log_dir" || true
+    for log in "$log_dir"/*.err "$log_dir"/*.out; do
+      [ -f "$log" ] || continue
+      echo ""
+      echo "===== $(basename "$log") ====="
+      tail -200 "$log" || true
+    done
+    end_section "joblogs_$expid"
+  else
+    echo "WARNING: log dir not found: $log_dir"
+  fi
+fi
+
+destine report generate reports/tsuite-run.xml
+
+# Overwrite the up-front fail-safe verdict with the real result.  This line
+# is only reached when the script ran to completion (no hard abort), so on a
+# clean pass it flips the flag to 0; on a handled failure it stays 1.  The
+# `delete` job imports it through `needs: run (artifacts)`.
+if [ "$run_exit" -ne 0 ]; then run_failed=1; else run_failed=0; fi
+echo "{{ flag_var }}=$run_failed" > "run-{{ type_name }}.env"
+
+[ "$run_exit" -eq 0 ]

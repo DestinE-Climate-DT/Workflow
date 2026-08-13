@@ -1,0 +1,41 @@
+expid="{{ expid_ref }}"
+echo "=== Cleanup for type {{ type_name }} (expid: $expid) ==="
+
+# Safety guard: refuse to act on an empty / suspicious expid.
+# Without this, an empty expid would expand the path to the parent
+# AUTOSUBMIT_DATA directory and `rm -rf` could nuke every experiment.
+if [ -z "$expid" ] || [[ ! "$expid" =~ ^[a-zA-Z0-9]{4}$ ]]; then
+  echo "SKIPPING delete: expid is empty or not a 4-char id ('$expid')."
+  echo "Likely cause: expid job failed before allocating an experiment id."
+  destine report add "{{ report }}" skip
+  destine report generate reports/tsuite-delete.xml
+  exit 0
+fi
+{% if skip_on_fail %}
+{% include "delete_preserve.sh.j2" %}
+{% endif %}
+{% include "remote_cleanup.sh.j2" %}
+
+expdir="/appl/AS/AUTOSUBMIT_DATA/$expid"
+
+# Reclaim disk but KEEP the experiment's autosubmit.db row.  That row is the
+# only thing stopping the allocator from re-issuing this expid (and reusing its
+# FDB expver) -- see last_name_used / check_experiment_exists.  'autosubmit
+# delete' would drop it, so we remove the directory directly instead.
+if [ -d "$expdir" ]; then
+  echo "Removing $expdir (DB row for $expid kept to prevent expid/FDB reuse)"
+  du -sh "$expdir" 2>/dev/null || true
+  rm -rf "$expdir" 2>&1 | tee "reports/cleanup_$expid.txt"
+  if [ "${PIPESTATUS[0]}" -eq 0 ] && [ ! -d "$expdir" ]; then
+    echo "CLEANUP: removed $expdir"
+    destine report add "{{ report }}" pass --classname "$expid"
+  else
+    echo "CLEANUP: failed to remove $expdir"
+    destine report add "{{ report }}" fail "reports/cleanup_$expid.txt" --classname "$expid"
+  fi
+else
+  echo "Experiment directory not found: $expdir (already cleaned)"
+  destine report add "{{ report }}" pass --classname "$expid"
+fi
+
+destine report generate reports/tsuite-delete.xml

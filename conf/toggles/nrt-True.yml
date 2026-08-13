@@ -1,0 +1,15 @@
+JOBS:
+  SIM:
+    SPLITS: auto
+    DEPENDENCIES:
+      INI:
+      SIM:
+        SPLITS_FROM:
+          ALL:
+            SPLITS_TO: previous
+      SIM-1: {}
+EXPERIMENT:
+  SPLITSIZEUNIT: day
+  # Force one simulation day per split. transfer-True.yml and wipe-True.yml set
+  # SPLITSIZE: 2 and load earlier; this loads after them so daily splits win.
+  SPLITSIZE: 1

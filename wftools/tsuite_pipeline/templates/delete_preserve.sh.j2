@@ -1,0 +1,20 @@
+# Run failed (or the verdict is unknown) -> keep the experiment so it can be
+# investigated live (re-run jobs, inspect FDB/scratch, read full per-job
+# logs).  Cleanup then happens by clicking the manual `force-delete-{{ type_name }}`
+# job.  Fail-safe default: a MISSING flag means an upstream job (create/run)
+# died before writing its verdict, so we must PRESERVE, not delete -- hence
+# `:-1`.  Only an explicit RUN_FAILED=0 (clean pass) falls through to delete.
+if [ "{{ flag_ref }}" != "0" ]; then
+  echo ""
+  echo -e "${RED}====================================================================${NC}"
+  echo -e "${RED}  ACTION REQUIRED -- run FAILED for $expid ({{ type_name }})${NC}"
+  echo -e "${RED}  Experiment is PRESERVED on the HPC for live debugging and will${NC}"
+  echo -e "${RED}  NOT be auto-deleted.  When you are finished investigating,${NC}"
+  echo -e "${RED}  click the manual 'force-delete-{{ type_name }}' job to reclaim it.${NC}"
+  echo -e "${RED}====================================================================${NC}"
+  echo "  Dir:   /appl/AS/AUTOSUBMIT_DATA/$expid"
+  echo "  Logs:  /appl/AS/AUTOSUBMIT_DATA/$expid/tmp/LOG_$expid"
+  destine report add "{{ report }}" skip
+  destine report generate reports/tsuite-delete.xml
+  exit 0
+fi

@@ -1,0 +1,2 @@
+include wftools/tsuite_pipeline/skeleton.yml
+recursive-include wftools/tsuite_pipeline/templates *.sh *.j2

@@ -1,0 +1,261 @@
+default:
+  tags:
+    - de340_2_workflow
+# Fire merge-request pipelines so jobs see CI_MERGE_REQUEST_* context
+# (needed by tsuite-detect to diff against the MR target branch instead
+# of falling back to origin/main).  Suppress the duplicate branch
+# pipeline when the branch has any open MR.
+workflow:
+  rules:
+    # Trigger-spawned child pipeline (tsuite child).  Without this rule
+    # the child is rejected with 'downstream_pipeline_creation_failed /
+    # would have been empty' because its source ('parent_pipeline')
+    # matches none of the others.
+    - if: $CI_PIPELINE_SOURCE == "parent_pipeline"
+    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
+    - if: $CI_COMMIT_BRANCH && $CI_OPEN_MERGE_REQUESTS
+      when: never
+    - if: $CI_COMMIT_BRANCH
+    - if: $CI_COMMIT_TAG
+stages:
+  - smoke
+  - lint
+  - test
+  - mirror
+  - report
+variables:
+  GIT_STRATEGY: clone
+  GIT_CLEAN_FLAGS: none
+  SOURCE_BRANCH: $CI_MERGE_REQUEST_SOURCE_BRANCH_NAME
+  TARGET_BRANCH: $CI_MERGE_REQUEST_TARGET_BRANCH_NAME
+  RUNNING_BRANCH: $CI_COMMIT_REF_NAME
+  # -------------------------------------------------------------------------
+  # Testing-suite controls (rendered as drop-downs on the "Run pipeline" page)
+  # -------------------------------------------------------------------------
+  # When you start a pipeline from the GitLab UI ("Build > Pipelines > Run
+  # pipeline" or "CI/CD > Run pipeline"), these three variables appear with
+  # the drop-downs and help text below. Leave them at their defaults for the
+  # normal merge-request flow (types auto-detected from the diff).
+  #
+  # Pick them HERE rather than on the later "tsuite-trigger" manual job:
+  # GitLab's manual-job form shows only blank Key/Value boxes (no drop-downs,
+  # no descriptions), whereas these flow straight into tsuite-prepare AND the
+  # trigger — so the manual gate becomes a single "Run job" click.
+  TSUITE_TYPE:
+    value: ""
+    options:
+      - "" # (default) auto-detect types from the MR diff
+      - "ifs-fesom-tco79" # IFS-FESOM tco79 historical + DQC (MN5)
+      - "ifs-fesom-storylines" # IFS-FESOM storylines historical tco79 (MN5)
+      - "ifs-fesom-cont-tco79-lumi" # IFS-FESOM control tco79 SIM+DQC+AQUA+LRA (LUMI)
+      - "ifs-nemo-lowres" # IFS-NEMO lowres SIM+DQC+CLEAN+TRANSFER+WIPE (LUMI)
+      - "ifs-nemo-2monthly" # IFS-NEMO 2-monthly lowres (MN5)
+      - "ifs-nemo-e2e" # IFS-NEMO end-to-end + apps, 1 month (LUMI)
+      - "ifs-nemo-multi-start-date" # IFS-NEMO multiple start dates (MN5)
+      - "ifs-nemo-dataportfolio" # IFS-NEMO reduced data-portfolio TRANSFER+WIPE (MN5)
+      - "icon-r2b8-control" # ICON control R2B8 Phase 2, no DQC (LUMI)
+      - "icon-r2b8-historical" # ICON historical R2B8 model-only (LUMI)
+      - "nemo-standalone" # NEMO standalone (MN5)
+      - "apps-databridge-lumi" # All apps alone from DataBridge (LUMI)
+      - "apps-databridge-mn5" # All apps alone from DataBridge (MN5)
+      - "apps-dataflow-lumi" # Apps dataflow data-only workflow from DataBridge (LUMI)
+    description: >-
+      Which experiment type to test. Empty = auto-detect from the MR diff (default). Choosing one here makes it the single "required" type for this run. Model family is the prefix: ifs-fesom / ifs-nemo / icon / nemo / apps. For ifs-fesom, tco79 = historical and storylines = storyline runs. Need several types at once? Leave this empty and use TSUITE_TYPES_JSON instead.
+  TSUITE_AUTO:
+    value: "NONE"
+    options:
+      - "NONE" # safest: every chain stays parked, start each by hand
+      - "REQUIRED" # required (detected) chains auto-start; optional stay manual
+      - "ALL" # every available chain auto-starts (most HPC time)
+    description: >-
+      How far the test chains auto-start once the pipeline runs. NONE keeps every chain parked at its expid-{type} job (you start each by hand) — safest. REQUIRED auto-starts the detected/required chains only. ALL auto-starts everything (careful: this consumes the most HPC time).
+  TSUITE_TYPES_JSON:
+    value: ""
+    description: >-
+      Advanced multi-type override. JSON array, e.g. [{"type":"ifs-fesom-tco79","hpc":"marenostrum5"}]. Takes precedence over TSUITE_TYPE. Leave empty unless you need to run several types in one go.
+shellcheck:
+  stage: lint
+  # Official image, project source code: https://github.com/koalaman/shellcheck
+  image: koalaman/shellcheck-alpine:stable
+  before_script:
+    - shellcheck --version
+  script:
+    - find lib -name "*.sh" -exec shellcheck --severity error '{}' +;
+    - find templates -name "*.sh" -exec shellcheck --severity error '{}' +;
+    - find runscripts -name "*.sh" -exec shellcheck --severity error '{}' +;
+shfmt:
+  stage: lint
+  # Official image, project source code: https://github.com/mvdan/sh
+  image: mvdan/shfmt:latest-alpine
+  before_script:
+    - shfmt --version
+  script:
+    - find templates -name "*.sh" -exec shfmt --diff -i 4 '{}' +;
+    - find lib -name "*.sh" -exec shfmt --diff -i 4 '{}' +;
+    - find runscripts -name "*.sh" -exec shfmt --diff -i 4 '{}' +;
+yamllint:
+  stage: lint
+  # Non-official image, maintained by GitLab: https://gitlab.com/pipeline-components/yamllint
+  image: registry.gitlab.com/pipeline-components/yamllint:latest
+  script:
+    - yamllint -c .yamllint .
+yamlfmt:
+  stage: lint
+  # Official image from Google: https://github.com/google/yamlfmt
+  image: ghcr.io/google/yamlfmt:latest
+  script:
+    - yamlfmt -lint .
+ruff:
+  stage: lint
+  # Non-official image, project source code: https://github.com/astral-sh/ruff
+  # N.B.: They use "FROM scratch" and copy only the `ruff` binary to `/ruff`.
+  #       `/ruff` is then used as entrypoint. This does not work with older
+  #       versions of Docker, and complicates using GitLab.
+  image: pipelinecomponents/ruff:latest
+  before_script:
+    - ruff --version
+  script:
+    - ruff check lib utils runscripts wftools --output-format=gitlab > gl-code-quality-ruff.json || true
+    - ruff check lib utils runscripts wftools
+    - ruff format --check lib utils runscripts wftools
+  artifacts:
+    when: always
+    reports:
+      codequality: gl-code-quality-ruff.json
+templates_numeration:
+  stage: lint
+  # Official python image, https://hub.docker.com/_/python
+  image: python:3.9-alpine
+  script:
+    - pip install .[test] && python utils/templates_numeration.py
+test-python:
+  stage: test
+  # gsv image, list of included packages: https://github.com/DestinE-Climate-DT/ContainerRecipes/pkgs/container/gsv#container-definitions-and-software
+  image: ghcr.io/destine-climate-dt/gsv:2.9.0_fdb-5.12.1_eccodes-2.39.0_python-3.11_ubuntu-22.04_8dbc13ec4e39
+  script:
+    # PyYaml build issues...
+    # Ref: https://github.com/yaml/pyyaml/issues/736#issuecomment-1656557056
+    - pip install .[test] && pytest tests/bats_tests tests/unit --cov
+  coverage: '/(?i)total.*? (100(?:\.0+)?\%|[1-9]?\d(?:\.\d+)?\%)$/'
+  # These artifacts are saved with every build in GitLab and can be reviewed later. If
+  # we have a folder with HTML files, as in this example, users can navigate with their
+  # browser.
+  artifacts:
+    reports:
+      coverage_report:
+        coverage_format: cobertura
+        path: tests/bats_tests/coverage.xml
+test-shell:
+  image: kinow/bats-kcov:latest
+  before_script:
+    - apt-get update -qq && apt-get install -y -qq rsync
+  script:
+    - /usr/local/bin/bats --verbose-run --recursive ./
+coverage-shell:
+  image: kinow/bats-kcov:latest
+  before_script:
+    - apt-get update -qq && apt-get install -y -qq rsync
+  # Run kcov on the test scripts
+  script:
+    - /usr/local/bin/kcov --include-path=./ --dump-summary ./coverage/ /usr/local/bin/bats --recursive ./
+  # These artifacts are saved with every build in GitLab and can be reviewed later
+  artifacts:
+    expire_in: 1 hour
+    paths:
+      - ./coverage/
+test-preflight:
+  stage: test
+  image: autosubmit/autosubmit:4.1.16.1-bullseye-slim
+  script:
+    - |
+      sudo apt-get update
+      sudo apt-get -yq install make wget unzip
+      sudo apt-get -yq install pipx
+      pipx ensurepath
+      autosubmit install
+      export USER=autosubmit
+      make install-yq
+      make install-jsonschema
+      make test-schema
+baseline-test:
+  stage: test
+  image: autosubmit/autosubmit:4.1.16.1-bullseye-slim
+  allow_failure: true
+  rules:
+    # Only in MR pipelines, so the diff uses the MR's real target, not main.
+    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
+  script:
+    - pwd
+    - echo "machine gitlab.earth.bsc.es login gitlab-ci-token password $CI_JOB_TOKEN" >> ~/.netrc
+    - echo "Test inside the container"
+    - autosubmit install
+    - export USER=autosubmit
+    - autosubmit --version
+    - pip install pyyaml
+    - pip install colorama
+    - pip install pyyaml
+    - echo "SOURCE_BRANCH $SOURCE_BRANCH"
+    - echo "TARGET_BRANCH $TARGET_BRANCH"
+    - echo "RUNNING_BRANCH $RUNNING_BRANCH"
+    - echo "CI_MERGE_REQUEST_TARGET_BRANCH_NAME $CI_MERGE_REQUEST_TARGET_BRANCH_NAME"
+    - echo "CI_COMMIT_REF_NAME $CI_COMMIT_REF_NAME"
+    - cd tests/workflow_mock && python3 run_baseline_tests.py --target_branch="$TARGET_BRANCH" --source_branch="$SOURCE_BRANCH" --running_branch="$RUNNING_BRANCH"
+    # Disable the unnecessary jobs to reduce CI/CD resource usage
+    #
+    #docs:
+  # Official image, project source code: https://github.com/sphinx-doc/sphinx/
+  # TODO: publish the generated files somewhere?
+#  image: sphinxdoc/sphinx:latest
+#  stage: docs
+#  script:
+#    - make docs-html
+# latex:
+#  image: sphinxdoc/sphinx-latexpdf
+#  stage: docs
+#  script:
+#    - pip install .[docs]
+#    - sed -i 's/✅/yes/g' docs/source/schemas/*.md
+#    - cd docs && make latexpdf
+mirror_releases:
+  stage: mirror
+  image: ubuntu:latest
+  needs:
+    # baseline-test runs only in MR pipelines, so it is absent on tag pipelines.
+    - job: baseline-test
+      optional: true
+    - coverage-shell
+    - test-python
+    - test-shell
+    - test-preflight
+  before_script:
+    - apt-get update && apt-get install -y git curl ca-certificates
+    - curl -fsSL https://cli.github.com/packages/githubcli-archive-keyring.gpg | dd of=/usr/share/keyrings/githubcli-archive-keyring.gpg
+    - chmod go+r /usr/share/keyrings/githubcli-archive-keyring.gpg
+    - echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/githubcli-archive-keyring.gpg] https://cli.github.com/packages stable main" | tee /etc/apt/sources.list.d/github-cli.list > /dev/null
+    - apt-get update && apt-get install -y gh
+    - git config --global user.email "ci@example.com"
+    - git config --global user.name "GitLab CI"
+  variables:
+    GITHUB_REPO: "DestinE-Climate-DT/Workflow"
+  #  CI_COMMIT_TAG: "v5.2.3" # Can be overridden when running the pipeline
+  script:
+    - echo "$(echo -n $GH_PAT | wc -c)"
+    # Create an orphan branch to avoid history
+    - git checkout --orphan mirror-temp
+    # Add all current files
+    - git add -A
+    - git commit -m "Mirror commit for $CI_COMMIT_TAG"
+    # Tag the commit
+    - git tag -f $CI_COMMIT_TAG
+    # Add GitHub remote
+    - git remote add github https://x-access-token:${GH_PAT}@github.com/${GITHUB_REPO}.git
+    # Push only the tag (no history)
+    - git push github refs/tags/$CI_COMMIT_TAG --force
+    # create new release on github with gh client
+    - GH_TOKEN=$GH_PAT gh release create "$CI_COMMIT_TAG" --repo "$GITHUB_REPO" --title "Release $CI_COMMIT_TAG" --notes "Release Version $CI_COMMIT_TAG"
+  rules:
+    - if: $CI_COMMIT_TAG
+      # when: manual
+include:
+  - local: .gitlab/ci/jacamar-smoke.yml
+  - local: .gitlab/ci/jacamar-tsuite.yml

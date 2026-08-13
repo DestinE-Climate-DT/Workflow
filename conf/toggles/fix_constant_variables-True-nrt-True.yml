@@ -1,0 +1,14 @@
+# NRT override for FIX_CONSTANT_VARIABLES: run as soon as day 2 is simulated
+# (SIM chunk-1 split 2) instead of after the whole first chunk. The job
+# back-fills the constant variables from day-2 data (see
+# templates/fix_constant_variables.sh, which moves the retrieval date to day 2
+# when NRT). Loaded only when ADDITIONAL_JOBS.FIX_CONSTANT_VARIABLES and NRT
+# are both True; loads after fix_constant_variables-True.yml so this wins.
+JOBS:
+  FIX_CONSTANT_VARIABLES:
+    DEPENDENCIES:
+      SIM:
+        CHUNKS_FROM:
+          all:
+            CHUNKS_TO: "1"
+            SPLITS_TO: "1,2"

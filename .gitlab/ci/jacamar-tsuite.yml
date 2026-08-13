@@ -1,0 +1,408 @@
+# Testing suite jobs.
+# Runs on the climatedt-wf-dev1 VM via Jacamar as the triggering user.
+#
+# Pipeline shape:
+#   smoke ─► test ─► report
+#                    ├── tsuite-prepare  (auto: detect MR diff,
+#                    │                     validate templates,
+#                    │                     emit child-pipeline.yml)
+#                    ├── tsuite-trigger  (MANUAL: the only click;
+#                    │                     spawns the child pipeline)
+#                    ├── tsuite-collect  (auto: aggregate child JUnit)
+#                    └── tsuite-required (auto: MR-blocking gate;
+#                                          fails if any *detected* type
+#                                          did not run or did not pass)
+#
+# Type selection is automatic from the MR diff (`destine tsuite detect`).  Set
+# `TSUITE_TYPES_JSON` at pipeline level to override.  The child pipeline
+# is always generated for *every* type with templates available, but only
+# detected ("required") types render in the left-hand `required-*` stages
+# and gate the MR; the rest land in `optional-*` stages as opt-in extras.
+#
+# All HPC interaction stays manual: every per-type chain in the child
+# starts at a `when: manual` `expid-{type}` job.
+#
+# TODO: Once YAML provenance tracking is available (mapping experiment configs
+# back to their source YAML file combinations), generate a Code Quality JSON
+# report (reports: codequality:) alongside JUnit. This would place inline
+# annotations on MR diffs showing which config file changes caused experiment
+# failures — e.g., an annotation on conf/model/ifs-fesom/tco79l137.yml saying
+# "Experiment a006 FAILED: grib_set: No messages found". Requires the reverse
+# mapping: failed experiment -> contributing YAML files. See `destine tsuite detect`
+# for the forward mapping (changed files -> experiment types).
+# ---------------------------------------------------------------------------
+# Shared configuration
+# ---------------------------------------------------------------------------
+.tsuite-defaults:
+  extends: .jacamar-id-token
+  tags: [jacamar]
+  stage: test
+  variables:
+    # Autosubmit module version. Leave empty for default.
+    AUTOSUBMIT_VERSION: ""
+  before_script:
+    - |
+      source .gitlab/ci/load-autosubmit.sh
+      source .gitlab/ci/install-destine.sh
+      # Prepare reports directory + clean previous results (report clean is
+      # idempotent -- no-op if dir missing).
+      mkdir -p reports
+      destine report clean
+# Lean base for the post-HPC report-stage jobs (`tsuite-collect`,
+# `tsuite-required`).  Installs wftools so `destine` is on PATH, but skips the
+# autosubmit module load -- these jobs only inspect JUnit + TSUITE_TYPES_JSON,
+# they never touch the cluster.
+.tsuite-required-defaults:
+  extends: .jacamar-id-token
+  tags: [jacamar]
+  stage: report
+  before_script:
+    - source .gitlab/ci/install-destine.sh
+# ---------------------------------------------------------------------------
+# Job: tsuite-prepare (auto-running)
+# ---------------------------------------------------------------------------
+# One job, three responsibilities — all pure transforms with no HPC contact:
+#   1. Detect experiment types from the MR diff (`destine tsuite detect`).
+#   2. Walk EXPERIMENT_TYPES; keep types whose main+minimal templates exist;
+#      tag each kept entry with `detected: bool` (was the type flagged by the
+#      diff?).  Skip-with-template-missing recorded as JUnit.
+#   3. Generate the child-pipeline.yml (`destine tsuite generate-pipeline`) where
+#      detected types land in `required-*` stages and the rest in
+#      `optional-*` stages.
+#
+# Type selection can also be overridden from the "Run pipeline" page:
+#   * TSUITE_TYPE       — pick one type from the drop-down (most common); or
+#   * TSUITE_TYPES_JSON — JSON array for several types at once (advanced).
+# Either override treats the listed type(s) as detected:true. Precedence is
+# TSUITE_TYPES_JSON > TSUITE_TYPE > diff-driven auto-detect.
+tsuite-prepare:
+  extends: .tsuite-defaults
+  # Run only where the smoke jobs run (MR / web / main).  A plain
+  # feature-branch push is allowed by the top-level workflow:rules, and
+  # would otherwise include this job while excluding its smoke `needs:`,
+  # which makes GitLab reject the whole pipeline ("needs job not added").
+  rules:
+    - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
+    - if: '$CI_PIPELINE_SOURCE == "web"'
+    - if: '$CI_COMMIT_BRANCH == "main"'
+  needs: [identity-env-check, token-check-lumi-o, token-check-github, token-check-gitlab]
+  variables:
+    # Both are normally chosen from the drop-downs on the "Run pipeline" page
+    # (defined as top-level variables in .gitlab-ci.yml). Defaults below keep
+    # the merge-request flow auto-detecting from the diff.
+    #   TSUITE_TYPES_JSON — JSON array override, e.g.
+    #                       [{"type":"ifs-nemo-lowres","hpc":"lumi"}]
+    #   TSUITE_TYPE       — single type name, e.g. "ifs-fesom-storylines"
+    # Precedence: TSUITE_TYPES_JSON > TSUITE_TYPE > auto-detect from MR diff.
+    TSUITE_TYPES_JSON: ""
+    TSUITE_TYPE: ""
+  script:
+    - |
+      set -e
+
+      # ----- 1) Detect ---------------------------------------------------
+      if [ -n "$TSUITE_TYPES_JSON" ]; then
+        echo "Manual override (advanced): TSUITE_TYPES_JSON=$TSUITE_TYPES_JSON"
+        DETECTED_JSON="$TSUITE_TYPES_JSON"
+      elif [ -n "$TSUITE_TYPE" ]; then
+        echo "Manual single-type selection: TSUITE_TYPE=$TSUITE_TYPE"
+        # Validate the chosen name against the registry and emit the one-element
+        # JSON the merge step below expects (hpc is filled in there from the
+        # registry, so only the "type" key is needed). A typo fails the job
+        # with the list of valid names instead of silently running nothing.
+        DETECTED_JSON=$(destine tsuite select-type "$TSUITE_TYPE")
+      else
+        echo "=== Auto-detecting experiment types from MR diff ==="
+
+        # Prefer GitLab's pre-computed merge base in MR pipelines; otherwise
+        # fall back to the project's default branch.  The runner clones at
+        # depth 20, so the base ref is usually missing from the local clone
+        # and needs an explicit fetch.
+        if [ -n "$CI_MERGE_REQUEST_DIFF_BASE_SHA" ]; then
+          BASE_SHA="$CI_MERGE_REQUEST_DIFF_BASE_SHA"
+          echo "Using GitLab-provided MR diff base: $BASE_SHA"
+          git fetch --depth=1 origin "$BASE_SHA" || \
+            git fetch --unshallow origin
+          DIFF_BASE="$BASE_SHA"
+        else
+          # Prefer GitLab's default branch; fall back to the remote HEAD,
+          # then to main.  (develop is not this project's default branch.)
+          BASE="${CI_DEFAULT_BRANCH:-}"
+          if [ -z "$BASE" ]; then
+            BASE=$(git symbolic-ref --short refs/remotes/origin/HEAD 2>/dev/null | sed 's@^origin/@@')
+          fi
+          BASE="${BASE:-main}"
+          echo "No MR context — diffing against default branch: $BASE"
+          git fetch --unshallow origin "$BASE" 2>/dev/null || \
+            git fetch --depth=1000 origin "$BASE"
+          DIFF_BASE="origin/$BASE"
+        fi
+
+        echo "Diffing against: $DIFF_BASE"
+        git diff --name-only "$DIFF_BASE" > changed_files.txt
+        echo "Changed files:"
+        cat changed_files.txt
+        echo ""
+
+        if [ -s changed_files.txt ]; then
+          destine tsuite detect --file changed_files.txt --verbose \
+            > detected.json
+        else
+          echo "No changed files; treating as no-detection MR."
+          echo "[]" > detected.json
+        fi
+
+        DETECTED_JSON=$(cat detected.json)
+      fi
+
+      echo "DETECTED_JSON: $DETECTED_JSON"
+
+      # ----- 2) Merge with full registry + template existence ------------
+      # For every entry in EXPERIMENT_TYPES (loaded from tests/tsuite_config.yml),
+      # keep iff main+minimal templates exist.  Attach `detected:bool`.
+      destine tsuite prepare-types \
+        --detected-json "$DETECTED_JSON" \
+        --templates-dir tests/tsuite_mains \
+        --missing-file missing_templates.txt \
+        > prepare-types.json
+
+      TYPES_JSON=$(cat prepare-types.json)
+      echo "TYPES_JSON: $TYPES_JSON"
+
+      # JUnit: record each missing-template type as a skipped case.
+      if [ -s missing_templates.txt ]; then
+        echo ""
+        echo "WARNING: types missing templates (will be skipped):"
+        cat missing_templates.txt
+        while IFS= read -r t; do
+          [ -z "$t" ] && continue
+          echo "no template pair for $t" \
+            > "reports/prepare_skip_${t}.txt"
+          destine report add "${t}_prepare" skip "reports/prepare_skip_${t}.txt"
+        done < missing_templates.txt
+      fi
+
+      KEPT_COUNT=$(echo "$TYPES_JSON" | python3 -c \
+        "import json,sys; print(len(json.loads(sys.stdin.read())))")
+      if [ "$KEPT_COUNT" -eq 0 ]; then
+        echo "ERROR: no experiment types have templates available."
+        destine report generate reports/tsuite-prepare.xml
+        exit 1
+      fi
+
+      # ----- 3) Generate child-pipeline.yml ------------------------------
+      echo ""
+      echo "=== Generating child-pipeline.yml ==="
+      TSUITE_TYPES_JSON="$TYPES_JSON" \
+        destine tsuite generate-pipeline \
+          --from-env \
+          --parent-pipeline-id "$CI_PIPELINE_ID" \
+          > child-pipeline.yml
+      echo "=== Generated child-pipeline.yml ==="
+      cat child-pipeline.yml
+
+      # Forward the prepared TYPES_JSON to downstream jobs (collect, required).
+      echo "TSUITE_TYPES_JSON=${TYPES_JSON}" > prepare.env
+
+      # Record an overall PASS so the JUnit report always has at least one
+      # case.  `destine report generate` exits 1 on an empty result set, so
+      # without this the happy path (no missing-template skips added) would
+      # fail even though preparation succeeded.
+      destine report add "tsuite-prepare" pass
+
+      destine report generate reports/tsuite-prepare.xml
+  artifacts:
+    expire_in: 14d
+    when: always
+    paths:
+      - child-pipeline.yml
+      - prepare.env
+      - changed_files.txt
+      - prepare-types.json
+    reports:
+      dotenv: prepare.env
+      junit: reports/tsuite-prepare.xml
+# ---------------------------------------------------------------------------
+# Job: tsuite-trigger (manual gate, regular job)
+# ---------------------------------------------------------------------------
+# This is the single human gate before any HPC interaction.  It is a regular
+# (non-bridge) manual job so the pipeline pauses here until someone confirms.
+#
+# RECOMMENDED FLOW: choose TSUITE_TYPE and TSUITE_AUTO from the drop-downs on
+# the "Run pipeline" page (see the top-level variables: in .gitlab-ci.yml).
+# Those values flow down into this job automatically, so here you just click
+# "Run job" — nothing to type.  GitLab's manual-job "Run with options" form
+# shows only blank Key/Value boxes (no drop-downs, no help text; gitlab.com
+# issue #426022), so picking values up-front on the Run pipeline page is the
+# intuitive path.  If you must override at the gate, add key TSUITE_AUTO with
+# value NONE / REQUIRED / ALL in that form.
+#
+# TSUITE_AUTO determines whether the child pipeline's per-type chains
+# auto-start or stay parked at `expid-{type}`:
+#
+#   NONE     (default) every chain manual — max safety
+#   REQUIRED detected ("required") chains auto-start; optional stay manual
+#   ALL      every available chain auto-starts — careful: HPC time
+#
+# The chosen value is exported via dotenv so the downstream `_tsuite-launch`
+# bridge (and the spawned child pipeline) see it.
+tsuite-trigger:
+  extends: .tsuite-defaults
+  needs:
+    - job: tsuite-prepare
+      artifacts: true
+  # Single manual "click" gate, scoped to the same pipelines as the rest of
+  # the suite.  allow_failure keeps it non-blocking (opt-in): if nobody
+  # clicks, the downstream tsuite jobs simply never run.
+  rules:
+    - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
+      when: manual
+      allow_failure: true
+    - if: '$CI_PIPELINE_SOURCE == "web"'
+      when: manual
+      allow_failure: true
+    - if: '$CI_COMMIT_BRANCH == "main"'
+      when: manual
+      allow_failure: true
+  variables:
+    TSUITE_AUTO: "NONE"
+  script:
+    - |
+      case "$TSUITE_AUTO" in
+        NONE|REQUIRED|ALL) ;;
+        *)
+          echo "ERROR: TSUITE_AUTO must be one of NONE / REQUIRED / ALL"
+          exit 1
+          ;;
+      esac
+      # GitLab refuses (PG unique constraint) to upload a dotenv variable
+      # whose key matches one already declared in this job's `variables:`
+      # block.  Write under a different key; _tsuite-launch resolves it
+      # back via YAML variable expansion.
+      echo "TSUITE_AUTO_CHOICE=$TSUITE_AUTO" | tee trigger.env
+  artifacts:
+    expire_in: 14d
+    paths:
+      - trigger.env
+    reports:
+      dotenv: trigger.env
+# ---------------------------------------------------------------------------
+# Job: _tsuite-launch (internal bridge — spawns the child pipeline)
+# ---------------------------------------------------------------------------
+# Leading underscore is a convention to signal "internal plumbing" — GitLab
+# can't actually hide active jobs, so this still appears in the pipeline
+# graph, just with a name that nudges reviewers to ignore it.  Auto-fires
+# once tsuite-trigger has completed (no second click).
+#
+# strategy: mirror — this bridge's status mirrors the child pipeline status
+# (`depend` is documented as not-recommended; status doesn't always match).
+#
+# allow_failure: true — a child-pipeline failure must leave downstream
+# `on_success` jobs (tsuite-collect, tsuite-required) runnable.  GitLab
+# treats an allow_failure'd failure as success-for-dependents.  The actual
+# MR-blocking signal lives in tsuite-required, which inspects JUnit content
+# and fails iff a *detected* type did not run/pass.
+_tsuite-launch:
+  stage: test
+  rules:
+    - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
+    - if: '$CI_PIPELINE_SOURCE == "web"'
+    - if: '$CI_COMMIT_BRANCH == "main"'
+  needs:
+    - job: tsuite-trigger
+      artifacts: true
+    - job: tsuite-prepare
+      artifacts: true
+  allow_failure: true
+  variables:
+    # Resolve the dotenv-borne value from tsuite-trigger
+    # (TSUITE_AUTO_CHOICE) back to TSUITE_AUTO so the child pipeline
+    # sees the canonical name.  YAML expansion happens at evaluation
+    # time, after needs:dotenv has been merged into the job env.
+    TSUITE_AUTO: "$TSUITE_AUTO_CHOICE"
+    # Pin the parent pipeline id so the child's monitor jobs write their
+    # JUnit/metrics into /tmp/<user>-tsuite_results/<PARENT_PIPELINE_ID>/,
+    # the exact directory tsuite-collect (which runs in the parent and sees
+    # its own $CI_PIPELINE_ID) reads from.  Without this the child falls
+    # back to its own $CI_PIPELINE_ID and the parent never finds the results.
+    PARENT_PIPELINE_ID: "$CI_PIPELINE_ID"
+  trigger:
+    include:
+      - artifact: child-pipeline.yml
+        job: tsuite-prepare
+    strategy: mirror
+    forward:
+      # Forward TSUITE_AUTO + PARENT_PIPELINE_ID (and any other parent vars)
+      # to the child so the child's rules: blocks can read $TSUITE_AUTO and
+      # its monitor scripts can read $PARENT_PIPELINE_ID at evaluation time.
+      pipeline_variables: true
+      yaml_variables: true
+# ---------------------------------------------------------------------------
+# Job: tsuite-collect (aggregate child pipeline results into parent)
+# ---------------------------------------------------------------------------
+# GitLab does not surface child pipeline JUnit reports in the parent MR
+# widget.  This job downloads the child's artifacts and re-uploads them
+# so they appear in the parent pipeline's Tests tab and MR widget.
+#
+# It runs ONCE: the `_tsuite-launch` bridge resolves when the child first
+# reaches a terminal state, and retrying a child chain does not re-open the
+# parent's report stage.  So everything published names its source expid and
+# child job (reports/provenance.txt, the tsuite_source metrics), and a receipt
+# beside the shared dir makes a later re-run's log say the parent is stale.
+#
+# RECOVERY after a manual child re-run: retry this job, then tsuite-required.
+# The first collection emptied the shared dir, so a retry picks up the new
+# attempt alone.  Re-running the whole parent pipeline is the sure route.
+tsuite-collect:
+  extends: .tsuite-required-defaults
+  rules:
+    - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
+    - if: '$CI_PIPELINE_SOURCE == "web"'
+    - if: '$CI_COMMIT_BRANCH == "main"'
+  needs:
+    # _tsuite-launch is the bridge that mirrors the child pipeline; we
+    # need to wait for it to finish before scanning the shared dir.
+    - job: _tsuite-launch
+    # tsuite-prepare's dotenv carries TSUITE_TYPES_JSON so this job can tell
+    # whether any types were actually required for this MR.
+    - job: tsuite-prepare
+      artifacts: true
+  script:
+    - |
+      set -euo pipefail
+      destine tsuite collect \
+        --shared-dir "/tmp/$(whoami)-tsuite_results/$CI_PIPELINE_ID" \
+        --reports-dir reports \
+        --types-json "${TSUITE_TYPES_JSON:-[]}" \
+        --job-url "${CI_JOB_URL:-}"
+  artifacts:
+    expire_in: 14d
+    when: always
+    paths:
+      - reports/
+    reports:
+      junit:
+        - reports/tsuite-report-*.xml
+      metrics: reports/metrics.txt
+# ---------------------------------------------------------------------------
+# Job: tsuite-required (MR-blocking gate)
+# ---------------------------------------------------------------------------
+# This is the merge gate.  Inspects every detected (`detected: true`) type:
+#   - did it run (= did monitor publish a tsuite-report-<expid>.xml)?
+#   - if so, did it pass (no <failure>/<error> cases in any of its reports,
+#     the per-phase ones such as tsuite-report-<expid>.resources.xml included)?
+# Any answer of "no" fails this job, the parent pipeline goes red, and the
+# MR cannot be merged.  Optional/extra types are ignored entirely — they
+# may be visible (and red) in JUnit, but they never block.
+tsuite-required:
+  extends: .tsuite-required-defaults
+  rules:
+    - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
+    - if: '$CI_PIPELINE_SOURCE == "web"'
+    - if: '$CI_COMMIT_BRANCH == "main"'
+  needs:
+    - job: tsuite-collect
+    - job: tsuite-prepare
+      artifacts: true
+  script:
+    - destine tsuite required --types-json "$TSUITE_TYPES_JSON" --reports-dir reports

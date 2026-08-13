@@ -1,0 +1,232 @@
+# Smoke tests for Jacamar runner on the ClimateDT VM.
+# These validate that the user triggering the pipeline has
+# the necessary environment, credentials, and access.
+.jacamar-id-token:
+  id_tokens:
+    CI_JOB_JWT:
+      aud: https://gitlab.earth.bsc.es
+.jacamar-defaults:
+  extends: .jacamar-id-token
+  tags: [jacamar]
+  stage: smoke
+  rules:
+    - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
+    - if: '$CI_PIPELINE_SOURCE == "web"'
+    - if: '$CI_COMMIT_BRANCH == "main"'
+  before_script:
+    - |
+      module use /appl/AS/modules
+      if ! command -v python3 &>/dev/null; then
+        echo "ERROR: python3 not found on this runner"; exit 1
+      fi
+      # Install wftools (provides the destine CLI) via shared script.
+      source .gitlab/ci/install-destine.sh
+      mkdir -p reports
+identity-env-check:
+  extends: .jacamar-defaults
+  variables:
+    # Override to pin a specific version, e.g. "autosubmit/4.1.16.1"
+    # AUTOSUBMIT_VERSION: "4.1.16.1" # [TODO] Should be same as in baseline check to ensure no differences...?
+    AUTOSUBMIT_VERSION: ""
+  script:
+    - |
+      echo "=== Identity ==="
+      echo "User: $(whoami)"
+      echo "Hostname: $(hostname)"
+      echo "Home: $HOME"
+      echo ""
+
+      echo "=== MODULEPATH ==="
+      echo "$MODULEPATH" | tr ":" "\n"
+      echo "=== Autosubmit ==="
+      # Load the requested version, or fall back to the default module
+      if [ -n "$AUTOSUBMIT_VERSION" ]; then
+        echo "Loading requested version: $AUTOSUBMIT_VERSION"
+        if ! module load "$AUTOSUBMIT_VERSION"; then
+          echo "ERROR: Failed to load module $AUTOSUBMIT_VERSION"
+          destine report add identity_autosubmit fail
+          destine report generate reports/smoke-identity.xml
+          exit 1
+        fi
+      else
+        echo "Loading default autosubmit module"
+        if ! module load autosubmit; then
+          echo "ERROR: Failed to load module autosubmit"
+          destine report add identity_autosubmit fail
+          destine report generate reports/smoke-identity.xml
+          exit 1
+        fi
+      fi
+      echo "Loaded: $(autosubmit --version 2>&1)"
+      echo "Path:   $(which autosubmit)"
+      destine report add identity_autosubmit pass
+      if ls -ld /appl/AS/AUTOSUBMIT_DATA/ 2>/dev/null; then
+        echo "AUTOSUBMIT_DATA accessible"
+        destine report add identity_autosubmit_data pass
+      else
+        echo "WARNING: /appl/AS/AUTOSUBMIT_DATA/ not accessible"
+        destine report add identity_autosubmit_data fail
+        exit 1
+      fi
+
+      destine report generate reports/smoke-identity.xml
+  artifacts:
+    expire_in: 14d
+    when: always
+    reports:
+      junit: reports/smoke-identity.xml
+token-check-lumi-o:
+  extends: .jacamar-defaults
+  allow_failure: true
+  script:
+    - |
+      failed=0
+      if ./tests/check-token-lumi-o.sh; then
+        destine report add token_lumi_o pass
+      else
+        destine report add token_lumi_o fail
+        failed=1
+      fi
+      destine report generate reports/smoke-lumi-o.xml
+      [ "$failed" -eq 0 ]
+  artifacts:
+    expire_in: 14d
+    when: always
+    reports:
+      junit: reports/smoke-lumi-o.xml
+token-check-github:
+  extends: .jacamar-defaults
+  script:
+    - |
+      failed=0
+      if ./tests/check-token-github.sh; then
+        destine report add token_github pass
+      else
+        destine report add token_github fail
+        failed=1
+      fi
+      destine report generate reports/smoke-github.xml
+      [ "$failed" -eq 0 ]
+  artifacts:
+    expire_in: 14d
+    when: always
+    reports:
+      junit: reports/smoke-github.xml
+token-check-gitlab:
+  extends: .jacamar-defaults
+  variables:
+    GITLAB_HOST: "gitlab.earth.bsc.es"
+  script:
+    - |
+      failed=0
+      if GITLAB_HOST="$GITLAB_HOST" ./tests/check-token-gitlab.sh; then
+        destine report add token_gitlab pass
+      else
+        destine report add token_gitlab fail
+        failed=1
+      fi
+      destine report generate reports/smoke-gitlab.xml
+      [ "$failed" -eq 0 ]
+  artifacts:
+    expire_in: 14d
+    when: always
+    reports:
+      junit: reports/smoke-gitlab.xml
+datamover-check-mn5:
+  extends: .jacamar-defaults
+  allow_failure: true
+  script:
+    - |
+      failed=0
+      if ./tests/check-datamover-mn5.sh; then
+        destine report add datamover_mn5 pass
+      else
+        destine report add datamover_mn5 fail
+        failed=1
+      fi
+      destine report generate reports/smoke-datamover-mn5.xml
+      [ "$failed" -eq 0 ]
+  artifacts:
+    expire_in: 14d
+    when: always
+    paths:
+      - de340-datamover-mn5.env
+    reports:
+      junit: reports/smoke-datamover-mn5.xml
+ssh-check-lumi:
+  extends: .jacamar-defaults
+  allow_failure: true
+  variables:
+    # Override to use a different SSH host alias (must match ~/.ssh/config).
+    LUMI_HOST: "lumi-cluster"
+  script:
+    - |
+      failed=0
+      if LUMI_HOST="$LUMI_HOST" ./tests/check-ssh-lumi.sh; then
+        destine report add ssh_lumi pass
+      else
+        destine report add ssh_lumi fail
+        failed=1
+      fi
+      destine report generate reports/smoke-ssh-lumi.xml
+      [ "$failed" -eq 0 ]
+  artifacts:
+    expire_in: 14d
+    when: always
+    reports:
+      junit: reports/smoke-ssh-lumi.xml
+ssh-check-mn5:
+  extends: .jacamar-defaults
+  allow_failure: true
+  variables:
+    # Override to use a different SSH host alias (must match ~/.ssh/config).
+    MN5_HOST: "mn5-cluster1"
+  script:
+    - |
+      failed=0
+      if MN5_HOST="$MN5_HOST" ./tests/check-ssh-mn5.sh; then
+        destine report add ssh_mn5 pass
+      else
+        destine report add ssh_mn5 fail
+        failed=1
+      fi
+      destine report generate reports/smoke-ssh-mn5.xml
+      [ "$failed" -eq 0 ]
+  artifacts:
+    expire_in: 14d
+    when: always
+    reports:
+      junit: reports/smoke-ssh-mn5.xml
+ssh-check-lumi-to-mn5:
+  extends: .jacamar-defaults
+  allow_failure: true
+  # This job tests the LUMI → MN5 cross-HPC SSH hop.
+  # Prerequisites on LUMI (see tests/check-ssh-lumi-to-mn5.sh for details):
+  #   1. SSH key pair for MN5 exists on LUMI, e.g. ~/.ssh/id_ed25519_bsc
+  #   2. The public key is in MN5's ~/.ssh/authorized_keys
+  #      (run on MN5: ssh-copy-id -i ~/.ssh/id_ed25519_bsc.pub <bsc_user>@glogin1.bsc.es)
+  needs: [ssh-check-lumi]
+  variables:
+    LUMI_HOST: "lumi-cluster"
+    # Host alias as defined in LUMI's ~/.ssh/config — this ensures the correct
+    # User and IdentityFile are used, matching what you get when you manually
+    # run 'ssh mn5-cluster1' from LUMI.  Set to glogin1.bsc.es if no alias
+    # is configured in LUMI's ~/.ssh/config.
+    MN5_FROM_LUMI_HOST: "mn5-cluster1"
+  script:
+    - |
+      failed=0
+      if LUMI_HOST="$LUMI_HOST" MN5_FROM_LUMI_HOST="$MN5_FROM_LUMI_HOST" \
+           ./tests/check-ssh-lumi-to-mn5.sh; then
+        destine report add ssh_lumi_to_mn5 pass
+      else
+        destine report add ssh_lumi_to_mn5 fail
+        failed=1
+      fi
+      destine report generate reports/smoke-ssh-lumi-to-mn5.xml
+      [ "$failed" -eq 0 ]
+  artifacts:
+    expire_in: 14d
+    when: always
+    reports:
+      junit: reports/smoke-ssh-lumi-to-mn5.xml

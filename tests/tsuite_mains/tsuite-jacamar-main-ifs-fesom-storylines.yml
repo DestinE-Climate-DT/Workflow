@@ -1,0 +1,40 @@
+RUN:
+  WORKFLOW: model
+  ENVIRONMENT: intel
+  PROCESSOR_UNIT: cpu
+  TYPE: research
+MODEL:
+  NAME: ifs-fesom
+  SIMULATION: ifs-fesom-story-nudging-hist-tco79
+  GRID_ATM: tco79l137
+  PATH: /gpfs/projects/ehpc01/sbeyer/models/DE_CY48R1.0_climateDT_20260326
+  INPUTS: /gpfs/scratch/ehpc01/sbeyer/inproot
+  #BUNDLE_BUILD_DIR: /gpfs/projects/ehpc01/sbeyer/models/fesom_ensemble_gen/build
+  #BUNDLE_SOURCE_DIR: /gpfs/projects/ehpc01/sbeyer/models/fesom_ensemble_gen/source
+  #RAPS:
+  #BIN: /gpfs/projects/ehpc01/sbeyer/models/fesom_ensemble_gen/source/raps/bin
+CONFIGURATION:
+  DATA_PORTFOLIO: full
+  ADDITIONAL_JOBS:
+    TRANSFER: 'True'
+    BACKUP: 'False'
+    WIPE: 'True'
+    MEMORY_CHECKER: 'False'
+    SIZE_CHECK: 'False'
+    DQC: 'True'
+    CLEAN: 'False'
+    AQUA: 'True'
+    SYNC_LRA: 'True'
+    LRA: 'True'
+  WIPE:
+    DOIT: 'True'
+PLATFORMS:
+  MARENOSTRUM5:
+    DATABRIDGE_FDB_HOME: ''
+EXPERIMENT:
+  MEMBERS: 'fc0 fc1 fc2'
+JOBS:
+  TRANSFER:
+    WALLCLOCK: '01:30'
+  AQUA_ANALYSIS:
+    WALLCLOCK: 02:00

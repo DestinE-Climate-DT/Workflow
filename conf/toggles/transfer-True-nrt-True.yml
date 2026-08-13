@@ -1,0 +1,25 @@
+# NRT override for TRANSFER: transfer each daily SIM split as it completes,
+# tied 1-to-1 to SIM and DQC_BASIC splits. Loaded only when
+# ADDITIONAL_JOBS.TRANSFER and NRT are both True; loads after transfer-True.yml
+# so this full dep set wins (the base uses the compact string DEPENDENCIES).
+# The '[1:auto]*\1' mapping ties split N of the child to split N of the parent.
+JOBS:
+  TRANSFER:
+    DEPENDENCIES:
+      REMOTE_SETUP:
+      SIM:
+        SPLITS_FROM:
+          ALL:
+            SPLITS_TO: '[1:auto]*\1'
+      FIX_CONSTANT_VARIABLES:
+      TRANSFER-1:
+      # Serialize daily transfers within a chunk so they don't race on remote
+      # state or exceed datamover connection limits.
+      TRANSFER:
+        SPLITS_FROM:
+          ALL:
+            SPLITS_TO: previous
+      DQC_BASIC:
+        SPLITS_FROM:
+          ALL:
+            SPLITS_TO: '[1:auto]*\1'

@@ -1,0 +1,29 @@
+RUN:
+  WORKFLOW: simless
+  ENVIRONMENT: intel
+  PROCESSOR_UNIT: cpu
+  TYPE: production
+EXPERIMENT:
+  DATELIST: 20160101 #Startdate
+  # Inference lead time
+  CHUNKSIZE: 15
+  CHUNKSIZEUNIT: day # day, month, year
+CONFIGURATION:
+  ADDITIONAL_JOBS:
+    DOWNLOAD_DATA: "False"
+    DATAFLOW: "False"
+    MODEL_SERVING_FLOW: "True"
+    AQUA: "False"
+  MODEL_SERVING_FLOW: # inference parameters and inputs
+    INPUT_DATASET: /gpfs/projects/pred1/datasets/zarrs/251023_CMIP6_DAY_UKESM1-0-LL_ssp245_r1i1p1f2_r320x160_20150101-20991231.zarr
+    GRID_SIZE_LATITUDE: 160
+    GRID_SIZE_LONGITUDE: 320
+    TARGET_PATTERNS: "/gpfs/projects/pred1/datasets/251006_CMIP6_DAY_UKESM1-0-LL_historical_r1i1p1f2_r320x160/CMIP/MOHC/UKESM1-0-LL/historical/r1i1p1f2/*day*.nc"
+    FIXER_NAME: "UKESM1"
+    PRESSURE_LEVELS: "1000 5000 10000 25000"
+PLATFORMS:
+  MARENOSTRUM5:
+    PROJECT: pred1
+    QUEUE: gp_resa
+  MARENOSTRUM5-ACCELERATED:
+    QUEUE: acc_resa

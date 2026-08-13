@@ -1,0 +1,64 @@
+echo "=== Provisioning experiment for type {{ type_name }} ({{ hpc }}) ==="
+
+# Generate a fresh experiment ID.  --testcase puts it in the 't' namespace;
+# the t400 anchor row in autosubmit.db makes the first one t401 (see branch doc).
+output=$(autosubmit expid \
+  --testcase \
+  --description "CI ${CI_PIPELINE_ID} type {{ type_name }}" \
+  --HPC "{{ hpc }}" \
+  --minimal_configuration 2>&1)
+echo "$output"
+
+# Extract the new expid
+if [[ $output =~ Experiment\ ([a-zA-Z0-9]+)\ created ]]; then
+  NEW_EXPID="${BASH_REMATCH[1]}"
+  echo "Allocated expid: $NEW_EXPID"
+elif [[ $output =~ expid:\ ([a-zA-Z0-9]+) ]]; then
+  NEW_EXPID="${BASH_REMATCH[1]}"
+  echo "Allocated expid: $NEW_EXPID"
+else
+  echo "ERROR: Failed to extract expid from autosubmit output"
+  destine report add "{{ type_name }}_expid" fail
+  destine report generate reports/tsuite-expid.xml
+  exit 1
+fi
+EXPDIR="/appl/AS/AUTOSUBMIT_DATA/$NEW_EXPID"
+
+# Copy main.yml template (experiment configuration)
+if [ -f "tests/tsuite_mains/tsuite-jacamar-main-{{ type_name }}.yml" ]; then
+  cp "tests/tsuite_mains/tsuite-jacamar-main-{{ type_name }}.yml" "$EXPDIR/conf/main.yml"
+  echo "Installed main.yml from template"
+else
+  echo "ERROR: Template not found: tests/tsuite_mains/tsuite-jacamar-main-{{ type_name }}.yml"
+  destine report add "{{ type_name }}_expid" fail --classname "$NEW_EXPID"
+  destine report generate reports/tsuite-expid.xml
+  exit 1
+fi
+
+# Copy minimal.yml template and patch dynamic fields
+if [ -f "tests/tsuite_mains/tsuite-jacamar-minimal-{{ type_name }}.yml" ]; then
+  cp "tests/tsuite_mains/tsuite-jacamar-minimal-{{ type_name }}.yml" "$EXPDIR/conf/minimal.yml"
+  # Patch EXPID to the newly allocated value
+  sed -i "s/EXPID:.*/EXPID: \"$NEW_EXPID\"/" "$EXPDIR/conf/minimal.yml"
+  # Patch PROJECT_BRANCH to the CI branch
+  sed -i "s|PROJECT_BRANCH:.*|PROJECT_BRANCH: \"${CI_COMMIT_REF_NAME}\"|" "$EXPDIR/conf/minimal.yml"
+  # Patch PROJECT_ORIGIN to the repository that triggered this pipeline so the
+  # experiment clones the exact fork under test (e.g. de_340 vs de_340-2),
+  # regardless of the static default baked into the template.
+  sed -i "s|PROJECT_ORIGIN:.*|PROJECT_ORIGIN: \"https://earth.bsc.es/gitlab/${CI_PROJECT_PATH}\"|" "$EXPDIR/conf/minimal.yml"
+  # Fix submodule setting
+  sed -i "s/PROJECT_SUBMODULES: ''/PROJECT_SUBMODULES: false/g" "$EXPDIR/conf/minimal.yml"
+  echo "Installed minimal.yml from template (patched EXPID + origin + branch)"
+else
+  echo "ERROR: Template not found: tests/tsuite_mains/tsuite-jacamar-minimal-{{ type_name }}.yml"
+  destine report add "{{ type_name }}_expid" fail --classname "$NEW_EXPID"
+  destine report generate reports/tsuite-expid.xml
+  exit 1
+fi
+
+# Write the new expid to dotenv for downstream jobs
+echo "{{ env_var }}=$NEW_EXPID" > expid-{{ type_name }}.env
+echo "Provisioned $NEW_EXPID for type {{ type_name }}"
+
+destine report add "{{ type_name }}_expid" pass --classname "$NEW_EXPID"
+destine report generate reports/tsuite-expid.xml

@@ -1,0 +1,283 @@
+# tsuite experiment type registry and path-to-tag mapping rules.
+#
+# experiment_types:
+#   Each entry defines an experiment type with:
+#     - type: descriptive name, also key for template lookup in mains/
+#     - description: human-readable label
+#     - hpc: target HPC platform
+#     - tags: list of component tags used for matching
+#
+#   Template convention:
+#     tests/tsuite_mains/tsuite-jacamar-main-{type}.yml
+#     tests/tsuite_mains/tsuite-jacamar-minimal-{type}.yml
+#
+# path_rules:
+#   Each entry maps a regex pattern to a set of tags.
+#   If a changed file matches the regex, the associated tags are activated.
+#   Experiment types whose tags intersect with activated tags are selected.
+#   Special tag "ALL" means: run every experiment type.
+experiment_types:
+  - type: ifs-nemo-lowres
+    description: "IFS-Nemo lowres SIM+DQC+CLEAN+TRANSFER+WIPE (LUMI)"
+    hpc: lumi
+    tags: [ifs-nemo, sim, dqc, clean, transfer, wipe, lumi, ini]
+  - type: ifs-nemo-e2e
+    description: "Energy_onshore end-to-end ifs-nemo 1 month (LUMI)"
+    hpc: lumi
+    tags: [ifs-nemo, sim, end-to-end, apps, energy, hydroland, hydromet, aqua, dqc, clean, dn, lumi, ini]
+  - type: apps-databridge-lumi
+    description: "All apps alone - data bridge (LUMI)"
+    hpc: lumi
+    tags: [apps, dn, energy, hydroland, hydromet, obsall, aqua, lumi, databridge]
+  - type: icon-r2b8-control
+    description: "Test control R2B8 ICON Phase 2 without DQC (LUMI)"
+    hpc: lumi
+    tags: [icon, sim, lumi, ini]
+  - type: apps-databridge-mn5
+    description: "All apps alone from DataBridge (MN5)"
+    hpc: marenostrum5
+    tags: [apps, dn, energy, hydroland, hydromet, obsall, aqua, mn5, databridge]
+  - type: ifs-fesom-tco79
+    description: "IFS-FESOM tco79 historical with DQC (MN5)"
+    hpc: marenostrum5
+    tags: [ifs-fesom, sim, dqc, aqua, mn5, ini]
+  - type: ifs-fesom-storylines
+    description: "IFS-FESOM storylines historical tco79 (MN5)"
+    hpc: marenostrum5
+    tags: [ifs-fesom, sim, dqc, aqua, clean, transfer, wipe, mn5, ini, storylines]
+  - type: ifs-nemo-2monthly
+    description: "IFS-NEMO 2monthly lowres SIM+DQC+CLEAN+TRANSFER+WIPE (MN5)"
+    hpc: marenostrum5
+    tags: [ifs-nemo, sim, dqc, clean, transfer, wipe, mn5, ini]
+  - type: icon-r2b8-historical
+    description: "Test historical R2B8 ICON model-only (LUMI)"
+    hpc: lumi
+    tags: [icon, sim, lumi, ini]
+  - type: ifs-nemo-multi-start-date
+    description: "Multiple start dates (MN5)"
+    hpc: marenostrum5
+    tags: [ifs-nemo, sim, mn5, ini, multi-start-date]
+  - type: nemo-standalone
+    description: "NEMO standalone (MN5)"
+    hpc: marenostrum5
+    tags: [nemo, sim, mn5, ini]
+  - type: ifs-nemo-dataportfolio
+    description: "IFS-Nemo reduced data portfolio TRANSFER+WIPE (MN5)"
+    hpc: marenostrum5
+    tags: [ifs-nemo, sim, transfer, wipe, mn5, ini, data-portfolio]
+  - type: apps-dataflow-lumi
+    description: "Apps dataflow workflow from DataBridge (LUMI)"
+    hpc: lumi
+    tags: [apps, dn, databridge, dataflow, lumi]
+  - type: ifs-fesom-cont-tco79-lumi
+    description: "IFS-FESOM baseline control tco79 SIM+DQC+AQUA+LRA (LUMI)"
+    hpc: lumi
+    tags: [ifs-fesom, sim, dqc, aqua, lumi, ini]
+path_rules:
+  # === CORE INFRASTRUCTURE (triggers ALL) ===
+  - pattern: ^lib/common/util\.sh$
+    tags: [ALL]
+  - pattern: ^lib/common/checkers\.sh$
+    tags: [ALL]
+  - pattern: ^lib/common/utils/sim_utils\.sh$
+    tags: [sim]
+  - pattern: ^lib/common/utils/ini_utils\.sh$
+    tags: [ini]
+  - pattern: ^lib/common/utils/remote_setup_utils\.sh$
+    tags: [ALL]
+  - pattern: ^lib/common/utils/local_setup_utils\.sh$
+    tags: [ALL]
+  - pattern: ^templates/local_setup\.sh$
+    tags: [ALL]
+  - pattern: ^templates/ini\.sh$
+    tags: [ini]
+  # === MODEL SIMULATION TEMPLATES ===
+  - pattern: ^templates/sim_ifs-nemo\.sh$
+    tags: [ifs-nemo]
+  - pattern: ^templates/sim_ifs-fesom\.sh$
+    tags: [ifs-fesom]
+  - pattern: ^templates/sim_icon\.sh$
+    tags: [icon]
+  - pattern: ^templates/sim_nemo\.sh$
+    tags: [nemo]
+  # === MODEL CONFIGURATION ===
+  - pattern: ^conf/model/ifs-nemo/
+    tags: [ifs-nemo]
+  - pattern: ^conf/model/ifs-fesom/
+    tags: [ifs-fesom]
+  - pattern: ^conf/model/icon/
+    tags: [icon]
+  - pattern: ^conf/model/nemo/
+    tags: [nemo]
+  # === COMPONENT TEMPLATES ===
+  - pattern: ^templates/dqc\.sh$
+    tags: [dqc]
+  - pattern: ^templates/clean\.sh$
+    tags: [clean]
+  - pattern: ^templates/clean_restarts\.sh$
+    tags: [clean]
+  - pattern: ^templates/transfer\.sh$
+    tags: [transfer]
+  - pattern: ^templates/synchronize\.sh$
+    tags: [transfer]
+  - pattern: ^templates/wipe\.sh$
+    tags: [wipe]
+  - pattern: ^templates/wipe-check\.sh$
+    tags: [wipe]
+  - pattern: ^templates/backup\.sh$
+    tags: [ALL]
+  - pattern: ^templates/dn\.sh$
+    tags: [dn]
+  - pattern: ^templates/application\.sh$
+    tags: [apps]
+  - pattern: ^templates/opa\.sh$
+    tags: [apps]
+  - pattern: ^templates/postproc_app\.sh$
+    tags: [apps]
+  - pattern: ^templates/fix_constant_variables\.sh$
+    tags: [ALL]
+  # === COMPONENT UTILITIES ===
+  - pattern: ^lib/common/utils/dqc_utils\.sh$
+    tags: [dqc]
+  - pattern: ^lib/common/utils/clean_restarts_utils\.sh$
+    tags: [clean]
+  - pattern: ^lib/common/utils/transfer_utils\.sh$
+    tags: [transfer]
+  - pattern: ^lib/common/utils/wipe_utils\.sh$
+    tags: [wipe]
+  - pattern: ^lib/common/utils/dn_utils\.sh$
+    tags: [dn]
+  - pattern: ^lib/common/utils/backup_utils\.sh$
+    tags: [ALL]
+  - pattern: ^lib/common/utils/opa_utils\.sh$
+    tags: [apps]
+  - pattern: ^lib/common/utils/grid_build_utils\.sh$
+    tags: [aqua]
+  # === AQUA / CATALOG ===
+  - pattern: ^templates/aqua/
+    tags: [aqua]
+  - pattern: ^runscripts/aqua/
+    tags: [aqua]
+  # === FDB / REMOTE SETUP ===
+  - pattern: ^templates/remote_setup/
+    tags: [ALL]
+  - pattern: ^templates/fdb/
+    tags: [sim]
+  # === APPLICATION CONFIGS ===
+  - pattern: ^conf/applications/energy_indicators
+    tags: [energy]
+  - pattern: ^conf/applications/hydroland
+    tags: [hydroland]
+  - pattern: ^conf/applications/hydromet
+    tags: [hydromet]
+  - pattern: ^conf/applications/obsall
+    tags: [obsall]
+  - pattern: ^conf/applications/wildfires
+    tags: [energy]
+  - pattern: ^conf/applications/opa
+    tags: [apps]
+  - pattern: ^conf/applications/data
+    tags: [databridge]
+  - pattern: ^conf/applications/container_versions\.yml$
+    tags: [apps, dqc]
+  - pattern: ^conf/applications/default_gsv_request\.yml$
+    tags: [apps]
+  - pattern: ^conf/applications/request/
+    tags: [apps, dn]
+  # === PLATFORM-SPECIFIC LIBRARIES ===
+  - pattern: ^lib/LUMI/
+    tags: [lumi]
+  - pattern: ^lib/LUMI-TRANSFER/
+    tags: [lumi, transfer]
+  - pattern: ^lib/MARENOSTRUM5/
+    tags: [mn5]
+  - pattern: ^lib/MARENOSTRUM5-TRANSFER/
+    tags: [mn5, transfer]
+  # === PIPELINE CONFIGURATION ===
+  - pattern: ^conf/general\.yml$
+    tags: [ALL]
+  - pattern: ^conf/platforms\.yml$
+    tags: [ALL]
+  - pattern: ^conf/gsv\.yml$
+    tags: [ALL]
+  - pattern: ^conf/jobs_model\.yml$
+    tags: [sim]
+  - pattern: ^conf/jobs_apps\.yml$
+    tags: [apps]
+  - pattern: ^conf/jobs_end-to-end\.yml$
+    tags: [end-to-end]
+  - pattern: ^conf/jobs_simless\.yml$
+    tags: [simless]
+  - pattern: ^conf/defaults/
+    tags: [ALL]
+  - pattern: ^conf/simulation/
+    tags: [sim]
+  - pattern: ^conf/run_types/
+    tags: [ALL]
+  - pattern: ^conf/bootstrap/
+    tags: [ALL]
+  - pattern: ^conf/namelist_patches/
+    tags: [sim]
+  - pattern: ^conf/output_portfolios/
+    tags: [sim, data-portfolio]
+  - pattern: ^conf/remote_setup/
+    tags: [ALL]
+  # === RUNSCRIPTS (applications) ===
+  - pattern: ^runscripts/dn/
+    tags: [dn]
+  - pattern: ^runscripts/dqc/
+    tags: [dqc]
+  - pattern: ^runscripts/energy_indicators/
+    tags: [energy]
+  - pattern: ^runscripts/hydroland/
+    tags: [hydroland]
+  - pattern: ^runscripts/hydromet/
+    tags: [hydromet]
+  - pattern: ^runscripts/obsall/
+    tags: [obsall]
+  - pattern: ^runscripts/wildfires_fwi/
+    tags: [energy]
+  - pattern: ^runscripts/wildfires_wise/
+    tags: [energy]
+  - pattern: ^runscripts/opa/
+    tags: [apps]
+  - pattern: ^runscripts/icon/
+    tags: [icon]
+  - pattern: ^runscripts/namelists/
+    tags: [sim]
+  - pattern: ^runscripts/ensembles/
+    tags: [multi-start-date]
+  - pattern: ^runscripts/FDB/
+    tags: [sim]
+  - pattern: ^runscripts/utils/
+    tags: [ALL]
+  # === DATA PORTFOLIO ===
+  - pattern: ^data-portfolio/
+    tags: [sim, data-portfolio]
+  # === MAINS (top-level experiment configs) ===
+  - pattern: ^mains/.*ifs-nemo
+    tags: [ifs-nemo]
+  - pattern: ^mains/.*ifs-fesom
+    tags: [ifs-fesom]
+  - pattern: ^mains/.*icon
+    tags: [icon]
+  - pattern: ^mains/.*nemo
+    tags: [nemo]
+  # === TSUITE TEMPLATES (per-type main.yml + minimal.yml) ===
+  - pattern: ^tests/tsuite_mains/.*ifs-nemo
+    tags: [ifs-nemo]
+  - pattern: ^tests/tsuite_mains/.*ifs-fesom
+    tags: [ifs-fesom]
+  - pattern: ^tests/tsuite_mains/.*icon
+    tags: [icon]
+  - pattern: ^tests/tsuite_mains/.*nemo
+    tags: [nemo]
+  - pattern: ^tests/tsuite_mains/.*apps
+    tags: [apps]
+  # === SETUP / BUILD SYSTEM ===
+  - pattern: ^setup\.py$
+    tags: [ALL]
+  - pattern: ^pyproject\.toml$
+    tags: [ALL]
+  - pattern: ^Makefile$
+    tags: [ALL]

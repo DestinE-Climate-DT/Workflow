@@ -1,0 +1,17 @@
+# NRT end-to-end override for DN: depend on the matching SIM split (1-to-1)
+# so DN flows daily instead of blocking on the last SIM split of the chunk.
+# Loaded only when CONFIGURATION.DN and CONFIGURATION.NRT are both True;
+# loads last so this full DN dep set wins the merge over jobs_end-to-end.yml.
+JOBS:
+  DN:
+    DEPENDENCIES:
+      SIM:
+        STATUS: "RUNNING"
+        SPLITS_FROM:
+          ALL:
+            SPLITS_TO: '[1:auto]*\1'
+      DN:
+        SPLITS_FROM:
+          ALL:
+            SPLITS_TO: 'previous'
+      DN-1:

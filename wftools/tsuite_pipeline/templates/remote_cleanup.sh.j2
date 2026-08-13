@@ -1,0 +1,200 @@
+# --- Remote HPC cleanup: every per-expid root, the FDB, the central LRA copy ---
+# Paths come from Autosubmit's *resolved* parameters (never reconstructed);
+# every remote action is re-validated on the HPC side.  Failures here WARN but
+# do not fail the job -- the local VM delete below is the authoritative gate
+# signal.
+LUMI_ALIAS="{{ lumi_alias }}"
+MN5_ALIAS="{{ mn5_alias }}"
+TRANSFER_ALIAS="{{ transfer_alias }}"
+{% include "cleanup_lib.sh" %}
+# Anything left behind is reported with the command that finishes the job.
+manual_cmds=""
+note_manual() { manual_cmds="${manual_cmds}    $1"$'\n'; }
+
+remote_guarded_rm() {
+  # $1=alias  $2=target_path  $3=expid  $4=kind(dir|expdir)
+  ssh -o BatchMode=yes -o ConnectTimeout=15 "$1" bash -s -- "$2" "$3" "$4" <<'REMOTE_EOF'
+set -u
+target="$1"; expid="$2"; kind="$3"
+if [ -z "$target" ]; then echo "REFUSED: empty target"; exit 2; fi
+case "$target" in
+  /scratch/*|/gpfs/scratch/*|/staging/*) ;;
+  *) echo "REFUSED: unsafe prefix: $target"; exit 2 ;;
+esac
+if [ "$kind" = "expdir" ]; then
+  case "$target" in
+    */experiments/"$expid") ;;
+    *) echo "REFUSED: not a per-expid experiments dir: $target"; exit 2 ;;
+  esac
+elif [ "$(basename "$target")" != "$expid" ]; then
+  echo "REFUSED: path does not end in /$expid: $target"; exit 2
+fi
+if [ -d "$target" ]; then
+  echo "Removing $target"
+  if rm -rf "$target"; then echo "REMOVED $target"; else echo "RMFAIL $target"; exit 1; fi
+else
+  echo "already absent: $target"
+fi
+REMOTE_EOF
+}
+remote_fdb_rm() {
+  # $1=alias  $2=fdb_store  $3=expid
+  # A shared FDB_HOME is a *select* root holding config, not data: its per-grid
+  # config.yaml names the roots the data actually lands in.  Entries there are
+  # MARS keys (d1:climate-dt:...:<expver>:<stream>:<date>), so with expver ==
+  # expid an anchored :expid: glob is this experiment's data and nothing else.
+  ssh -o BatchMode=yes -o ConnectTimeout=15 "$1" bash -s -- "$2" "$3" "$CI_EXPID_PATTERN" <<'REMOTE_EOF'
+set -u
+store="${1%/}"; expid="$2"; ci_pattern="$3"
+case "$expid" in
+  $ci_pattern) ;;
+  *) echo "REFUSED: not a CI expid ($ci_pattern): $expid"; exit 2 ;;
+esac
+shopt -s nullglob
+configs=("$store"/*/etc/fdb/config.yaml)
+if [ -z "${configs[0]:-}" ]; then echo "NOCONFIG: $store declares no FDB roots"; exit 3; fi
+# Keep only roots this expid's expver can route to: a block that pins expver is
+# production's, and an archive:False root is a read-only mount.
+roots=$(awk '
+  /select:/  { if (last != "") print last; keep = ($0 ~ /climate-dt/) && ($0 !~ /expver=/); last = ""; next }
+  /- path:/  { if (last != "") print last; last = (keep ? $3 : ""); next }
+  /archive:/ { if ($0 ~ /[Ff]alse/) last = ""; next }
+  END        { if (last != "") print last }
+' "${configs[@]}" | sort -u)
+if [ -z "$roots" ]; then echo "NOCONFIG: $store routes $expid nowhere writable"; exit 3; fi
+removed=0
+while IFS= read -r root; do
+  case "$root" in
+    */fdb/*) ;;
+    *) echo "REFUSED: declared root is not inside an fdb store: $root"; exit 2 ;;
+  esac
+  if [ ! -d "$root" ]; then echo "absent: $root"; continue; fi
+  echo "Scanning $root"
+  for entry in "$root"/*:"$expid":*; do
+    echo "Removing $entry"
+    if rm -rf "$entry"; then removed=$((removed + 1)); else echo "RMFAIL $entry"; exit 1; fi
+  done
+done <<< "$roots"
+echo "removed $removed FDB entr(ies) keyed :$expid: under the roots $store declares"
+REMOTE_EOF
+}
+remote_lra_rm() {
+  # $1=alias  $2=central_lra_root  $3=expid
+  # The central LRA is a shared store holding an rsync *copy* of the
+  # experiment's own LRA output, under <catalog>/<model-res>/<expid>.
+  ssh -o BatchMode=yes -o ConnectTimeout=15 "$1" bash -s -- "$2" "$3" "$CI_EXPID_PATTERN" <<'REMOTE_EOF'
+set -u
+central="${1%/}"; expid="$2"; ci_pattern="$3"
+case "$expid" in
+  $ci_pattern) ;;
+  *) echo "REFUSED: not a CI expid ($ci_pattern): $expid"; exit 2 ;;
+esac
+case "$central" in
+  /*) ;;
+  *) echo "REFUSED: central LRA path is not absolute: $central"; exit 2 ;;
+esac
+if [ ! -d "$central" ]; then echo "central LRA absent: $central"; exit 0; fi
+shopt -s nullglob
+removed=0
+for d in "$central"/*/*/"$expid"; do
+  if [ ! -d "$d" ]; then continue; fi
+  echo "Removing $d"
+  if rm -rf "$d"; then removed=$((removed + 1)); else echo "RMFAIL $d"; exit 1; fi
+done
+echo "removed $removed central LRA dir(s) for $expid under $central"
+REMOTE_EOF
+}
+rm_root() {
+  # $1=root  $2=kind(dir|expdir) -- pick the host, delete, record the fallback.
+  local root="$1" kind="$2" host
+  host=$(alias_for_root "$root")
+  if [ -z "$host" ]; then
+    echo -e "${RED}WARNING${NC}: no SSH alias known for $root; not cleaned."
+    note_manual "rm -rf $root   (on the machine owning that path)"
+    return 1
+  fi
+  if remote_guarded_rm "$host" "$root" "$expid" "$kind"; then
+    echo -e "${GREEN}OK${NC}: $root cleaned on $host."
+    return 0
+  fi
+  echo -e "${RED}WARNING${NC}: failed to clean $root on $host."
+  note_manual "ssh $host 'rm -rf $root'"
+  return 1
+}
+
+start_section "remote_cleanup_$expid" "Remote HPC cleanup: $expid" true
+# Resolve the experiment's paths from the created experiment.  MUST run before
+# the local 'rm -rf' removes the conf the report reads.
+report_dir=$(mktemp -d)
+plist=""
+if autosubmit report "$expid" -all -fp "$report_dir" > "reports/report_$expid.txt" 2>&1; then
+  plist=$(ls -t "$report_dir"/${expid}_parameter_list_*.txt 2>/dev/null | head -1)
+fi
+
+if ! is_ci_expid "$expid"; then
+  # Expids are allocated sequentially, so the day the counter leaves the
+  # pattern this refuses everything -- say so instead of skipping in silence.
+  echo -e "${RED}WARNING${NC}: '$expid' is not a CI expid ($CI_EXPID_PATTERN); refusing every remote deletion."
+  note_manual "check $expid, then widen CI_EXPID_PATTERN in wftools/tsuite_pipeline/templates/cleanup_lib.sh"
+elif [ -z "$plist" ]; then
+  echo -e "${RED}WARNING${NC}: could not resolve parameters for $expid; skipping remote cleanup."
+  note_manual "autosubmit report $expid -all   (then clean its roots by hand)"
+else
+  # HPCROOTDIR is the root that is there even when the per-job rows are not;
+  # the enumeration is what adds the roots on the other platforms.
+  HPCROOTDIR=$(resolve_param "$plist" HPCROOTDIR)
+  ROOTS=$( { resolve_roots "$plist"; echo "$HPCROOTDIR"; } | grep -vE '%|^-?$' | sort -u)
+  FDB_STORES=$(resolve_fdb_stores "$plist" "$HPCROOTDIR")
+  EXPVER=$(resolve_param "$plist" REQUEST.EXPVER)
+  CENTRAL_LRA=$(resolve_param "$plist" AQUA.CENTRAL_LRA_OUTPUT_PATH)
+  echo "Per-expid roots:"
+  sed 's/^/  /' <<< "${ROOTS:-<none>}"
+  echo "FDB store (expver $EXPVER):"
+  sed 's/^/  /' <<< "${FDB_STORES:-<none>}"
+
+  # 1) Every platform's per-expid root: the run dir, the datamover's request
+  #    dir, and the root Autosubmit created on the other HPC for a single job.
+  while IFS= read -r root; do
+    [ -n "$root" ] || continue
+    rm_root "$root" dir || true
+  done <<< "$ROOTS"
+
+  # 2) FDB.  A per-expid store (RUN.TYPE test) is a directory we own; a shared
+  #    one keys its entries by expver, so it holds this run's data only when
+  #    the expver is the expid -- which is every RUN.TYPE except the fixed ones.
+  while IFS= read -r store; do
+    [ -n "$store" ] || continue
+    case "$store" in
+      */experiments/"$expid"/fdb)
+        rm_root "${store%/fdb}" expdir || true ;;
+      *)
+        if [ "$EXPVER" != "$expid" ]; then
+          echo "Shared FDB store $store keys entries by expver $EXPVER; nothing of $expid there."
+        elif remote_fdb_rm "$(alias_for_root "$HPCROOTDIR")" "$store" "$expid"; then
+          echo -e "${GREEN}OK${NC}: shared-FDB entries for $expid cleaned."
+        else
+          echo -e "${RED}WARNING${NC}: failed to clean $expid out of $store."
+          note_manual "FDB store $store: read its */etc/fdb/config.yaml for the data roots, then remove '*:$expid:*' under each"
+        fi ;;
+    esac
+  done <<< "$FDB_STORES"
+
+  # 3) The central LRA copy, on the LUMI side where SYNC_LRA writes it.  The
+  #    row only exists when the experiment ran AQUA's LRA jobs.
+  if [ -n "$CENTRAL_LRA" ]; then
+    if remote_lra_rm "$LUMI_ALIAS" "$CENTRAL_LRA" "$expid"; then
+      echo -e "${GREEN}OK${NC}: central LRA copies cleaned."
+    else
+      echo -e "${RED}WARNING${NC}: failed to clean central LRA under $CENTRAL_LRA."
+      note_manual "ssh $LUMI_ALIAS 'rm -rf ${CENTRAL_LRA%/}/*/*/$expid'"
+    fi
+  fi
+fi
+rm -rf "$report_dir"
+
+if [ -n "$manual_cmds" ]; then
+  echo ""
+  echo -e "${RED}  REMOTE CLEANUP INCOMPLETE for $expid -- finish it by hand:${NC}"
+  printf '%s' "$manual_cmds"
+fi
+end_section "remote_cleanup_$expid"

@@ -1,0 +1,98 @@
+expid="{{ expid_ref }}"
+echo "=== Resource accounting for {{ type_name }} (expid: $expid) ==="
+
+# Guard: a missing/short expid means the chain never allocated -- nothing to do.
+if [ -z "$expid" ] || [[ ! "$expid" =~ ^[a-zA-Z0-9]{4}$ ]]; then
+  echo "SKIPPING resources: expid is empty or not a 4-char id ('$expid')."
+  destine report add "{{ type_name }}/resources" skip
+  destine report generate reports/tsuite-resources.xml
+  exit 0
+fi
+
+SSH_ALIAS="{{ ssh_alias }}"
+sacct_file="reports/sacct_$expid.txt"
+: > "$sacct_file"
+
+start_section "resources_$expid" "Resource accounting: $expid ({{ type_name }})" true
+
+# Every recorded attempt, superseded ones included.  Login-node and VM jobs
+# carry a PID, which can alias another experiment's SLURM id; the job name
+# settles who owns what.
+jobids=$(destine resources job-ids "$expid")
+
+# Non-zero means jobs were recorded, so empty accounting below is a real failure.
+nids=$(echo "$jobids" | tr ',' '\n' | grep -c .)
+
+if [ -z "$jobids" ]; then
+  echo -e "${RED}WARNING${NC}: no job ids found in job_data_$expid.db; totals will be empty."
+elif [ -z "$SSH_ALIAS" ]; then
+  echo -e "${RED}WARNING${NC}: unknown HPC '{{ hpc }}'; cannot run remote sacct."
+else
+  echo "Querying sacct on $SSH_ALIAS for $nids job ids."
+  if ! ssh -o BatchMode=yes -o ConnectTimeout=15 "$SSH_ALIAS" \
+      "sacct -j '$jobids' -p -n -o {{ sacct_format }}" \
+      > "$sacct_file" 2>>"reports/resources_$expid.err"; then
+    echo -e "${RED}WARNING${NC}: remote sacct failed (see reports/resources_$expid.err)."
+  fi
+fi
+
+# Passed only when non-empty: the CLI types pipeline ids as ints.
+meta_args=()
+if [ -n "$RESULTS_ID" ]; then
+  meta_args+=(--pipeline-id "$RESULTS_ID")
+fi
+if [ -n "${CI_COMMIT_SHA:-}" ]; then
+  meta_args+=(--commit-sha "$CI_COMMIT_SHA")
+fi
+if [ -n "${CI_MERGE_REQUEST_IID:-}" ]; then
+  meta_args+=(--mr-iid "$CI_MERGE_REQUEST_IID")
+fi
+meta_args+=(--type-name "{{ type_name }}")
+{% if hpc %}
+meta_args+=(--hpc "{{ hpc }}")
+{% endif %}
+
+# JSON + metrics from whatever we collected; also records it in the store.
+accounting_failed=0
+if destine resources report "$expid" "$sacct_file" \
+    --json "reports/resources-$expid.json" \
+    --metrics "reports/metrics-resources.txt" \
+    "${meta_args[@]}"; then
+  # SKIP rather than a misleading green when the run allocated HPC jobs but
+  # sacct returned nothing.  `hpc_jobs` counts allocations alone; login-node
+  # jobs are accounted without sacct and would mask this.
+  hpcjobs=$(awk '$1 == "hpc_jobs" {print $2}' reports/metrics-resources.txt 2>/dev/null)
+  if [ "$nids" -gt 0 ] && [ "${hpcjobs:-0}" -eq 0 ]; then
+    echo -e "${RED}WARNING${NC}: queried $nids job id(s) but sacct returned 0 allocations for $expid; only login-node jobs were accounted."
+    destine report add "{{ type_name }}/resources" skip --classname "$expid"
+  else
+    destine report add "{{ type_name }}/resources" pass --classname "$expid"
+  fi
+else
+  echo -e "${RED}WARNING${NC}: 'destine resources report' failed for $expid."
+  destine report add "{{ type_name }}/resources" fail --classname "$expid"
+  accounting_failed=1
+fi
+destine report generate reports/tsuite-resources.xml
+
+# Forward results to the parent collector (best effort).
+if stamp_provenance "$expid" "{{ type_name }}" resources; then
+  if [ -f "reports/resources-$expid.json" ]; then
+    cp "reports/resources-$expid.json" "$SHARED_DIR/" || true
+  fi
+  if [ -f "reports/metrics-resources.txt" ]; then
+    cp "reports/metrics-resources.txt" "$SHARED_DIR/metrics-$expid.resources.txt" || true
+  fi
+  # The phase infix keeps this clear of the monitor report; `tsuite-required`
+  # reads both, so a broken accounting run gates instead of passing unseen.
+  cp "reports/tsuite-resources.xml" "$SHARED_DIR/tsuite-report-$expid.resources.xml" || true
+fi
+
+cat "reports/resources-$expid.json" 2>/dev/null || true
+end_section "resources_$expid"
+
+# Job stays green on an empty-sacct SKIP, but not when accounting itself broke:
+# `allow_failure` keeps monitor and delete running either way.
+if [ "$accounting_failed" -ne 0 ]; then
+  exit 1
+fi

@@ -1,0 +1,29 @@
+RUN:
+  WORKFLOW: apps
+  ENVIRONMENT: cray
+  PROCESSOR_UNIT: cpu
+  TYPE: research
+APP:
+  ENERGY_INDICATORS: 'True'
+  WILDFIRES_FWI: 'True'
+  WILDFIRES_WISE: 'True'
+  HYDROLAND: 'True'
+  HYDROMET: 'True'
+  OBSALL: 'True'
+  READ_FROM_DATABRIDGE: 'True'
+EXPERIMENT:
+  DATELIST: 19900101 #Startdate
+  MEMBERS: fc2 # fc2 -> realization 3, matching REQUEST.REALIZATION below
+  CHUNKSIZEUNIT: day
+  SPLITSIZEUNIT: day
+  CHUNKSIZE: 1
+  NUMCHUNKS: 1
+  CALENDAR: standard
+REQUEST:
+  EXPERIMENT: hist
+  ACTIVITY: baseline
+  RESOLUTION: standard
+  REALIZATION: 3
+  GENERATION: 2
+  MODEL: ifs-nemo
+  EXPVER: '0001'

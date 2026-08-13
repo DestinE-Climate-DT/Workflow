@@ -1,0 +1,91 @@
+set -o pipefail
+expid="{{ expid_ref }}"
+echo "=== Collecting status for experiment $expid (type {{ type_name }}) ==="
+
+# Run monitor to trigger status file creation
+autosubmit monitor "$expid" -txt --hide > "reports/monitor_$expid.txt" 2>&1
+monitor_exit=$?
+
+# The actual status file (with [STATUS] brackets) is written to disk by
+# monitor, not to stdout.  Find the most recent one.
+status_file=$(ls -t /appl/AS/AUTOSUBMIT_DATA/$expid/status/${expid}_*.txt 2>/dev/null | head -1)
+if [ -n "$status_file" ]; then
+  cp "$status_file" "reports/status_$expid.txt"
+  echo "Using status file: $status_file"
+else
+  echo "WARNING: No status file found for $expid"
+  touch "reports/status_$expid.txt"
+fi
+
+# Check for failures.
+#
+# Two signals trigger a FAIL report:
+#   1) status file contains [FAILED] / [ABORTED] (AS marked jobs failed)
+#   2) run log contains AS-level CRITICAL errors (eCode>=7000, e.g. eCode=7010
+#      platform connectivity).  These bail before any job gets scheduled, so the
+#      status file just shows jobs as [WAITING] -- without this check, the
+#      report would falsely show PASS.  Note: 6xxx eCodes are ERROR-level log
+#      lines (e.g. 6006 command-stderr noise, 6013 ignored config issue) that a
+#      healthy run emits at startup -- they must NOT trip this gate.
+failed=0
+fail_reason=""
+
+if [ "$monitor_exit" -ne 0 ]; then
+  failed=1
+  fail_reason="monitor failed"
+elif grep -qP '\[(FAILED|ABORTED)\]' "reports/status_$expid.txt"; then
+  failed=1
+  fail_reason="status file has [FAILED]/[ABORTED]"
+elif [ -f "reports/run_$expid.txt" ] && \
+     ! grep -q 'Run successful' "reports/run_$expid.txt" && \
+     grep -qE '^\[CRITICAL\]|eCode=7[0-9]{3}|Some jobs have failed' \
+       "reports/run_$expid.txt"; then
+  failed=1
+  fail_reason="run log shows AS-level failure (CRITICAL/eCode/'jobs have failed')"
+fi
+
+if [ "$failed" -eq 1 ]; then
+  echo -e "${RED}FAIL${NC} $expid: $fail_reason"
+  destine report add "{{ type_name }}_monitor" fail "reports/status_$expid.txt" --classname "$expid"
+else
+  echo -e "${GREEN}PASS${NC} $expid: all jobs OK"
+  destine report add "{{ type_name }}_monitor" pass "reports/status_$expid.txt" --classname "$expid"
+fi
+
+start_section "monitor_$expid" "Monitor output: $expid" true
+cat "reports/monitor_$expid.txt"
+end_section "monitor_$expid"
+start_section "status_$expid" "Status file: $expid" true
+cat "reports/status_$expid.txt"
+end_section "status_$expid"
+
+# Parse per-job results and generate reports.
+# --name-prefix puts the experiment type in front of every job name so the
+# GitLab Test Summary shows e.g. 'nemo-standalone/LOCAL_SETUP' instead of
+# a context-free 'LOCAL_SETUP'.  --durations reuses the resources phase's sacct
+# times for the jobs whose _STAT_ file AS has not retrieved yet.
+destine report parse "$expid" \
+  "reports/status_$expid.txt" "reports/run_$expid.txt" \
+  --name-prefix "{{ type_name }}/" \
+  --durations "$SHARED_DIR/resources-$expid.json"
+destine report generate reports/tsuite-monitor.xml
+destine report metrics reports/metrics.txt
+
+# Copy results to shared filesystem for the parent collector job
+stamp_provenance "$expid" "{{ type_name }}" monitor
+cp reports/tsuite-monitor.xml "$SHARED_DIR/tsuite-report-$expid.xml"
+cp reports/metrics.txt "$SHARED_DIR/metrics-$expid.txt"
+echo "Results copied to $SHARED_DIR"
+
+if [ "$failed" -eq 1 ]; then
+  echo ""
+  echo -e "${RED}============================================${NC}"
+  echo -e "${RED}  EXPERIMENT $expid ({{ type_name }}) HAS FAILURES${NC}"
+  echo -e "${RED}  Check the JUnit report for details.       ${NC}"
+  echo -e "${RED}============================================${NC}"
+  exit 1
+fi
+echo ""
+echo -e "${GREEN}============================================${NC}"
+echo -e "${GREEN}  EXPERIMENT $expid ({{ type_name }}) PASSED     ${NC}"
+echo -e "${GREEN}============================================${NC}"
