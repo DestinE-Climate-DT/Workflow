@@ -1,0 +1,81 @@
+#!/bin/bash
+
+# This step installs AQUA
+
+set -xuve
+
+# HEADER
+
+CURRENT_ARCH=${1:-%CURRENT_ARCH%}
+LIBDIR=${2:-%CONFIGURATION.LIBDIR%}
+AQUA_ON=${3:-%CONFIGURATION.ADDITIONAL_JOBS.AQUA%}
+HPC_CONTAINER_DIR=${4:-%CURRENT_CONTAINER_DIR%}
+CONTAINER_VERSION=${5:-%AQUA.CONTAINER_VERSION%}
+
+# load_singularity variables
+SCRATCH_DIR=${6:-%CURRENT_SCRATCH_DIR%}
+HPC_PROJECT_ROOT=${7:-%CURRENT_HPC_PROJECT_ROOT%}
+LOCAL_DIR=${8:-%CURRENT_LOCAL_DIR%}
+
+# install_aqua variables
+HPCROOTDIR=${9:-%HPCROOTDIR%}
+AQUA_REGENCAT=${10:-%AQUA.REGENERATE_CATALOGS%}
+HPCARCH_short=${11:-%CURRENT_HPCARCH_SHORT%}
+PROJDEST=${12:-%PROJECT.PROJECT_DESTINATION%}
+CATALOG_NAME=${13:-%HPCCATALOG_NAME%}
+EXPID=${14:-%DEFAULT.EXPID%}
+EXPVER=${15:-%REQUEST.EXPVER%}
+MODEL=${16:-%REQUEST.MODEL%}
+DATA_PORTFOLIO=${17:-%CONFIGURATION.DATA_PORTFOLIO%}
+SIM_START_DATE=${18:-%SDATE%}
+USER=${19:-%CURRENT_USER%}
+AQUA_CONFIG=${20:-%AQUA.INSTALL_DIR%}
+AQUA_START_DATE=${21:-%AQUA.START_DATE%}
+GRID_BUILD_ENABLED=${22:-%CONFIGURATION.ADDITIONAL_JOBS.AQUA_GRID_BUILD%}
+AQUA_GRID_ATM=${23:-%AQUA.GRID_ATM%}
+MODEL_NAME_LOWER=${24:-%MODEL.NAME%}
+DQC_PROFILE=${25:-%CONFIGURATION.DQC_PROFILE%}
+GRID_OCE=${26:-%AQUA.GRID_OCE%}
+RUN_LRA_GENERATOR=${27:-%CONFIGURATION.ADDITIONAL_JOBS.LRA%}
+PREV_AQUA_EXP=${28:-%AQUA.PREV_EXP%}
+RESOLUTION=${29:-%MODEL.RESOLUTION%}
+MODEL_NAME_UPPER=${30:-%REQUEST.MODEL_NAME_UPPER%}
+MEMBER_LIST=${31:-%EXPERIMENT.MEMBERS%}
+EXPERIMENT_NAME=${32:-%AQUA.EXPERIMENT_NAME%}
+
+# END_HEADER
+
+HPC=$(echo "${CURRENT_ARCH}" | cut -d- -f1) # Value of the HPC variable based on the current architecture
+
+# Source libraries
+. "${LIBDIR}"/"${HPC}"/config.sh
+. "${LIBDIR}"/common/utils/remote_setup_utils.sh
+# lib/common/util.sh (get_realization_list) (auto generated comment)
+. "${LIBDIR}"/common/util.sh
+
+if [ "${AQUA_ON,,}" == "true" ]; then
+    AQUA="/app/AQUA"
+    AQUA_CONTAINER="${HPC_CONTAINER_DIR}/aqua/aqua_${CONTAINER_VERSION}.sif"
+
+    # if LRA generator will be skipped and a previous AQUA exp ID was entered
+    # we must be analyzing data from an older experiment, so both the request
+    # and the catalog entry have to point at it
+    if [ "${RUN_LRA_GENERATOR,,}" != "true" ] && [ -n "${PREV_AQUA_EXP}" ]; then
+        EXPVER="${PREV_AQUA_EXP}"
+        EXPERIMENT_NAME="${PREV_AQUA_EXP}"
+    fi
+
+    cd "$HPCROOTDIR"
+
+    if [ -f "catalog.tar.gz" ]; then
+        tar xf catalog.tar.gz
+    fi
+
+    # lib/LUMI/config.sh (load_singularity) (auto generated comment)
+    # lib/MARENOSTRUM5/config.sh (load_singularity) (auto generated comment)
+    load_singularity
+    # lib/common/util.sh (get_realization_list) (auto generated comment)
+    REALIZATIONS=$(get_realization_list "${MEMBER_LIST}") || exit 1
+    # lib/common/utils/remote_setup_utils.sh (install_aqua) (auto generated comment)
+    install_aqua "${AQUA_CONFIG}" "${GRID_BUILD_ENABLED}" "${AQUA_GRID_ATM}" "${MODEL_NAME_LOWER}" "${DQC_PROFILE}" "${GRID_OCE}" "${RESOLUTION}" "${REALIZATIONS}" "${EXPERIMENT_NAME}"
+fi

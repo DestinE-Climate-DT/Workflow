@@ -1,0 +1,11 @@
+# Full portfolio
+CONFIGURATION:
+  # full MULTIO plan files don't have a -full suffix
+  MULTIO_PLANS: ""
+  IFS:
+    MULTIO_PLANS: ""
+  NEMO:
+    MULTIO_PLANS: ""
+AQUA:
+  VARS_SFC: "['tprate', '2t', 'skt', 'msl', 'tcc', 'sd', 'tciw', 'tclw', 'tsrwe', 'slhtf', 'ishf', 'snswrf', 'snlwrf', 'sdlwrf', 'sdswrf', 'tnswrf', 'tnlwrf', 'tdswrf', 'iews', 'inss', 'ie', '10u', '10v']"
+  VARS_O2D: "['sithick', 'siconc', 'tos', 'sos', 'hc700m']"

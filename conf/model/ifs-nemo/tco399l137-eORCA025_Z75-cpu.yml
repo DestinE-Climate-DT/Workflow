@@ -1,0 +1,69 @@
+MODEL:
+  RESOLUTION: "25km"
+  RAPS:
+    # ------------------------
+    # --- Scientific flags ---
+    # ------------------------
+    USER_RESOL_SCI_FLAGS: ""
+    # -------------------------
+    # --- Performance flags ---
+    # -------------------------
+    USER_RESOL_PERF_FLAGS: ""
+CONFIGURATION:
+  ICMCL: "yearly"
+  IFS:
+    GTYPE: tco
+    RESOL: 399
+    LEVELS: 137
+    EXPVER: hz9n
+    LABEL: LWDA
+    # TODO: verify
+    IO_PPN: 16
+    IO_NODES: "%CURRENT_IFS_IO_NODES%"
+  NEMO:
+    # TODO: verify
+    IO_PPN: 8
+    IO_NODES: "%CURRENT_NEMO_IO_NODES%"
+  DQC_PROFILE: intermediate
+  DQC_WALLCLOCK: "00:30"
+WALLCLOCKS:
+  MONTHLY: "01:00"
+  DAILY: "00:10"
+# TODO: now added here instead of in e.g. conf/simulation/control-ifs-nemo.yml
+JOBS:
+  SIM:
+    # TODO: verify
+    WALLCLOCK: "%WALLCLOCKS.MONTHLY%"
+EXPERIMENT:
+  CHUNKSIZEUNIT: month
+  CHUNKSIZE: 1
+  # Setting 2 months for testing
+  NUMCHUNKS: 2
+PLATFORMS:
+  LUMI:
+    TYPE: slurm
+    PARTITION: "debug"
+    MAX_WALLCLOCK: "00:30"
+    NODES: 3
+    TASKS: 8
+    THREADS: 7
+    PROCESSORS_PER_NODE: 128
+    IFS_IO_NODES: 1
+    NEMO_IO_NODES: 1
+  MARENOSTRUM5:
+    TYPE: slurm
+    QUEUE: "gp_debug"
+    MAX_WALLCLOCK: "2:00"
+    NODES: 16
+    TASKS: 14
+    THREADS: 8
+    PROCESSORS_PER_NODE: 112
+    IFS_IO_NODES: 1
+    NEMO_IO_NODES: 1
+REQUEST:
+  RESOLUTION: standard
+AQUA:
+  GRID_ATM: tco399
+  RESOLUTION_ATM: hpz7
+  GRID_OCE: eORCA025
+  RESOLUTION_OCE: hpz7

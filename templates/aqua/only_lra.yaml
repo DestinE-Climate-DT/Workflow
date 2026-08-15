@@ -1,0 +1,40 @@
+#This include the option for the regridding
+target:
+  resolution: r100
+  frequency: monthly
+  catalog: "%HPCCATALOG_NAME%"
+paths:
+  outdir: "%AQUA.LOCAL_LRA_OUTPUT_PATH%"
+  tmpdir: "%APP.OUTPATH%/tmp"
+  opadir: "%APP.OUTPATH%"
+  configdir: "%AQUA.INSTALL_DIR%"
+options:
+  loglevel: INFO
+# all the variable listed here will be processed by the LRA creator
+data:
+  "%REQUEST.MODEL_NAME_UPPER%-%MODEL.RESOLUTION%":
+    "%AQUA.EXPERIMENT_NAME%":
+      "%AQUA.SOURCE_SFC%":
+        workers: "%AQUA.WORKERS_SFC%"
+        vars: %AQUA.VARS_SFC%
+        realizations: [%REQUEST.REALIZATION%]
+      "%AQUA.SOURCE_HL%":
+        workers: "%AQUA.WORKERS_HL%"
+        vars: %AQUA.VARS_HL%
+        realizations: [%REQUEST.REALIZATION%]
+      "%AQUA.SOURCE_O2D%":
+        workers: "%AQUA.WORKERS_O2D%"
+        vars: %AQUA.VARS_O2D%
+        realizations: [%REQUEST.REALIZATION%]
+      "%AQUA.SOURCE_O3D%":
+        workers: "%AQUA.WORKERS_O3D%"
+        vars: %AQUA.VARS_O3D%
+        realizations: [%REQUEST.REALIZATION%]
+      "%AQUA.SOURCE_PL%":
+        workers: "%AQUA.WORKERS_PL%"
+        vars: %AQUA.VARS_PL%
+        realizations: [%REQUEST.REALIZATION%]
+      "%AQUA.SOURCE_SOL%":
+        workers: "%AQUA.WORKERS_SOL%"
+        vars: %AQUA.VARS_SOL%
+        realizations: [%REQUEST.REALIZATION%]

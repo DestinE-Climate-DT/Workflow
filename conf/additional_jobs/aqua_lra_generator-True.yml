@@ -1,0 +1,21 @@
+JOBS:
+  LRA_GENERATOR:
+    DEPENDENCIES:
+      AQUA_SETUP: {}
+      SIM: {}
+      DQC_BASIC: {}
+      LRA_GENERATOR-1: {} # Chunk N+1 waits for chunk N to COMPLETE to prevent incomplete analysis data
+    FILE: templates/aqua/lra_generator.sh,templates/aqua/only_lra.yaml
+    NODES: 1
+    PROCESSORS: '%CURRENT_PROCESSORS_PER_NODE%'
+    PARTITION: '%CURRENT_APP_PARTITION%'
+    TASKS: 0
+    THREADS: 1
+    PLATFORM: '%DEFAULT.HPCARCH%'
+    EXCLUSIVE: "True"
+    RUNNING: chunk
+    WALLCLOCK: 01:00
+    FREQUENCY: 1
+    CHECK: on_submission
+    NOTIFY_ON: FAILED
+    TOTALJOBS: 1

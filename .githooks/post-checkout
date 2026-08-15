@@ -1,0 +1,137 @@
+#!/bin/bash
+
+main_path="../../conf/main.yml"
+request_path="../../conf/request.yml"
+
+echo "executing githook"
+
+# One or more environment variables are not set.
+if [[ -z "$WF_TYPE_ENV" || -z "$WF_MODEL_ENV" || -z "$WF_TEMPLATE_PATH_ENV" ]]; then
+    export WF_TYPE_ENV=""
+    export WF_MODEL_ENV=""
+    export WF_TEMPLATE_PATH_ENV=""
+    # Allows us to read user input below, assigns stdin to keyboard # https://stackoverflow.com/questions/3417896/how-do-i-prompt-the-user-from-within-a-commit-msg-hook
+    exec </dev/tty
+fi
+
+# Check if main exists
+if [ ! -f "$main_path" ]; then
+    echo "The main.yml file does not exist."
+
+    # Check if WF_TYPE_ENV is set
+    if [ -n "$WF_TYPE_ENV" ]; then
+        choice="$WF_TYPE_ENV"
+    else
+        # Prompt the user to choose a workflow
+        echo "Choose a workflow:"
+        echo "1. model"
+        echo "2. end_to_end"
+        echo "3. app"
+        echo "4. simless"
+
+        read -p "Enter your choice (1/2/3/4): " choice
+    fi
+
+    case $choice in
+    1)
+        # Check if WF_MODEL_ENV is set
+        if [ -n "$WF_MODEL_ENV" ]; then
+            model_choice="$WF_MODEL_ENV"
+        else
+            echo "Choose a model:"
+            echo "1. ifs-nemo"
+            echo "2. ifs-fesom"
+            echo "3. icon"
+            echo "4. nemo"
+            read -p "Enter your choice (1/2/3/4): " model_choice
+        fi
+
+        case $model_choice in
+        1)
+            echo "Choose a resolution:"
+            echo "1. tco79"
+            echo "2. tco399"
+            echo "3. tco1279"
+            echo "4. tco2559"
+            read -p "Enter your choice (1/2/3/4): " res_choice
+
+            case $res_choice in
+            1) resolution="tco79" ;;
+            2) resolution="tco399" ;;
+            3) resolution="tco1279" ;;
+            4) resolution="tco2559" ;;
+            *)
+                echo "Invalid choice. Exiting."
+                exit 1
+                ;;
+            esac
+
+            echo "Choose a simulation:"
+            echo "1. historical"
+            echo "2. control"
+            echo "3. ssp370"
+            echo "4. spinup"
+            echo "5. test"
+            read -p "Enter your choice (1/2/3/4/5): " sim_choice
+
+            case $sim_choice in
+            1) simulation="historical" ;;
+            2) simulation="control" ;;
+            3) simulation="ssp370" ;;
+            4) simulation="spinup" ;;
+            5) simulation="test" ;;
+            *)
+                echo "Invalid choice. Exiting."
+                exit 1
+                ;;
+            esac
+
+            template="ifs-nemo-${simulation}-${resolution}.yml"
+            ;;
+        2)
+            template="main_example_model_ifs-fesom.yml"
+            ;;
+        3)
+            template="main_example_model_icon.yml"
+            ;;
+        4)
+            template="main_example_model_nemo.yml"
+            ;;
+        *)
+            echo "Invalid choice. Exiting."
+            exit 1
+            ;;
+        esac
+        ;;
+    2)
+        template="main_example_end_to_end.yml"
+        run_create_jobs="true"
+        ;;
+    3)
+        template="main_example_app.yml"
+        run_create_jobs="true"
+        ;;
+    4)
+        template="main_example_simless.yml"
+        ;;
+    *)
+        echo "Invalid choice. Exiting."
+        exit 1
+        ;;
+    esac
+
+    # Copy the selected template to main.yml
+    cp "mains/$template" "$main_path"
+
+    echo "Template '$template' copied to '$main_path'. Opening for editing..."
+
+    if [ -n "$WF_TEMPLATE_PATH_ENV" ]; then
+        touch "$main_path"
+        cp "$WF_TEMPLATE_PATH_ENV" "$main_path"
+    else
+        # Open the file for editing
+        ${EDITOR:-vi} "$main_path"
+    fi
+else
+    echo "$main_path already exists. Skipping template selection."
+fi
