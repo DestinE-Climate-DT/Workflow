@@ -1,0 +1,63 @@
+CONFIGURATION:
+  ICMCL: "yearly"
+  IFS:
+    GTYPE: tco
+    RESOL: 319
+    LEVELS: 137
+    LABEL: LWDA
+    IO_TASKS: "%CURRENT_IFS_IO_TASKS%"
+    IO_NODES: "%CURRENT_IFS_IO_NODES%"
+    IO_PPN: "%CURRENT_IFS_IO_PPN%"
+  FESOM:
+    IO_TASKS: "%CURRENT_FESOM_IO_TASKS%"
+    IO_NODES: "%CURRENT_FESOM_IO_NODES%"
+    IO_PPN: "%CURRENT_FESOM_IO_PPN%"
+  DQC_WALLCLOCK: '00:30'
+PLATFORMS:
+  LUMI:
+    TYPE: slurm
+    PARTITION: "standard"
+    MAX_WALLCLOCK: "48:00"
+    NODES: 2
+    TASKS: 64
+    THREADS: 2
+    PROCESSORS_PER_NODE: 128
+    EXCLUSIVE: "True"
+    CUSTOM_DIRECTIVES: "['#SBATCH --hint=nomultithread', '#SBATCH --mem=0']"
+    # I/O
+    IFS_IO_TASKS: 96
+    IFS_IO_NODES: 0
+    IFS_IO_PPN: 0
+    FESOM_IO_TASKS: 96
+    FESOM_IO_NODES: 0
+    FESOM_IO_PPN: 0
+  MARENOSTRUM5:
+    TYPE: slurm
+    PARTITION: "ehpc01"
+    MAX_WALLCLOCK: "24:00"
+    NODES: 40
+    TASKS: 28
+    THREADS: 4
+    PROCESSORS_PER_NODE: 112
+    EXCLUSIVE: "True"
+    CUSTOM_DIRECTIVES: "['#SBATCH -q gp_ehpc']"
+    # I/O
+    IFS_IO_TASKS: 8
+    IFS_IO_NODES: 0
+    IFS_IO_PPN: 0
+    FESOM_IO_TASKS: 2
+    FESOM_IO_NODES: 0
+    FESOM_IO_PPN: 0
+JOBS:
+  SIM:
+    WALLCLOCK: "01:30"
+REQUEST:
+  RESOLUTION: standard
+MODEL:
+  GRID_OCE: DARS2
+  RESOLUTION: "31km"
+# not supported in the current AQUA catalog
+AQUA:
+  GRID_ATM: tco319
+  RESOLUTION_ATM: hpz7
+  RESOLUTION_OCE: hpz7

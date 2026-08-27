@@ -1,0 +1,4 @@
+ENERGY_INDICATORS:
+  MASK_FILE_5: offshore_onshore_mask_global_r005_100_rotated.nc
+  MASK_FILE_10: offshore_onshore_mask_global_r010_100_rotated.nc
+  MASK_FILE_25: offshore_onshore_mask_global_r025_100_rotated.nc

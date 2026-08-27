@@ -1,0 +1,26 @@
+HYDROLAND:
+  DELETE_FILES: true
+  APPLY_INDICATORS: true
+  RUN_FREQUENCY: "day" # day or month
+  APPLY_CDO_MERGETIME: false # only applicable if RUN_FREQUENCY is month
+  INIT_FILES: "%APP_AUX_IN_DATA_DIR%/hydroland_v%HYDROLAND.IN_DATA_VERSION%"
+  PRE_VARIABLE: "avg_tprate"
+  TAVG_VARIABLE: "2t"
+  STAT: "raw" # raw for STAT_FREQ: hourly | mean for STAT_FREQ: daily
+  STAT_FREQ: "hourly"
+  PRIOR_APP_OUTPATH: "None"
+  RESTART_FROM_PRIOR_RUN: false
+  OMP_NUM_THREADS_MHM: 128
+  SUBDOMAINS_PER_NODE: 3
+  MEM_PER_SUBDOMAIN: 64 # in GigaBites (GB)
+  MERGE_BUFFER_TARGET_MB: 4096
+  MERGE_SPLIT_NODES: false
+  MERGE_COMPRESSION_LEVEL: "None" # month forcings merge only; "None" = uncompressed (fastest)
+  SUBDOMAIN: "None" # "None" = all subdomains; 1..26 for a single recovery run
+  NUM_SUBDOMAINS: 26
+  MRM_PARALLEL_SUBDOMAINS: "None" # day runs only; "None" = 26 at 5km, 53 at 10km
+  MAX_WORKERS: 16
+  STAGE: "all" # all | forcings | subdomain | merge - see hydroland README
+  BIAS_ADJUSTMENT:
+    APPLY_BA: false
+    FUTURE_START_DATE: "2015-01-01"

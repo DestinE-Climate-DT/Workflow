@@ -1,0 +1,24 @@
+EXPERIMENT:
+  DATELIST: 20150101 # only possible when forcing & restarts are available OR experiment is restarted with RESTARTED_RUN: 'true'
+  MEMBERS: fc0
+  CHUNKSIZEUNIT: month
+  CHUNKSIZE: 1
+  NUMCHUNKS: 2
+  CALENDAR: standard
+CONFIGURATION:
+  DQC_PROFILE: lowres
+  RAPS_FORCING_AEROSOLS: "aerosol_cams-extended-macv2sp-ssp370_climatology_CONFESS_1951-2100_4D.nc"
+  RAPS_FORCING_AEROSOLS_VOLCANIC: "cmip6_stratospheric_aerosol_aod_extend.dat"
+  RAPS_FORCING_GHG: "greenhouse_gas_timeseries_CMIP6_SSP370_CFC11equiv_47r1.nc"
+  RAPS_FORCING_OZONE: "cmip6-ozone-scenarios/SSP370"
+  RAPS_USER_FLAGS: "--no-ozone --runoff-mapper --sicoupl=thermodynamical"
+  FESOM_PERTURB: "false"
+  FESOM_PERTURBATION_SEED_BASE: "50000"
+  IFS:
+    EXPVER: awi0
+    START_DATE: "19900101"
+REQUEST:
+  ACTIVITY: projections
+  EXPERIMENT: SSP3-7.0
+  GENERATION: 2
+  REALIZATION: 1
