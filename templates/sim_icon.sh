@@ -1,0 +1,302 @@
+#!/bin/bash
+#
+# This step runs one chunk of climate simulation
+
+set -xuve
+
+# HEADER
+HPCROOTDIR=${1:-%HPCROOTDIR%}
+PROJDEST=${2:-%PROJECT.PROJECT_DESTINATION%}
+CURRENT_ARCH=${3:-%CURRENT_ARCH%}
+MODEL_NAME=${4:-%MODEL.NAME%}
+MODEL_VERSION=${5:-%MODEL.VERSION%}
+
+# Simulation parameters
+CHUNK=${6:-%CHUNK%}
+CHUNKSIZE=${7:-%EXPERIMENT.CHUNKSIZE%}
+CHUNKSIZEUNIT=${8:-%EXPERIMENT.CHUNKSIZEUNIT%}
+CHUNK_FIRST=${9:-%CHUNK_FIRST%}
+CHUNK_START_DATE=${10:-%Chunk_START_DATE%}
+CHUNK_END_DATE=${11:-%Chunk_END_DATE%}
+RUN_DAYS=${12:-%RUN_DAYS%}
+FAIL_COUNT=${13:-%FAIL_COUNT%}
+
+MEMBER=${14:-%MEMBER%}
+MEMBER_LIST=${15:-%EXPERIMENT.MEMBERS%}
+RUNDIR=${16:-%CONFIGURATION.RUNDIR_PATH%}
+PRE_RESTART_DIR=${17:-%CONFIGURATION.PRE_RESTART_DIR%}
+RESTART_DIR=${18:-%CONFIGURATION.RESTART_DIR%}
+RESTARTED_RUN=${19:-%RUN.RESTARTED_RUN%}
+
+TIMEFORMAT=${20:-%SIMULATION.TIMEFORMAT%}
+RUNSCRIPT=${21:-%SIMULATION.RUNSCRIPT%}
+HPCARCH=${22:-%HPCARCH%}
+SCRATCH_DIR=${23:-%SCRATCH_DIR%}
+RUN_TYPE=${24:-%RUN.TYPE%}
+FDB_HOME=${25:-%REQUEST.FDB_HOME%}
+EXPID=${26:-%DEFAULT.EXPID%}
+EXPVER=${27:-%REQUEST.EXPVER%}
+SIM_NAME=${28:-%SIMULATION.NAME%}
+LIBDIR=${29:-%CONFIGURATION.LIBDIR%}
+SCRIPTDIR=${30:-%CONFIGURATION.SCRIPTDIR%}
+ENVIRONMENT=${31:-%RUN.ENVIRONMENT%}
+PU=${32:-%RUN.PROCESSOR_UNIT%}
+MODEL_PATH=${33:-%MODEL.PATH%}
+MODEL_INPUTS=${34:-%MODEL.INPUTS%}
+ICON_VERSION=${35:-%MODEL.ICON_VERSION%}
+YACO_VERSION=${36:-%MODEL.YACO_VERSION%}
+
+# Platform-dependent variables
+HDF5_USE_FILE_LOCKING=${37:-%CURRENT_HDF5_USE_FILE_LOCKING%}
+FI_CXI_OPTIMIZED_MRS=${38:-%CURRENT_FI_CXI_OPTIMIZED_MRS%}
+FI_CXI_RX_MATCH_MODE=${39:-%CURRENT_FI_CXI_RX_MATCH_MODE%}
+FI_MR_CACHE_MONITOR=${40:-%CURRENT_FI_MR_CACHE_MONITOR%}
+MPICH_ALLREDUCE_NO_SMP=${41:-%CURRENT_MPICH_ALLREDUCE_NO_SMP%}
+MPICH_COLL_OPT_OFF=${42:-%CURRENT_MPICH_COLL_OPT_OFF%}
+PMI_SIGNAL_STARTUP_COMPLETION=${43:-%CURRENT_PMI_SIGNAL_STARTUP_COMPLETION%}
+MPICH_SMP_SINGLE_COPY_MODE=${44:-%CURRENT_MPICH_SMP_SINGLE_COPY_MODE%}
+
+AS_JOBNAME=${45:-%JOBNAME%}
+# Performance-metrics metadata (written to the per-chunk env file for the
+# MONITOR_RESOURCES / PERFORMANCE_METRICS jobs; see write_performance_env).
+RESOLUTION=${46:-%MODEL.RESOLUTION%}
+GRID_ATM=${47:-%MODEL.GRID_ATM%}
+GRID_OCE=${48:-%MODEL.GRID_OCE%}
+CHUNK_SECOND_TO_LAST_DATE=${49:-%CHUNK_SECOND_TO_LAST_DATE%}
+CLASS=${50:-%REQUEST.CLASS%}
+DATASET=${51:-%REQUEST.DATASET%}
+STREAM=${52:-%REQUEST.STREAM%}
+MODEL_REQ=${53:-%REQUEST.MODEL%}
+COMPLEXITY_ATMOSPHERE=${54:-%PERFORMANCE_METRICS.COMPLEXITY.ATMOSPHERE%}
+COMPLEXITY_OCEAN=${55:-%PERFORMANCE_METRICS.COMPLEXITY.OCEAN%}
+COMPLEXITY_LAND=${56:-%PERFORMANCE_METRICS.COMPLEXITY.LAND%}
+HPC_CONTAINER_DIR=${57:-%CURRENT_CONTAINER_DIR%}
+PERFORMANCE_METRICS_VERSION=${58:-%PERFORMANCE_METRICS.VERSION%}
+PERFORMANCE_RESOLUTION=${59:-%PERFORMANCE_METRICS.RESOLUTION%}
+
+export SIM_START_DATE=${60:-%SDATE%}
+
+# END_HEADER
+
+HPC=$(echo "${CURRENT_ARCH}" | cut -d- -f1)
+
+# Load HPC and utility functions
+. "${LIBDIR}"/"${HPC}"/config.sh
+. "${LIBDIR}"/common/util.sh
+. "${LIBDIR}"/common/utils/sim_utils.sh
+
+# Main code
+
+# Model directory definition
+if [ -z "${MODEL_VERSION}" ]; then
+    export MODEL_DIR="${HPCROOTDIR}"/icon_"${ICON_VERSION}"
+else
+    export MODEL_DIR="${MODEL_PATH}"/icon_"${ICON_VERSION}"
+fi
+
+# directories with absolute paths
+export icon_data_rootFolder="${MODEL_INPUTS}"
+
+# Switch binaries for ocean and atmosphere when using hetjobs
+if [ "${PU}" = "gpu" ]; then
+    export MODEL_C="${MODEL_PATH}"/build/icon_cpu/bin/icon
+    export MODEL_G="${MODEL_PATH}"/build/icon_gpu/bin/icon
+else
+    echo "Unsupported processing unit"
+    exit 1
+fi
+
+# Set output task to write to the FDB through the modified coupler
+export YACO_DIR="${MODEL_PATH}"/yaco_"${YACO_VERSION}"
+export yaco_rootFolder="${MODEL_PATH}"/yaco_"${YACO_VERSION}"
+export YACO="${MODEL_PATH}"/build/yaco/current/yaco
+
+# Check if MODEL_G and MODEL_C and YACO exist
+if [ ! -f "${MODEL_G}" ] || [ ! -f "${MODEL_C}" ] || [ ! -f "${YACO}" ]; then
+    echo "One or more required binaries not found:"
+    [ ! -f "${MODEL_G}" ] && echo "Model GPU binary not found: ${MODEL_G}"
+    [ ! -f "${MODEL_C}" ] && echo "Model CPU binary not found: ${MODEL_C}"
+    [ ! -f "${YACO}" ] && echo "YACO binary not found: ${YACO}"
+    exit 1
+fi
+
+# If first run, set lrestart to ".FALSE."
+if [ "${CHUNK_FIRST}" = "TRUE" ] && [ "${RESTARTED_RUN,,}" != "true" ]; then
+    export lrestart=".false."
+    export restart_jsbach=".false."
+    export initialize_fromrestart=".true."
+    export read_initial_reservoirs=".true."
+else
+    export lrestart=".true."
+    export restart_jsbach=".true."
+    export initialize_fromrestart=".false."
+    export read_initial_reservoirs=".false."
+fi
+
+# Loads necessary packages (module load ...)
+# Exports necessary paths (input, output, restarts ...)
+load_SIM_env_"${MODEL_NAME%%-*}"_"${PU}"
+
+# Grid Configuration
+export atmos_gridID="%CONFIGURATION.ICON.ATM_GID%"
+export atmos_refinement="%CONFIGURATION.ICON.ATM_REF%"
+
+export ocean_gridID="%CONFIGURATION.ICON.OCE_GID%"
+export ocean_refinement="%CONFIGURATION.ICON.OCE_REF%"
+
+# Time stepping configuration
+export radTimeStep="%SIMULATION.RAD_TSTEP%"
+export atmTimeStep="%SIMULATION.ATM_TSTEP%"
+export oceTimeStep="%SIMULATION.OCE_TSTEP%"
+export couplingTimeStep="%SIMULATION.COUPLING_TSTEP%"
+# lib/common/utils/sim_utils.sh (iso8601_to_seconds) (auto generated comment)
+export atmos_time_step_in_sec=$(iso8601_to_seconds "$atmTimeStep")
+# lib/common/utils/sim_utils.sh (iso8601_to_seconds) (auto generated comment)
+export ocean_time_step_in_sec=$(iso8601_to_seconds "$oceTimeStep")
+
+# YACO output process timestep
+export yacoTimeStep="%SIMULATION.YACO_TSTEP%"
+
+# Internal YAC timestepping
+export atm_lag="%SIMULATION.ATM_LAG%"
+export oce_lag="%SIMULATION.OCE_LAG%"
+export yaco_lag="%SIMULATION.YACO_LAG%"
+
+# Ocean and Atmosphere level configuration
+export atm_levels="%CONFIGURATION.ICON.ATM_LEVELS%"
+export atm_halflevels="%CONFIGURATION.ICON.ATM_HALFLEVELS%"
+export oce_levels="%CONFIGURATION.ICON.OCE_LEVELS%"
+export oce_halflevels="%CONFIGURATION.ICON.OCE_HALFLEVELS%"
+
+# End/Start dates
+export start_date=$(date -u --date=$CHUNK_START_DATE $TIMEFORMAT)
+export end_date=$(date -u --date=$CHUNK_END_DATE $TIMEFORMAT)
+
+# Restart interval (uses mtime)
+# Stops run - Generates restart files
+export restart_interval="P${RUN_DAYS}D"
+export checkpoint_interval="%SIMULATION.CHECKPOINT_INTERVAL%"
+
+# Export FDB_HOME to load schema, FDB paths
+export FDB_HOME
+
+# Define Data Governance
+
+# lib/common/util.sh (get_member_number) (auto generated comment)
+realization=$(get_member_number "${MEMBER_LIST}" ${MEMBER})
+
+export EXPVER
+export activity="%REQUEST.ACTIVITY%"
+export experiment="%REQUEST.EXPERIMENT%"
+export realization
+export generation="%REQUEST.GENERATION%"
+export resolution="%REQUEST.RESOLUTION%"
+
+# Experiment name/id-definition
+export EXPNAME="${EXPVER}_${SIM_NAME}"
+export EXPDIR="${RUNDIR}"/run_"${CHUNK_START_DATE}"-"${CHUNK_END_DATE}"_"${AS_JOBNAME}"-"${SLURM_JOB_ID}"
+export CHUNK_RESTART="${PRE_RESTART_DIR}"/"${CHUNK}"
+export CURRENT_RESTART="${RESTART_DIR}"
+
+# Remove rundir and restarts if it already exists
+if [[ -d $EXPDIR ]] && [ $FAIL_COUNT -gt 0 ]; then
+    echo "$(date): previous failed run detected, removing run dir '$EXPDIR' and restart dir '$CHUNK_RESTART' before starting new chunk run"
+    rm -fvr "$EXPDIR" "$CHUNK_RESTART"
+fi
+
+# Create chunk and restart directory (or link if restarted)
+if [[ "${CHUNK_FIRST,,}" == "true" && "${RESTARTED_RUN,,}" == "true" ]]; then
+    # Rename restart files inside CHUNK_RESTART preserving the original
+    # lib/common/utils/sim_utils.sh (rename_chunk_restarts) (auto generated comment)
+    rename_chunk_restarts
+    ln -snf "$CHUNK_RESTART" "$CURRENT_RESTART"
+else
+    mkdir -vp "$CHUNK_RESTART"
+fi
+mkdir -vp $EXPDIR && cd $EXPDIR
+
+# Copy simulation runscript for run
+cp "${SCRIPTDIR}/${RUNSCRIPT}" "${EXPNAME}".run
+
+# The resource monitor is an optional per-run job (toggled via
+# CONFIGURATION.ADDITIONAL_JOBS). Export the toggle so the perf hooks in
+# sim_utils.sh (write_performance_env, signal_performance_done) no-op when it is
+# not scheduled for this run.
+export MONITOR_RESOURCES_ENABLED="%CONFIGURATION.ADDITIONAL_JOBS.MONITOR_RESOURCES%"
+
+# Publish the per-chunk performance env file before the run so MONITOR_RESOURCES
+# (triggered on SIM RUNNING) can attach. EXPDIR is the rundir and is already
+# known, so it is recorded here directly. RUNDIR_PATH backs the fallback search.
+RUNDIR_PATH="${RUNDIR}"
+# lib/common/utils/sim_utils.sh (write_performance_env) (auto generated comment)
+write_performance_env "${EXPDIR}"
+
+# Catch-all so the monitor stops cleanly even on an unexpected 'set -e' abort
+# before an explicit signal runs. We trap ERR, NOT EXIT: Autosubmit owns the
+# EXIT trap (as_exit_handler in its header) that writes the _COMPLETED stat file,
+# so trapping EXIT here would replace it and make every successful job be marked
+# FAILED. ERR fires at the failing command, before the shell exits, so our signal
+# runs first and Autosubmit's EXIT handler still runs afterwards.
+# signal_performance_done is idempotent, so this is a no-op once the explicit
+# success/failure signal has already fired.
+# lib/common/utils/sim_utils.sh (signal_performance_done) (auto generated comment)
+trap 'signal_performance_done' ERR
+
+# Submission of ICON bash runscript.
+# tee to a log so we can read back the compute/IO task split the runscript
+# prints (atm_compute_tasks / oce_tasks / yaco_tasks) — these use the real
+# runtime SLURM_GPUS_ON_NODE, which the io_analyzer can't get from the static
+# *.run file. A pipe makes the shell wait for tee, so the log is complete
+# before the next line. Success is judged by finish.status (as before), not by
+# the run's exit code, so routing through tee does not change that contract.
+START_TIME=$(date +%s)
+ICON_RUN_LOG="${EXPDIR}/icon_run.log"
+bash "${EXPNAME}".run 2>&1 | tee "${ICON_RUN_LOG}"
+END_TIME=$(date +%s)
+
+# Re-link restart directory to current
+ln -snf $CHUNK_RESTART $CURRENT_RESTART
+
+# Calculate runtime
+RUNTIME=$((END_TIME - START_TIME))
+
+# Format the runtime
+RUNTIME_FORMATTED=$(date -u -d @${RUNTIME} +"%H:%M:%S")
+
+echo -e "\n\n------------------------------------------------------"
+
+# Check if the ICON chunk run has been sucessful
+if [ -f finish.status ] && grep -q -e "OK" -e "RESTART" finish.status; then
+    echo -e " - SUCCESSFUL run of chunk ${CHUNK_START_DATE}-${CHUNK_END_DATE} member ${MEMBER}\n"
+    echo " - Total runtime: ${RUNTIME_FORMATTED} (hh:mm:ss)"
+    echo -e "------------------------------------------------------\n\n"
+
+    # Capture the compute/IO task split the runscript reported and record it in
+    # the env file (overriding the io_analyzer's static *.run parse, which can't
+    # resolve the runtime SLURM_GPUS_ON_NODE).
+    ICON_ATM_COMPUTE_TASKS=$(grep -oP 'atm_compute_tasks:\s*\K[0-9]+' "${ICON_RUN_LOG}" | tail -1)
+    ICON_OCE_TASKS=$(grep -oP 'oce_tasks:\s*\K[0-9]+' "${ICON_RUN_LOG}" | tail -1)
+    ICON_YACO_TASKS=$(grep -oP 'yaco_tasks:\s*\K[0-9]+' "${ICON_RUN_LOG}" | tail -1)
+    export ICON_ATM_COMPUTE_TASKS="${ICON_ATM_COMPUTE_TASKS:-0}"
+    export ICON_OCE_TASKS="${ICON_OCE_TASKS:-0}"
+    export ICON_YACO_TASKS="${ICON_YACO_TASKS:-0}"
+    # lib/common/utils/sim_utils.sh (write_performance_env) (auto generated comment)
+    write_performance_env "${EXPDIR}"
+else
+    echo " - UNSUCCESSFUL run of chunk ${CHUNK_START_DATE}-${CHUNK_END_DATE} member ${MEMBER}"
+    echo -e " - Check the .err .out at the Autosubmit LOGS folder\n"
+    echo " - Total runtime: ${RUNTIME_FORMATTED} (hh:mm:ss)"
+    echo -e "------------------------------------------------------\n\n"
+    # Tell the resource monitor this chunk failed so it stops cleanly instead of
+    # running until its wallclock.
+    # lib/common/utils/sim_utils.sh (signal_performance_done) (auto generated comment)
+    signal_performance_done
+    exit 1
+fi
+
+# Everything in the SIM template has now finished (reached only on success; the
+# failure branch exits above). Signal the resource monitor so it stops only at
+# this point, having observed the whole chunk. Idempotent, and on this success
+# path the ERR trap above never fires anyway.
+# lib/common/utils/sim_utils.sh (signal_performance_done) (auto generated comment)
+signal_performance_done

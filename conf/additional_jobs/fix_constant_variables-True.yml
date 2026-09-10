@@ -1,0 +1,14 @@
+JOBS:
+  FIX_CONSTANT_VARIABLES:
+    DEPENDENCIES:
+      SIM:
+        CHUNKS_FROM:
+          all:
+            CHUNKS_TO: "1"
+    RUNNING: member
+    PLATFORM: '%DEFAULT.HPCARCH%'
+    CHECK: on_submission
+    FILE: templates/fix_constant_variables.sh
+    TASKS: 1
+    THREADS: 1
+    NODES: 1

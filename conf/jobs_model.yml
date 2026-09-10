@@ -1,0 +1,40 @@
+JOBS:
+  INI:
+    DEPENDENCIES: DVC_SETUP FDB_INFO_FILE GENERATE_PROFILES CREATE_FDB COMPILE
+    FILE: templates/ini.sh
+    PLATFORM: '%DEFAULT.HPCARCH%-login'
+    RUNNING: member
+    WALLCLOCK: 00:30
+    CHECK: on_submission
+    NOTIFY_ON: FAILED
+    TOTALJOBS: 1
+  LOCAL_SETUP:
+    FILE: templates/local_setup.sh
+    PLATFORM: LOCAL
+    RUNNING: once
+    CHECK: on_submission
+    NOTIFY_ON: FAILED
+  REMOTE_SETUP:
+    DEPENDENCIES: SYNCHRONIZE
+    FILE: templates/remote_setup/remote_setup.sh,templates/fdb/confignative.yaml,templates/fdb/configlatlon.yaml,templates/fdb/config.yaml
+    PLATFORM: '%DEFAULT.HPCARCH%-login'
+    RUNNING: date
+    WALLCLOCK: 03:30
+    CHECK: on_submission
+    NOTIFY_ON: FAILED
+    TOTALJOBS: 1
+  SIM:
+    DEPENDENCIES: INI SIM-1 DQC_BASIC-10
+    FILE: templates/sim_%MODEL.NAME%.sh
+    PLATFORM: '%DEFAULT.HPCARCH%'
+    WALLCLOCK: 00:30
+    running: chunk
+    CHECK: on_submission
+    NOTIFY_ON: FAILED
+  SYNCHRONIZE:
+    DEPENDENCIES: LOCAL_SETUP
+    FILE: templates/synchronize.sh
+    PLATFORM: LOCAL
+    RUNNING: once
+    CHECK: on_submission
+    NOTIFY_ON: FAILED

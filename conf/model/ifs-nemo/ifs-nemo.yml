@@ -1,0 +1,79 @@
+MODEL:
+  VERSION: "DE_CY48R1.0_climateDT_20260326-6.2.0"
+  USE_DVC: "True"
+  USE_FIXED_DVC_COMMIT: "true"
+  DVC_INPUTS_BRANCH: "ClimateDT-phase2"
+  # Assuming that the experiment to read from is the same user
+  # And that "current" points to the latest restart files
+  # TODO current is deleted at the end of the chunk!
+  RESTARTS_FROM_PATH: "%CURRENT_SCRATCH_DIR%/%CURRENT_PROJECT%/%CURRENT_USER%/%RUN.RESTART_FROM%/restarts/%CONFIGURATION.IFS.START_DATE%/%MEMBER%/current/"
+  BUNDLE_BUILD_DIR: "%^MODEL.PATH%/build"
+  BUNDLE_SOURCE_DIR: "%^MODEL.PATH%/source"
+  RAPS_BIN: "%^MODEL.BUNDLE_SOURCE_DIR%/raps/bin"
+  FDB_DIRS: "%^REQUEST.FDB_HOME%/native:%^REQUEST.FDB_HOME%:%^REQUEST.FDB_HOME%/latlon"
+  RAPS:
+    GENERAL_FLAGS: "--ifs-bundle-build-dir=%^MODEL.BUNDLE_BUILD_DIR% --icmcl %^MODEL.ICMCL_PATTERN% -R --deep --inproot-namelists "
+    NEMO_FLAGS: "--nemo --nemo-ver=V40 --nemo-grid=%^MODEL.GRID_OCE% --nonemopart --nemodistdir=%^MODEL.WEIGHTS_DIR% --nemorwdist"
+    RESTART_FLAGS: "--restartdirectory=%^CONFIGURATION.RESTART_DIR% --keeprestart "
+    PERFORMANCE_GEN_FLAGS: ""
+    FDB_FLAGS: "--keepfdb --multio-production-fdbs=%^MODEL.FDB_DIRS% --outexp=%^REQUEST.EXPVER% --generation=%REQUEST.GENERATION% --multio-experiment=%^REQUEST.EXPERIMENT% --multio-activity=%^REQUEST.ACTIVITY% "
+    IO_FLAGS: "--keepnetcdf --nextgemsout=6 --ifs-and-wam-multio --fixyear=%^CONFIGURATION.RAPS.FIXYEAR% --forcing-aerosols=%^CONFIGURATION.RAPS.FORCING_AEROSOLS% --forcing-aerosols-volcanic=%^CONFIGURATION.RAPS.FORCING_AEROSOLS_VOLCANIC% --forcing-ghg=%^CONFIGURATION.RAPS.FORCING_GHG% --forcing-ozone=%^CONFIGURATION.RAPS.FORCING_OZONE% "
+    SCI_FLAGS: "--teos10 --sicoupl=fractional --no-ozone "
+  INPUTS: "%HPCROOTDIR%/%PROJECT.PROJECT_DESTINATION%/dvc-cache-de340"
+  WEIGHTS_DIR: "%CURRENT_HPC_PROJECT_ROOT%/%CURRENT_PROJECT%/%CURRENT_USER%/%DEFAULT.EXPID%/weights/ifs-nemo"
+REQUEST:
+  MODEL: ifs-nemo
+  MODEL_NAME_UPPER: IFS-NEMO
+PLATFORMS:
+  LUMI:
+    DVC_INPUTS_CACHE: "/pfs/lustrep3/scratch/project_465000454/pool/data/DVC_DATA_REPOSITORY/"
+    RAPS_HOST_CPU: lum-c
+    RAPS_HOST_GPU: lum-g
+    RAPS_BIN_HPC_NAME: lumi
+    RAPS_COMPILER: cce
+    # Exports this value as mpilib for RAPS. It doesn't really switch the MPI lib
+    # and it neither affects the name of the rundir (mpilib hard-coded in RAPS for lumi)
+    RAPS_MPILIB: cray-mpich
+    PERFORMANCE_PLATFORM_FLAGS: ""
+  LUMI-LOGIN:
+    # Parameters for compilation of the IFS-based models
+    ARCH_GPU: "arch/eurohpc/lumi-g/default"
+    ADDITIONAL_COMPILATION_FLAGS_GPU: "--keep-going --retry -j32 --with-gpu --with-gpu-aware-mpi --download-atlas-orca-files"
+    ARCH_CPU: "arch/eurohpc/lumi-c/default"
+    ADDITIONAL_COMPILATION_FLAGS_CPU: "--keep-going --retry -j32 --download-atlas-orca-files"
+    IFS_BUNDLE_SKIP_FESOM: 1
+    DVC_INPUTS_CACHE: "%PLATFORMS.LUMI.DVC_INPUTS_CACHE%"
+  MARENOSTRUM5:
+    DVC_INPUTS_CACHE: "/gpfs/scratch/ehpc01/data/.dvc/cache"
+    # Parameters needed by RAPS in the SIM job
+    RAPS_HOST_CPU: mn5-gpp
+    RAPS_HOST_GPU: ""
+    RAPS_BIN_HPC_NAME: mn5
+    RAPS_COMPILER: intel
+    PERFORMANCE_PLATFORM_FLAGS: "--hugepages "
+    # Exports this value as mpilib for RAPS. It doesn't really switch the MPI lib
+    # but it affects the name of the rundir (e.g.
+    # `rundir/tco79l137/t02k/hres/intel.openmpi`)
+    RAPS_MPILIB: openmpi
+  MARENOSTRUM5-login:
+    DVC_INPUTS_CACHE: "%PLATFORMS.MARENOSTRUM5.DVC_INPUTS_CACHE%"
+    # Parameters for compilation of the IFS-based models
+    ADDITIONAL_COMPILATION_FLAGS_CPU: "--with-omp-parallel-any-thread"
+    ARCH_CPU: "arch/eurohpc/mn5-gpp/intel/2021.10.0/intelmpi/2021.10.0"
+    ADDITIONAL_COMPILATION_FLAGS_GPU: ""
+    ARCH_GPU: ""
+DVC:
+  VERSION: "3.50.1"
+PERFORMANCE_METRICS:
+  COMPLEXITY:
+    IFS: 10
+    NEMO: 40
+CONFIGURATION:
+  GENERATE_PROFILES: "True"
+  ADDITIONAL_JOBS:
+    FIX_CONSTANT_VARIABLES: "True"
+  RESTARTS:
+    FILES_TO_CHECK: "waminfo rcf nemorcf"
+    DIRS_TO_CHECK: ""
+AQUA:
+  GRID_VERSION: 3

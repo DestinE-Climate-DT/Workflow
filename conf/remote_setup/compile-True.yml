@@ -1,0 +1,10 @@
+JOBS:
+  COMPILE:
+    DEPENDENCIES: REMOTE_SETUP
+    FILE: templates/remote_setup/compile.sh
+    PLATFORM: '%DEFAULT.HPCARCH%-login'
+    RUNNING: date
+    WALLCLOCK: 03:30
+    CHECK: on_submission
+    NOTIFY_ON: FAILED
+    TOTALJOBS: 1
